@@ -93,7 +93,7 @@ export const FAQ = [
   { q: "Where do discounted credits come from?", a: "Sellers list unused prepaid inference credit on the order book. When you buy, your order is filled from the deepest discount first. Sellers are paid when the credit is consumed." },
   { q: "What fees do you charge?", a: "A flat 5% platform fee on the discounted price. No subscription, minimum purchase $5." },
   { q: "Do you store my prompts?", a: "No. Inference runs on zero-retention endpoints. We store only billing metadata (model, token counts, cost, timestamp) attached to an anonymous key." },
-  { q: "Do I need an account or KYC?", a: "No email required. Generate an anonymous key, top it up with crypto or card, and save your recovery phrase — we can’t recover it for you." },
+  { q: "Do I need an account or KYC?", a: "No KYC. Sign in with Google, email, or just connect an Ethereum wallet for a fully pseudonymous account. Your sign-in is never linked to prompt content." },
   { q: "Is it compatible with my SDK?", a: "Yes. The API is OpenAI-compatible. Change the base URL and API key in the OpenAI SDK, Vercel AI SDK, LangChain, LiteLLM and most agents." },
   { q: "Can I get a refund?", a: "Unused credit can be relisted on the marketplace at any time. Credits are not redeemable for cash directly." },
 ];

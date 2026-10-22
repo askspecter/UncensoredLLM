@@ -20,7 +20,7 @@ function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: 
 const FEATURES = [
   { t: "No filters added", d: "Open-weight models served raw. No hidden system prompts, no refusals bolted on by us." },
   { t: "Zero data retention", d: "Prompts and outputs never touch disk. Only token counts and cost are kept for billing." },
-  { t: "Anonymous keys", d: "No email, no KYC. Pay with Monero, Bitcoin, USDC or card and get a key instantly." },
+  { t: "Wallet sign-in", d: "No KYC. Sign in with a wallet, Google or email, pay with crypto or card and get a key instantly." },
   { t: "Up to 50% cheaper", d: "Buy unused credit from sellers on the order book. Flat 5% fee, no subscription." },
   { t: "One key, every model", d: "Text, code, image and audio models behind a single OpenAI-compatible endpoint." },
   { t: "<40 ms overhead", d: "Edge gateway with streaming passthrough. Responses report the exact upstream model ID." },
@@ -130,7 +130,7 @@ export default function Home() {
         <div className="card relative overflow-hidden p-10 text-center md:p-16">
           <div className="glow pointer-events-none absolute inset-0" />
           <h2 className="relative font-serif text-4xl md:text-6xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>
-          <p className="relative mt-4 text-mute">$5 minimum. No account. Your key in under a minute.</p>
+          <p className="relative mt-4 text-mute">$5 minimum. Sign in with a wallet. Your key in under a minute.</p>
           <div className="relative mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>
             <a href="/sell" className="btn btn-ghost">Sell credits</a>

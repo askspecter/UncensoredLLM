@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import AuthButton from "./AuthButton";
 
 const links = [
   { href: "/#buy", label: "Buy credits" },
@@ -21,8 +22,8 @@ export default function Nav() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="btn btn-ghost hidden text-sm sm:inline-flex">Dashboard</Link>
-          <Link href="/#buy" className="btn btn-primary text-sm">Get a key</Link>
+          <Link href="/#buy" className="btn btn-ghost hidden text-sm sm:inline-flex">Get a key</Link>
+          <AuthButton />
         </div>
       </nav>
     </header>

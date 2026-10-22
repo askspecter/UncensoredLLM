@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useAuth } from "./Providers";
 import { MAX_PURCHASE, MIN_PURCHASE, PLATFORM_FEE, quote } from "@/lib/data";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -13,17 +14,20 @@ export default function BuyCard() {
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
+  const auth = useAuth();
 
   const valid = amount >= MIN_PURCHASE && amount <= MAX_PURCHASE;
   const q = useMemo(() => quote(valid ? amount : 0), [amount, valid]);
 
   async function checkout() {
+    if (auth.enabled && !auth.authenticated) return auth.login();
     setLoading(true);
     setError("");
     try {
+      const token = await auth.getToken();
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ credit: amount, payment: pay }),
       });
       const data = await res.json();
@@ -110,10 +114,10 @@ export default function BuyCard() {
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? "Generating key…" : valid ? `Pay ${usd(q.total)} · get anonymous key` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? "Generating key…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)} · get anonymous key` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
-      <p className="mt-3 text-center text-xs text-mute">No email. No KYC. Minimum ${MIN_PURCHASE}.</p>
+      <p className="mt-3 text-center text-xs text-mute">Sign in with Google, email or a wallet. No KYC. Minimum ${MIN_PURCHASE}.</p>
     </div>
   );
 }

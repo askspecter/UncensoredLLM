@@ -4,9 +4,16 @@ Next.js 15 + Tailwind 4. Buy discounted LLM inference credits (filled from a liq
 
 ```bash
 npm install
+cp .env.example .env.local   # set NEXT_PUBLIC_PRIVY_APP_ID
 npm run dev     # http://localhost:3000
 npm run build && npm start
 ```
+
+## Sign in (Privy)
+Login uses [Privy](https://privy.io) with Google, email and wallet. Create an app at dashboard.privy.io,
+enable Google / Email / External wallets under *Login methods*, add your domain (and `http://localhost:3000`)
+under *Allowed origins*, then set `NEXT_PUBLIC_PRIVY_APP_ID`. Without it the site runs with sign-in disabled.
+`POST /api/orders` requires a Privy access token, verified server-side against Privy's JWKS (`lib/auth.ts`).
 
 ## Structure
 - `app/page.tsx` — landing: hero chat demo, buy card, liquidity book, live buys, privacy tiers, model catalogue, API snippets, FAQ

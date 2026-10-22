@@ -1,7 +1,7 @@
 // In-memory store for demo purposes. Replace with Postgres/Redis + a payment processor in production.
 import { randomBytes, createHash } from "crypto";
 
-export type Order = { id: string; keyHash: string; credit: number; total: number; payment: string; createdAt: number };
+export type Order = { id: string; userId: string | null; keyHash: string; credit: number; total: number; payment: string; createdAt: number };
 export type Listing = { id: string; source: string; credit: number; discount: number; payout: string; status: "pending_verification" | "live"; createdAt: number };
 
 const g = globalThis as unknown as { __umbra?: { orders: Order[]; listings: Listing[] } };
