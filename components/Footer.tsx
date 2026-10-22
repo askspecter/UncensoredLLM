@@ -1,33 +1,38 @@
 import Link from "next/link";
 import Logo from "./Logo";
 
+const COLS = [
+  { title: "Product", links: [["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/models", "Models"], ["/dashboard", "Account"]] },
+  { title: "Network", links: [["/analytics", "Analytics"], ["/leaderboard", "Leaderboard"], ["/affiliates", "Affiliates"], ["/status", "Status"]] },
+  { title: "Developers", links: [["/docs", "Docs"], ["/docs#quickstart", "Quickstart"], ["/docs#mcp", "MCP server"], ["/docs#errors", "Errors"]] },
+  { title: "Legal", links: [["/terms", "Terms"], ["/aup", "Acceptable use"], ["/privacy", "Privacy"]] },
+];
+
 export default function Footer() {
   return (
     <footer className="mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-4">
-        <div className="md:col-span-2">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-6">
+        <div className="sm:col-span-2">
           <Logo />
-          <p className="mt-4 max-w-sm text-sm text-mute">
-            Private, uncensored inference at a discount. No logs, no accounts, no lectures — just the model.
+          <p className="mt-4 max-w-xs text-sm text-mute">
+            Private, uncensored inference at a discount. No logs, no lectures — just the model.
           </p>
+          <div className="mt-5 flex gap-2 text-sm">
+            <span className="rounded-full border border-line px-3 py-1 text-mute">X @beeper</span>
+            <span className="rounded-full border border-line px-3 py-1 text-mute">Discord</span>
+            <span className="rounded-full border border-line px-3 py-1 text-mute">Telegram</span>
+          </div>
         </div>
-        <div className="text-sm">
-          <p className="eyebrow mb-3">Product</p>
-          <ul className="space-y-2 text-mute">
-            <li><Link href="/#buy" className="hover:text-bone">Buy credits</Link></li>
-            <li><Link href="/sell" className="hover:text-bone">Sell credits</Link></li>
-            <li><Link href="/dashboard" className="hover:text-bone">Dashboard</Link></li>
-            <li><Link href="/#api" className="hover:text-bone">API docs</Link></li>
-          </ul>
-        </div>
-        <div className="text-sm">
-          <p className="eyebrow mb-3">Legal</p>
-          <ul className="space-y-2 text-mute">
-            <li>Terms of Service</li>
-            <li>Acceptable Use Policy</li>
-            <li>Privacy Policy</li>
-          </ul>
-        </div>
+        {COLS.map((c) => (
+          <div key={c.title} className="text-sm">
+            <p className="eyebrow mb-3">{c.title}</p>
+            <ul className="space-y-2 text-mute">
+              {c.links.map(([href, label]) => (
+                <li key={href}><Link href={href} className="hover:text-bone">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
       <div className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-mute/80">
         Credits are a prepaid grant of API access and are not redeemable for cash. Discounts depend on

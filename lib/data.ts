@@ -3,6 +3,7 @@
 export const PLATFORM_FEE = 0.05;
 export const MIN_PURCHASE = 5;
 export const MAX_PURCHASE = 10_000;
+export const AFFILIATE_COMMISSION = 0.02;
 
 export type Model = {
   id: string;

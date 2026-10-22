@@ -1,4 +1,4 @@
-export const metadata = { title: "Dashboard — Beeper" };
+export const metadata = { title: "Account — Beeper" };
 
 const DAYS = [12, 18, 9, 22, 31, 27, 40, 35, 44, 38, 52, 47, 61, 58];
 const REQS = [
@@ -15,7 +15,7 @@ export default function Dashboard() {
     <main className="mx-auto max-w-6xl px-5 pt-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Dashboard · demo data</p>
+          <p className="eyebrow">Account · demo data</p>
           <h1 className="mt-2 font-serif text-5xl">Your key, your numbers.</h1>
         </div>
         <a href="/#buy" className="btn btn-primary text-sm">Top up</a>
