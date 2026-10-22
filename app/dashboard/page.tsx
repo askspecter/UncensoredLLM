@@ -1,12 +1,12 @@
-export const metadata = { title: "Dashboard — Umbra" };
+export const metadata = { title: "Dashboard — Beeper" };
 
 const DAYS = [12, 18, 9, 22, 31, 27, 40, 35, 44, 38, 52, 47, 61, 58];
 const REQS = [
-  ["umbra/hermes-4-405b", "1,284", "612", "$0.0024", "41 ms"],
-  ["umbra/dolphin-mistral-24b", "3,902", "1,140", "$0.0015", "28 ms"],
-  ["umbra/deepseek-v3.2", "820", "2,310", "$0.0019", "35 ms"],
-  ["umbra/flux-dev-uncensored", "—", "1 img", "$0.0125", "52 ms"],
-  ["umbra/hermes-4-405b", "6,410", "980", "$0.0047", "39 ms"],
+  ["beeper/hermes-4-405b", "1,284", "612", "$0.0024", "41 ms"],
+  ["beeper/dolphin-mistral-24b", "3,902", "1,140", "$0.0015", "28 ms"],
+  ["beeper/deepseek-v3.2", "820", "2,310", "$0.0019", "35 ms"],
+  ["beeper/flux-dev-uncensored", "—", "1 img", "$0.0125", "52 ms"],
+  ["beeper/hermes-4-405b", "6,410", "980", "$0.0047", "39 ms"],
 ];
 
 export default function Dashboard() {
@@ -41,7 +41,7 @@ export default function Dashboard() {
         </div>
         <div className="card p-6">
           <p className="eyebrow">API key</p>
-          <code className="mt-4 block rounded-lg border border-line bg-ink p-3 font-mono text-sm text-mute">sk-umbra-••••••••••••••Qx7f</code>
+          <code className="mt-4 block rounded-lg border border-line bg-ink p-3 font-mono text-sm text-mute">sk-beeper-••••••••••••••Qx7f</code>
           <ul className="mt-5 space-y-2 text-sm text-mute">
             <li className="flex justify-between"><span>Privacy tier</span><span className="text-bone">Zero retention</span></li>
             <li className="flex justify-between"><span>Rate limit</span><span className="text-bone">600 rpm</span></li>

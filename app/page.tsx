@@ -67,7 +67,7 @@ export default function Home() {
       </Section>
 
       {/* Features */}
-      <Section eyebrow="Why Umbra" title="Built for people who don’t want a chaperone.">
+      <Section eyebrow="Why Beeper" title="Built for people who don’t want a chaperone.">
         <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div key={f.t} className="bg-panel p-6">
@@ -104,7 +104,7 @@ export default function Home() {
       <Section id="api" eyebrow="Developers" title="Two lines to switch.">
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_1.4fr]">
           <div className="space-y-5 text-mute">
-            <p>Umbra speaks the OpenAI API. Point your SDK at our base URL, swap in your key, done.</p>
+            <p>Beeper speaks the OpenAI API. Point your SDK at our base URL, swap in your key, done.</p>
             <ul className="space-y-3 text-sm">
               {["OpenAI SDK (Python / Node)", "Vercel AI SDK", "LangChain & LlamaIndex", "LiteLLM, Cline, OpenWebUI, SillyTavern"].map((s) => (
                 <li key={s} className="flex items-center gap-3"><span className="text-ember">→</span>{s}</li>

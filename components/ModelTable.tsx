@@ -30,7 +30,7 @@ export default function ModelTable({ discount = 0.5 }: { discount?: number }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
-            <tr><th className="p-4">Model</th><th className="p-4">Context</th><th className="p-4">Input / 1M</th><th className="p-4">Output / 1M</th><th className="p-4">With Umbra</th></tr>
+            <tr><th className="p-4">Model</th><th className="p-4">Context</th><th className="p-4">Input / 1M</th><th className="p-4">Output / 1M</th><th className="p-4">With Beeper</th></tr>
           </thead>
           <tbody className="divide-y divide-line">
             {rows.map((m) => (

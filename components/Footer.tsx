@@ -31,8 +31,8 @@ export default function Footer() {
       </div>
       <div className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-mute/80">
         Credits are a prepaid grant of API access and are not redeemable for cash. Discounts depend on
-        available marketplace liquidity. “Uncensored” means no additional filtering is applied by Umbra;
-        users remain bound by applicable law and the Acceptable Use Policy. © {new Date().getFullYear()} Umbra.
+        available marketplace liquidity. “Uncensored” means no additional filtering is applied by Beeper;
+        users remain bound by applicable law and the Acceptable Use Policy. © {new Date().getFullYear()} Beeper.
       </div>
     </footer>
   );

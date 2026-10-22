@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "Umbra — Private, uncensored AI credits up to 50% off",
+  title: "Beeper — Private, uncensored AI credits up to 50% off",
   description: "Buy and sell discounted inference credits for private, uncensored open models. One anonymous API key, zero data retention.",
 };
 

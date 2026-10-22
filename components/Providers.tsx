@@ -56,8 +56,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         appearance: {
           theme: "#13110f",
           accentColor: "#e5484d",
-          logo: "/umbra-logo.svg",
-          landingHeader: "Sign in to Umbra",
+          logo: "/beeper-logo.svg",
+          landingHeader: "Sign in to Beeper",
           walletChainType: "ethereum-only",
         },
       }}

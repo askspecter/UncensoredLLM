@@ -24,7 +24,7 @@ export default function HeroChat() {
   return (
     <div className="card mx-auto w-full max-w-2xl p-4 text-left shadow-2xl shadow-ember/5">
       <div className="mb-3 flex items-center justify-between font-mono text-[11px] text-mute">
-        <span>umbra/hermes-4-405b</span>
+        <span>beeper/hermes-4-405b</span>
         <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-moss" />private · zero retention</span>
       </div>
       <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-panel-2 px-4 py-2.5 text-sm">{cur.q}</div>

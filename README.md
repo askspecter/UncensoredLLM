@@ -1,4 +1,4 @@
-# Umbra — private, uncensored AI credit marketplace
+# Beeper — private, uncensored AI credit marketplace
 
 Next.js 15 + Tailwind 4. Buy discounted LLM inference credits (filled from a liquidity order book, 5% fee) or sell unused credits.
 

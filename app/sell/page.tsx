@@ -1,7 +1,7 @@
 import SellForm from "@/components/SellForm";
 import { LiquidityBook } from "@/components/Market";
 
-export const metadata = { title: "Sell unused AI credits — Umbra" };
+export const metadata = { title: "Sell unused AI credits — Beeper" };
 
 const STEPS = [
   ["01", "List", "Tell us where the credit sits and pick a discount. Minimum $50."],

@@ -16,18 +16,18 @@ export type Model = {
 };
 
 export const MODELS: Model[] = [
-  { id: "umbra/dolphin-mistral-24b", name: "Dolphin Mistral 24B", provider: "Cognitive", context: "32K", input: 0.4, output: 1.2, uncensored: true, tags: ["chat", "roleplay"] },
-  { id: "umbra/hermes-4-405b", name: "Hermes 4 405B", provider: "Nous", context: "128K", input: 1.0, output: 3.0, uncensored: true, tags: ["reasoning", "chat"] },
-  { id: "umbra/llama-3.3-70b-abliterated", name: "Llama 3.3 70B Abliterated", provider: "Meta (community)", context: "128K", input: 0.6, output: 0.8, uncensored: true, tags: ["chat"] },
-  { id: "umbra/qwen3-235b", name: "Qwen3 235B A22B", provider: "Alibaba", context: "128K", input: 0.9, output: 2.7, uncensored: false, tags: ["reasoning", "code"] },
-  { id: "umbra/deepseek-v3.2", name: "DeepSeek V3.2", provider: "DeepSeek", context: "128K", input: 0.5, output: 1.5, uncensored: false, tags: ["code", "chat"] },
-  { id: "umbra/deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", context: "128K", input: 1.2, output: 4.8, uncensored: false, tags: ["reasoning"] },
-  { id: "umbra/mistral-large-2", name: "Mistral Large 2", provider: "Mistral", context: "128K", input: 2.0, output: 6.0, uncensored: false, tags: ["chat", "code"] },
-  { id: "umbra/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "200K", input: 0.6, output: 2.2, uncensored: false, tags: ["agents", "code"] },
-  { id: "umbra/kimi-k2", name: "Kimi K2", provider: "Moonshot", context: "256K", input: 0.6, output: 2.5, uncensored: false, tags: ["agents"] },
-  { id: "umbra/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "128K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
-  { id: "umbra/flux-dev-uncensored", name: "FLUX.1 Dev (unfiltered)", provider: "Black Forest", context: "image", input: 0, output: 25, uncensored: true, tags: ["image"] },
-  { id: "umbra/whisper-large-v3", name: "Whisper Large v3", provider: "OpenAI (open weights)", context: "audio", input: 0.1, output: 0, uncensored: false, tags: ["audio"] },
+  { id: "beeper/dolphin-mistral-24b", name: "Dolphin Mistral 24B", provider: "Cognitive", context: "32K", input: 0.4, output: 1.2, uncensored: true, tags: ["chat", "roleplay"] },
+  { id: "beeper/hermes-4-405b", name: "Hermes 4 405B", provider: "Nous", context: "128K", input: 1.0, output: 3.0, uncensored: true, tags: ["reasoning", "chat"] },
+  { id: "beeper/llama-3.3-70b-abliterated", name: "Llama 3.3 70B Abliterated", provider: "Meta (community)", context: "128K", input: 0.6, output: 0.8, uncensored: true, tags: ["chat"] },
+  { id: "beeper/qwen3-235b", name: "Qwen3 235B A22B", provider: "Alibaba", context: "128K", input: 0.9, output: 2.7, uncensored: false, tags: ["reasoning", "code"] },
+  { id: "beeper/deepseek-v3.2", name: "DeepSeek V3.2", provider: "DeepSeek", context: "128K", input: 0.5, output: 1.5, uncensored: false, tags: ["code", "chat"] },
+  { id: "beeper/deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", context: "128K", input: 1.2, output: 4.8, uncensored: false, tags: ["reasoning"] },
+  { id: "beeper/mistral-large-2", name: "Mistral Large 2", provider: "Mistral", context: "128K", input: 2.0, output: 6.0, uncensored: false, tags: ["chat", "code"] },
+  { id: "beeper/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "200K", input: 0.6, output: 2.2, uncensored: false, tags: ["agents", "code"] },
+  { id: "beeper/kimi-k2", name: "Kimi K2", provider: "Moonshot", context: "256K", input: 0.6, output: 2.5, uncensored: false, tags: ["agents"] },
+  { id: "beeper/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "128K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
+  { id: "beeper/flux-dev-uncensored", name: "FLUX.1 Dev (unfiltered)", provider: "Black Forest", context: "image", input: 0, output: 25, uncensored: true, tags: ["image"] },
+  { id: "beeper/whisper-large-v3", name: "Whisper Large v3", provider: "OpenAI (open weights)", context: "audio", input: 0.1, output: 0, uncensored: false, tags: ["audio"] },
 ];
 
 export type Tier = { discount: number; available: number };

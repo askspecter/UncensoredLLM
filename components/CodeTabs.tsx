@@ -2,35 +2,35 @@
 import { useState } from "react";
 
 const SNIPPETS = {
-  curl: `curl https://api.umbra.ai/v1/chat/completions \\
-  -H "Authorization: Bearer $UMBRA_KEY" \\
+  curl: `curl https://api.beeper.ai/v1/chat/completions \\
+  -H "Authorization: Bearer $BEEPER_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "umbra/hermes-4-405b",
+    "model": "beeper/hermes-4-405b",
     "messages": [{"role": "user", "content": "Ask anything."}]
   }'`,
   python: `import os
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://api.umbra.ai/v1",
-    api_key=os.environ["UMBRA_KEY"],
+    base_url="https://api.beeper.ai/v1",
+    api_key=os.environ["BEEPER_KEY"],
 )
 
 res = client.chat.completions.create(
-    model="umbra/dolphin-mistral-24b",
+    model="beeper/dolphin-mistral-24b",
     messages=[{"role": "user", "content": "Ask anything."}],
 )
 print(res.choices[0].message.content)`,
   node: `import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: "https://api.umbra.ai/v1",
-  apiKey: process.env.UMBRA_KEY,
+  baseURL: "https://api.beeper.ai/v1",
+  apiKey: process.env.BEEPER_KEY,
 });
 
 const res = await client.chat.completions.create({
-  model: "umbra/deepseek-v3.2",
+  model: "beeper/deepseek-v3.2",
   messages: [{ role: "user", content: "Ask anything." }],
 });`,
 };
