@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { MODELS } from "@/lib/data";
 
 const fmt = (n: number) => (n === 0 ? "—" : `$${n.toFixed(2)}`);
-const FILTERS = ["all", "uncensored", "reasoning", "code", "image", "agents"] as const;
+const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents"] as const;
 
 export default function ModelTable({ discount = 0.5 }: { discount?: number }) {
   const [q, setQ] = useState("");

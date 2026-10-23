@@ -4,7 +4,7 @@ export const metadata = { title: "Docs — Beeper" };
 
 const TOC = [
   ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"],
-  ["images", "Images"], ["models", "List models"], ["mcp", "MCP & agents"], ["limits", "Rate limits"], ["errors", "Errors"],
+["models", "List models"], ["mcp", "MCP & agents"], ["limits", "Rate limits"], ["errors", "Errors"],
 ];
 
 function Code({ children }: { children: string }) {
@@ -44,7 +44,7 @@ export default function Docs() {
         <h1 className="mt-3 font-serif text-5xl md:text-6xl">Build on Beeper.</h1>
         <p className="mt-4 max-w-2xl text-mute">An OpenAI-compatible API for private, uncensored inference. If your code talks to OpenAI, it talks to Beeper.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3 font-mono text-sm">
-          <div className="card p-4"><p className="text-xs text-mute">Base URL</p><p className="mt-1 break-all">https://api.beeper.ai/v1</p></div>
+          <div className="card p-4"><p className="text-xs text-mute">Base URL</p><p className="mt-1 break-all">https://usebeeper.io/v1</p></div>
           <div className="card p-4"><p className="text-xs text-mute">Auth</p><p className="mt-1">Bearer sk-beeper-…</p></div>
           <div className="card p-4"><p className="text-xs text-mute">Format</p><p className="mt-1">OpenAI Chat Completions</p></div>
         </div>
@@ -64,40 +64,35 @@ export default function Docs() {
           <Code>{`{
   "id": "chatcmpl-9x2…",
   "model": "beeper/hermes-4-405b",
-  "upstream_model": "NousResearch/Hermes-4-405B",
+  "upstream_model": "nousresearch/hermes-4-405b",
   "choices": [{ "message": { "role": "assistant", "content": "…" } }],
-  "usage": { "prompt_tokens": 18, "completion_tokens": 212, "cost_usd": 0.00032 }
+  "usage": { "prompt_tokens": 18, "completion_tokens": 212, "total_tokens": 230, "cost_usd": 0.000654 }
 }`}</Code>
           <p>Every response reports the exact <code className="text-bone">upstream_model</code> and the discounted <code className="text-bone">cost_usd</code>.</p>
         </Sec>
 
         <Sec id="streaming" title="Streaming">
           <p>Set <code className="text-bone">"stream": true</code> to receive server-sent events. Gateway overhead is under 40 ms p50.</p>
-          <Code>{`curl https://api.beeper.ai/v1/chat/completions -N \\
+          <Code>{`curl https://usebeeper.io/v1/chat/completions -N \\
   -H "Authorization: Bearer $BEEPER_KEY" -H "Content-Type: application/json" \\
   -d '{"model":"beeper/dolphin-mistral-24b","stream":true,
        "messages":[{"role":"user","content":"Tell me a dark story."}]}'`}</Code>
         </Sec>
 
-        <Sec id="images" title="Images">
-          <p><code className="text-bone">POST /v1/images/generations</code> with an unfiltered model such as <code className="text-bone">beeper/flux-dev-uncensored</code>.</p>
-          <Code>{`{ "model": "beeper/flux-dev-uncensored", "prompt": "noir city at 3am, rain, neon", "size": "1024x1024" }`}</Code>
-        </Sec>
-
         <Sec id="models" title="List models">
-          <p><code className="text-bone">GET /v1/models</code> returns every model with live list price and your current discounted price. Filter with <code className="text-bone">?uncensored=true</code>.</p>
+          <p><code className="text-bone">GET /v1/models</code> returns every model with its price per 1M tokens. Filter with <code className="text-bone">?uncensored=true</code>.</p>
         </Sec>
 
         <Sec id="mcp" title="MCP & agents">
           <p>Use Beeper as the model provider in any agent that supports OpenAI-compatible endpoints — Claude Code proxies, Cursor, Cline, OpenWebUI, SillyTavern, LiteLLM.</p>
           <Code>{`# LiteLLM / OpenWebUI / Cline
-OPENAI_API_BASE=https://api.beeper.ai/v1
+OPENAI_API_BASE=https://usebeeper.io/v1
 OPENAI_API_KEY=$BEEPER_KEY
 MODEL=beeper/hermes-4-405b`}</Code>
         </Sec>
 
         <Sec id="limits" title="Rate limits">
-          <p>Default 600 requests/min and 2M tokens/min per key. Limits rise automatically with lifetime spend. Headers: <code className="text-bone">x-ratelimit-remaining</code>, <code className="text-bone">retry-after</code>.</p>
+          <p><code className="text-bone">max_tokens</code> is capped to what your balance can pay for. Requests are rejected with <code className="text-bone">402</code> when the balance runs out.</p>
         </Sec>
 
         <Sec id="errors" title="Errors">

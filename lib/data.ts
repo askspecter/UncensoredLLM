@@ -7,29 +7,36 @@ export const AFFILIATE_COMMISSION = 0.02;
 
 export type Model = {
   id: string;
+  upstream: string; // OpenRouter model slug
   name: string;
   provider: string;
   context: string;
-  input: number; // list price USD per 1M tokens
+  input: number; // list price USD per 1M tokens (what a request costs in credit)
   output: number;
   uncensored: boolean;
   tags: string[];
 };
 
+// Prices mirror OpenRouter list prices — keep them in sync when upstream changes.
 export const MODELS: Model[] = [
-  { id: "beeper/dolphin-mistral-24b", name: "Dolphin Mistral 24B", provider: "Cognitive", context: "32K", input: 0.4, output: 1.2, uncensored: true, tags: ["chat", "roleplay"] },
-  { id: "beeper/hermes-4-405b", name: "Hermes 4 405B", provider: "Nous", context: "128K", input: 1.0, output: 3.0, uncensored: true, tags: ["reasoning", "chat"] },
-  { id: "beeper/llama-3.3-70b-abliterated", name: "Llama 3.3 70B Abliterated", provider: "Meta (community)", context: "128K", input: 0.6, output: 0.8, uncensored: true, tags: ["chat"] },
-  { id: "beeper/qwen3-235b", name: "Qwen3 235B A22B", provider: "Alibaba", context: "128K", input: 0.9, output: 2.7, uncensored: false, tags: ["reasoning", "code"] },
-  { id: "beeper/deepseek-v3.2", name: "DeepSeek V3.2", provider: "DeepSeek", context: "128K", input: 0.5, output: 1.5, uncensored: false, tags: ["code", "chat"] },
-  { id: "beeper/deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", context: "128K", input: 1.2, output: 4.8, uncensored: false, tags: ["reasoning"] },
-  { id: "beeper/mistral-large-2", name: "Mistral Large 2", provider: "Mistral", context: "128K", input: 2.0, output: 6.0, uncensored: false, tags: ["chat", "code"] },
-  { id: "beeper/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "200K", input: 0.6, output: 2.2, uncensored: false, tags: ["agents", "code"] },
-  { id: "beeper/kimi-k2", name: "Kimi K2", provider: "Moonshot", context: "256K", input: 0.6, output: 2.5, uncensored: false, tags: ["agents"] },
-  { id: "beeper/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "128K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
-  { id: "beeper/flux-dev-uncensored", name: "FLUX.1 Dev (unfiltered)", provider: "Black Forest", context: "image", input: 0, output: 25, uncensored: true, tags: ["image"] },
-  { id: "beeper/whisper-large-v3", name: "Whisper Large v3", provider: "OpenAI (open weights)", context: "audio", input: 0.1, output: 0, uncensored: false, tags: ["audio"] },
+  { id: "beeper/dolphin-mistral-24b", upstream: "cognitivecomputations/dolphin-mistral-24b-venice-edition", name: "Dolphin Mistral 24B (Venice)", provider: "Cognitive Computations", context: "128K", input: 0.2, output: 0.9, uncensored: true, tags: ["chat", "roleplay"] },
+  { id: "beeper/hermes-4-405b", upstream: "nousresearch/hermes-4-405b", name: "Hermes 4 405B", provider: "Nous Research", context: "131K", input: 1.0, output: 3.0, uncensored: true, tags: ["reasoning", "chat"] },
+  { id: "beeper/hermes-3-405b", upstream: "nousresearch/hermes-3-llama-3.1-405b", name: "Hermes 3 405B", provider: "Nous Research", context: "131K", input: 1.0, output: 1.0, uncensored: true, tags: ["chat", "roleplay"] },
+  { id: "beeper/hermes-3-70b", upstream: "nousresearch/hermes-3-llama-3.1-70b", name: "Hermes 3 70B", provider: "Nous Research", context: "131K", input: 0.7, output: 0.7, uncensored: true, tags: ["chat", "roleplay"] },
+  { id: "beeper/euryale-70b", upstream: "sao10k/l3.1-euryale-70b", name: "Euryale 70B", provider: "Sao10K", context: "131K", input: 0.85, output: 0.85, uncensored: true, tags: ["roleplay"] },
+  { id: "beeper/magnum-v4-72b", upstream: "anthracite-org/magnum-v4-72b", name: "Magnum v4 72B", provider: "Anthracite", context: "33K", input: 2.5, output: 5.0, uncensored: true, tags: ["roleplay"] },
+  { id: "beeper/mythomax-13b", upstream: "gryphe/mythomax-l2-13b", name: "MythoMax 13B", provider: "Gryphe", context: "8K", input: 0.08, output: 0.11, uncensored: true, tags: ["roleplay"] },
+  { id: "beeper/llama-3.3-70b", upstream: "meta-llama/llama-3.3-70b-instruct", name: "Llama 3.3 70B", provider: "Meta", context: "131K", input: 0.1, output: 0.32, uncensored: false, tags: ["chat"] },
+  { id: "beeper/deepseek-v3.2", upstream: "deepseek/deepseek-v3.2", name: "DeepSeek V3.2", provider: "DeepSeek", context: "164K", input: 0.28, output: 0.42, uncensored: false, tags: ["code", "chat"] },
+  { id: "beeper/deepseek-r1", upstream: "deepseek/deepseek-r1-0528", name: "DeepSeek R1", provider: "DeepSeek", context: "164K", input: 0.5, output: 2.15, uncensored: false, tags: ["reasoning"] },
+  { id: "beeper/qwen3-235b", upstream: "qwen/qwen3-235b-a22b-2507", name: "Qwen3 235B A22B", provider: "Alibaba", context: "262K", input: 0.09, output: 0.55, uncensored: false, tags: ["code", "chat"] },
+  { id: "beeper/kimi-k2", upstream: "moonshotai/kimi-k2-0905", name: "Kimi K2", provider: "Moonshot", context: "262K", input: 0.6, output: 2.5, uncensored: false, tags: ["agents", "code"] },
+  { id: "beeper/glm-4.6", upstream: "z-ai/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "205K", input: 0.55, output: 2.2, uncensored: false, tags: ["agents", "code"] },
+  { id: "beeper/mistral-large", upstream: "mistralai/mistral-large-2512", name: "Mistral Large", provider: "Mistral", context: "262K", input: 0.5, output: 1.5, uncensored: false, tags: ["chat", "code"] },
+  { id: "beeper/gpt-oss-120b", upstream: "openai/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "131K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
 ];
+
+export const findModel = (id: string) => MODELS.find((m) => m.id === id);
 
 export type Tier = { discount: number; available: number };
 

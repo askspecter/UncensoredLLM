@@ -36,6 +36,12 @@ Local dev without Privy:
 DATABASE_URL=postgres://... DEV_AUTH_BYPASS=1 NEXT_PUBLIC_DEV_USER=did:privy:dev PAYMENTS_MODE=test npm run dev
 ```
 
+## AI gateway
+`POST /v1/chat/completions` and `GET /v1/models` are OpenAI-compatible. Requests authenticate with a Beeper key
+(`sk-beeper-…`), are forwarded to OpenRouter (`OPENROUTER_API_KEY`) with `data_collection: deny`, and are billed
+per token at the catalogue price in `lib/data.ts`. `max_tokens` is capped to what the balance can pay for;
+streaming responses are billed from the final usage chunk (or an estimate if the client disconnects).
+
 ## Structure
 - `app/page.tsx` — landing: hero chat demo, buy card, liquidity book, live buys, privacy tiers, model catalogue, API snippets, FAQ
 - `app/sell` — list unused credits · `app/dashboard` — balance/usage (demo data)

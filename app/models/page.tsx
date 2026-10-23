@@ -17,7 +17,7 @@ export default function Models() {
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
-      <p className="mt-4 text-xs text-mute">Prices per 1M tokens (images: per 1K images). “With Beeper” shows the current best book discount; your effective rate depends on liquidity at purchase.</p>
+      <p className="mt-4 text-xs text-mute">Prices per 1M tokens. “With Beeper” shows the current best book discount; your effective rate depends on liquidity at purchase.</p>
     </main>
   );
 }

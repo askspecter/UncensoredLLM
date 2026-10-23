@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 const SNIPPETS = {
-  curl: `curl https://api.beeper.ai/v1/chat/completions \\
+  curl: `curl https://usebeeper.io/v1/chat/completions \\
   -H "Authorization: Bearer $BEEPER_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -13,7 +13,7 @@ const SNIPPETS = {
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://api.beeper.ai/v1",
+    base_url="https://usebeeper.io/v1",
     api_key=os.environ["BEEPER_KEY"],
 )
 
@@ -25,7 +25,7 @@ print(res.choices[0].message.content)`,
   node: `import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: "https://api.beeper.ai/v1",
+  baseURL: "https://usebeeper.io/v1",
   apiKey: process.env.BEEPER_KEY,
 });
 
