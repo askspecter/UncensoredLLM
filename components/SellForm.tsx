@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useAuth } from "./Providers";
 
 const SOURCES = [
   ["openrouter", "OpenRouter"], ["together", "Together AI"], ["fireworks", "Fireworks"],
@@ -12,6 +13,7 @@ export default function SellForm() {
   const [credit, setCredit] = useState(500);
   const [discount, setDiscount] = useState(35);
   const [payout, setPayout] = useState("");
+  const auth = useAuth();
   const [state, setState] = useState<{ ok?: string; err?: string; busy?: boolean }>({});
 
   const payoutAmt = (credit || 0) * (1 - discount / 100);
@@ -19,10 +21,11 @@ export default function SellForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (auth.enabled && !auth.authenticated) return auth.login();
     setState({ busy: true });
     const res = await fetch("/api/listings", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
       body: JSON.stringify({ source, credit, discount: discount / 100, payout }),
     });
     const data = await res.json();
@@ -77,7 +80,7 @@ export default function SellForm() {
         <span className="font-serif text-3xl">{usd(payoutAmt)}</span>
       </div>
 
-      <button disabled={state.busy} className="btn btn-primary w-full disabled:opacity-40">{state.busy ? "Submitting…" : "List credits"}</button>
+      <button disabled={state.busy} className="btn btn-primary w-full disabled:opacity-40">{state.busy ? "Submitting…" : auth.enabled && !auth.authenticated ? "Sign in to list" : "List credits"}</button>
       {state.err && <p className="text-sm text-ember-soft">{state.err}</p>}
     </form>
   );

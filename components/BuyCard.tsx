@@ -6,7 +6,7 @@ import { MAX_PURCHASE, MIN_PURCHASE, PLATFORM_FEE, quote } from "@/lib/data";
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const PRESETS = [25, 100, 500, 2500];
 
-type Order = { id: string; apiKey: string; credit: number; total: number };
+type Order = { id: string; status: "paid" | "pending"; credit: number; total: number; balance?: number; apiKey: string | null; checkoutUrl?: string | null };
 
 export default function BuyCard() {
   const [amount, setAmount] = useState(100);
@@ -24,14 +24,14 @@ export default function BuyCard() {
     setLoading(true);
     setError("");
     try {
-      const token = await auth.getToken();
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
         body: JSON.stringify({ credit: amount, payment: pay }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
       setOrder(data);
     } catch (e) {
       setError((e as Error).message);
@@ -41,18 +41,25 @@ export default function BuyCard() {
   }
 
   if (order) {
+    const paid = order.status === "paid";
     return (
       <div className="card slidein p-6">
         <p className="eyebrow">Order {order.id}</p>
-        <h3 className="mt-2 font-serif text-3xl">Your key is ready.</h3>
+        <h3 className="mt-2 font-serif text-3xl">{paid ? "Credit added." : "Awaiting payment."}</h3>
         <p className="mt-2 text-sm text-mute">
-          {usd(order.credit)} of credit for {usd(order.total)}. Save this key now — it is shown once and never stored in plaintext.
+          {paid
+            ? <>{usd(order.credit)} of credit for {usd(order.total)}. Balance: <span className="text-bone">{usd(order.balance ?? order.credit)}</span>.</>
+            : <>Your order for {usd(order.credit)} ({usd(order.total)}) is created. Credit is added as soon as payment confirms.</>}
         </p>
-        <code className="mt-4 block break-all rounded-lg border border-line bg-ink p-3 font-mono text-sm text-ember-soft">
-          {order.apiKey}
-        </code>
-        <div className="mt-5 flex gap-2">
-          <button className="btn btn-primary text-sm" onClick={() => navigator.clipboard?.writeText(order.apiKey)}>Copy key</button>
+        {order.apiKey && (
+          <>
+            <p className="mt-4 text-sm text-mute">Your first API key — save it now, it’s shown once:</p>
+            <code className="mt-2 block break-all rounded-lg border border-line bg-ink p-3 font-mono text-sm text-ember-soft">{order.apiKey}</code>
+          </>
+        )}
+        <div className="mt-5 flex flex-wrap gap-2">
+          {order.apiKey && <button className="btn btn-primary text-sm" onClick={() => navigator.clipboard?.writeText(order.apiKey!)}>Copy key</button>}
+          <a href="/dashboard" className={`btn text-sm ${order.apiKey ? "btn-ghost" : "btn-primary"}`}>Go to account</a>
           <button className="btn btn-ghost text-sm" onClick={() => setOrder(null)}>Buy more</button>
         </div>
       </div>
@@ -114,7 +121,7 @@ export default function BuyCard() {
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? "Generating key…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)} · get anonymous key` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? "Generating key…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Sign in with Google, email or a wallet. No KYC. Minimum ${MIN_PURCHASE}.</p>

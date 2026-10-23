@@ -1,0 +1,172 @@
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "./Providers";
+
+type Key = { id: string; name: string; prefix: string; created_at: string; last_used_at: string | null };
+type Me = {
+  user: { id: string; balance: number; createdAt: string };
+  keys: Key[];
+  orders: { id: string; status: string; credit: number; total: number; payment_method: string; created_at: string }[];
+  usage: { model: string; prompt_tokens: number; completion_tokens: number; cost: number; latency_ms: number | null; status: number; created_at: string }[];
+  daily: { date: string; cost: number }[];
+  totals: { bought: number; saved: number; requests: number };
+};
+
+const usd = (n: number, digits = 2) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) });
+const when = (s: string | null) => (s ? new Date(s).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "never");
+const STATUS: Record<string, string> = { paid: "text-moss", pending: "text-[#f5c451]", failed: "text-ember-soft", expired: "text-mute", refunded: "text-mute" };
+
+export default function Account() {
+  const auth = useAuth();
+  const [me, setMe] = useState<Me | null>(null);
+  const [error, setError] = useState("");
+  const [newKey, setNewKey] = useState<{ name: string; key: string } | null>(null);
+  const [keyName, setKeyName] = useState("");
+  const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const api = useCallback(async (path: string, init: RequestInit = {}) => {
+    const res = await fetch(path, { ...init, headers: { "content-type": "application/json", ...(await auth.authHeaders()), ...init.headers } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
+    return data;
+  }, [auth]);
+
+  const load = useCallback(async () => {
+    try { setMe(await api("/api/me")); setError(""); } catch (e) { setError((e as Error).message); }
+  }, [api]);
+
+  useEffect(() => { if (auth.authenticated) load(); }, [auth.authenticated, load]);
+
+  async function createKey(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const k = await api("/api/keys", { method: "POST", body: JSON.stringify({ name: keyName }) });
+      setNewKey(k); setKeyName(""); await load();
+    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function revoke(id: string) {
+    setBusy(true);
+    try { await api(`/api/keys/${id}`, { method: "DELETE" }); setConfirmRevoke(null); await load(); }
+    catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+
+  if (!auth.ready) return <p className="mt-10 text-mute">Loading…</p>;
+  if (!auth.authenticated) {
+    return (
+      <div className="card mt-10 p-10 text-center">
+        <h2 className="font-serif text-3xl">Sign in to see your account.</h2>
+        <p className="mt-2 text-mute">Balance, API keys and usage live here.</p>
+        <button onClick={auth.login} className="btn btn-primary mt-6">Sign in</button>
+      </div>
+    );
+  }
+  if (!me) return <p className="mt-10 text-mute">{error || "Loading your account…"}</p>;
+
+  const max = Math.max(...me.daily.map((d) => d.cost), 0.0001);
+
+  return (
+    <>
+      {error && <p className="mt-6 rounded-lg border border-ember/40 bg-ember/10 p-3 text-sm text-ember-soft">{error}</p>}
+
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[["Balance", usd(me.user.balance)], ["Saved vs list", usd(me.totals.saved)], ["Credit bought", usd(me.totals.bought)], ["Requests (14d)", me.totals.requests.toLocaleString()]].map(([l, v]) => (
+          <div key={l} className="card p-5"><p className="text-xs uppercase tracking-wider text-mute">{l}</p><p className="mt-2 font-serif text-3xl">{v}</p></div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="card p-6">
+          <p className="eyebrow">Spend by day · 14d</p>
+          <div className="mt-6 flex h-44 items-end gap-2">
+            {me.daily.map((d) => (
+              <div key={d.date} className="group relative flex h-full flex-1 flex-col justify-end">
+                <div className="rounded-t bg-gradient-to-t from-ember/50 to-ember-soft" style={{ height: `${Math.max((d.cost / max) * 100, d.cost ? 3 : 1)}%` }} />
+                <span className="absolute -top-5 left-1/2 hidden -translate-x-1/2 whitespace-nowrap font-mono text-[10px] group-hover:block">{d.date} · {usd(d.cost, 4)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <p className="eyebrow">API keys</p>
+          {newKey && (
+            <div className="slidein mt-4 rounded-lg border border-moss/40 bg-moss/10 p-3">
+              <p className="text-xs text-moss">“{newKey.name}” created — copy it now, it won’t be shown again.</p>
+              <code className="mt-2 block break-all font-mono text-sm text-bone">{newKey.key}</code>
+              <div className="mt-2 flex gap-2">
+                <button className="btn btn-primary px-3 py-1 text-xs" onClick={() => navigator.clipboard?.writeText(newKey.key)}>Copy</button>
+                <button className="btn btn-ghost px-3 py-1 text-xs" onClick={() => setNewKey(null)}>Done</button>
+              </div>
+            </div>
+          )}
+          <ul className="mt-4 divide-y divide-line">
+            {me.keys.length === 0 && <li className="py-3 text-sm text-mute">No active keys.</li>}
+            {me.keys.map((k) => (
+              <li key={k.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm">{k.name}</p>
+                  <p className="font-mono text-xs text-mute">{k.prefix}… · used {when(k.last_used_at)}</p>
+                </div>
+                {confirmRevoke === k.id ? (
+                  <span className="flex shrink-0 gap-1">
+                    <button disabled={busy} onClick={() => revoke(k.id)} className="rounded-full bg-ember px-3 py-1 text-xs text-white">Revoke</button>
+                    <button onClick={() => setConfirmRevoke(null)} className="rounded-full border border-line px-3 py-1 text-xs">Cancel</button>
+                  </span>
+                ) : (
+                  <button onClick={() => setConfirmRevoke(k.id)} className="shrink-0 text-xs text-mute hover:text-ember-soft">Revoke</button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={createKey} className="mt-3 flex gap-2">
+            <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Key name" maxLength={40}
+              className="min-w-0 flex-1 rounded-full border border-line bg-ink px-4 py-2 text-sm outline-none focus:border-ember" />
+            <button disabled={busy} className="btn btn-ghost text-sm">+ New key</button>
+          </form>
+        </div>
+      </div>
+
+      <div className="card mt-4 overflow-x-auto">
+        <p className="eyebrow p-5 pb-0">Orders</p>
+        <table className="w-full min-w-[560px] text-sm">
+          <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
+            <tr><th className="p-4">Order</th><th className="p-4">Date</th><th className="p-4">Credit</th><th className="p-4">Paid</th><th className="p-4">Method</th><th className="p-4">Status</th></tr>
+          </thead>
+          <tbody className="divide-y divide-line font-mono">
+            {me.orders.length === 0 && <tr><td colSpan={6} className="p-6 text-center font-sans text-mute">No orders yet. <a href="/#buy" className="text-ember-soft underline">Buy credits</a></td></tr>}
+            {me.orders.map((o) => (
+              <tr key={o.id}>
+                <td className="p-4 text-mute">{o.id}</td><td className="p-4 text-mute">{when(o.created_at)}</td>
+                <td className="p-4">{usd(o.credit)}</td><td className="p-4">{usd(o.total)}</td>
+                <td className="p-4 text-mute">{o.payment_method}</td><td className={`p-4 ${STATUS[o.status] ?? ""}`}>{o.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="card mt-4 overflow-x-auto">
+        <p className="eyebrow p-5 pb-0">Recent requests</p>
+        <table className="w-full min-w-[560px] text-sm">
+          <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
+            <tr><th className="p-4">Model</th><th className="p-4">In</th><th className="p-4">Out</th><th className="p-4">Cost</th><th className="p-4">Latency</th><th className="p-4">Time</th></tr>
+          </thead>
+          <tbody className="divide-y divide-line font-mono">
+            {me.usage.length === 0 && <tr><td colSpan={6} className="p-6 text-center font-sans text-mute">No requests yet. See the <a href="/docs#quickstart" className="text-ember-soft underline">quickstart</a>.</td></tr>}
+            {me.usage.map((u, i) => (
+              <tr key={i}>
+                <td className="p-4">{u.model}</td><td className="p-4 text-mute">{u.prompt_tokens.toLocaleString()}</td>
+                <td className="p-4 text-mute">{u.completion_tokens.toLocaleString()}</td><td className="p-4">{usd(u.cost, 4)}</td>
+                <td className="p-4 text-mute">{u.latency_ms ?? "—"} ms</td><td className="p-4 text-mute">{when(u.created_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="border-t border-line p-4 text-xs text-mute">Only billing metadata is logged. Prompt and completion content is never stored.</p>
+      </div>
+    </>
+  );
+}

@@ -12,17 +12,23 @@ type Auth = {
   login: () => void;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  /** Headers to authenticate a request to our own API. */
+  authHeaders: () => Promise<Record<string, string>>;
 };
+
+// Local testing without Privy: NEXT_PUBLIC_DEV_USER signs you in as that id (server needs DEV_AUTH_BYPASS=1).
+const DEV_USER = process.env.NODE_ENV !== "production" ? process.env.NEXT_PUBLIC_DEV_USER : undefined;
 
 // Fallback when Privy isn't configured, so the site still renders in local dev.
 const disabled: Auth = {
-  enabled: false,
+  enabled: Boolean(DEV_USER),
   ready: true,
-  authenticated: false,
-  label: null,
+  authenticated: Boolean(DEV_USER),
+  label: DEV_USER ?? null,
   login: () => console.warn("Set NEXT_PUBLIC_PRIVY_APP_ID to enable sign in."),
   logout: async () => {},
   getToken: async () => null,
+  authHeaders: async (): Promise<Record<string, string>> => (DEV_USER ? { "x-dev-user": DEV_USER } : {}),
 };
 
 const AuthContext = createContext<Auth>(disabled);
@@ -42,6 +48,10 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
     login: () => login(),
     logout,
     getToken: getAccessToken,
+    authHeaders: async (): Promise<Record<string, string>> => {
+      const token = await getAccessToken();
+      return token ? { authorization: `Bearer ${token}` } : {};
+    },
   }), [ready, authenticated, user, login, logout, getAccessToken]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

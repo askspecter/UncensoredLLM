@@ -15,14 +15,30 @@ enable Google / Email / External wallets under *Login methods*, add your domain 
 under *Allowed origins*, then set `NEXT_PUBLIC_PRIVY_APP_ID`. Without it the site runs with sign-in disabled.
 `POST /api/orders` requires a Privy access token, verified server-side against Privy's JWKS (`lib/auth.ts`).
 
+## Database
+Postgres stores users, balances (integer micro-dollars), an append-only ledger, API keys (SHA-256 hashes only),
+orders, usage logs and listings. Schema lives in `db/migrations/*.sql`; `npm run build` applies pending
+migrations automatically when `DATABASE_URL` is set (or run `npm run db:migrate`).
+
+On Vercel: **Storage → Create Database → Neon (Postgres)** and connect it to the project — that sets
+`DATABASE_URL`. Supabase works too (use the pooled connection string). Then redeploy.
+
+Payments aren't wired yet: orders are created as `pending`. Set `PAYMENTS_MODE=test` to settle orders
+instantly while testing — turn it off before the API gateway goes live.
+
+Local dev without Privy:
+```bash
+DATABASE_URL=postgres://... DEV_AUTH_BYPASS=1 NEXT_PUBLIC_DEV_USER=did:privy:dev PAYMENTS_MODE=test npm run dev
+```
+
 ## Structure
 - `app/page.tsx` — landing: hero chat demo, buy card, liquidity book, live buys, privacy tiers, model catalogue, API snippets, FAQ
 - `app/sell` — list unused credits · `app/dashboard` — balance/usage (demo data)
-- `app/api/quote` · `app/api/orders` · `app/api/listings` — marketplace API
-- `lib/data.ts` — models, liquidity book, fee & order-fill logic · `lib/store.ts` — in-memory store
+- `app/api/me` · `keys` · `orders` · `listings` · `quote` — account & marketplace API (Postgres)
+- `lib/data.ts` — models, liquidity book, fee & order-fill logic
+- `lib/db.ts` · `lib/billing.ts` · `lib/keys.ts` · `lib/auth.ts` — database, ledger, API keys, Privy auth
 
 ## Before production
-- Replace `lib/store.ts` with a real database.
 - Issue API keys only after payment confirmation (BTCPay / NOWPayments / Stripe) — see TODO in `app/api/orders/route.ts`.
 - Build the actual OpenAI-compatible gateway (`/v1/chat/completions`) that meters usage against keys and routes upstream.
 - Write real Terms / Acceptable Use / Privacy pages, and check credit resale is allowed by each upstream provider's ToS.
