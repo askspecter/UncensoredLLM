@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Providers";
 import { MODELS } from "@/lib/data";
 
-type Msg = { role: "user" | "assistant"; content: string; tokens?: number };
+type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[] };
 type Convo = { id: string; title: string; model: string; system: string; messages: Msg[]; updated: number };
 
 const STORE = "beeper.chats.v1";
@@ -15,7 +15,9 @@ function loadChats(): Convo[] {
   try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; }
 }
 function saveChats(c: Convo[]) {
-  try { localStorage.setItem(STORE, JSON.stringify(c.slice(0, 50))); } catch { /* storage unavailable */ }
+  // Generated images are too large for browser storage; keep a marker instead.
+  const slim = c.slice(0, 50).map((cv) => ({ ...cv, messages: cv.messages.map(({ images, ...m }) => (images?.length ? { ...m, content: `${m.content}\n[${images.length} image(s) — download them before leaving]`.trim() } : m)) }));
+  try { localStorage.setItem(STORE, JSON.stringify(slim)); } catch { /* storage unavailable */ }
 }
 const newConvo = (model = DEFAULT_MODEL): Convo => ({ id: Math.random().toString(36).slice(2), title: "New chat", model, system: "", messages: [], updated: Date.now() });
 
@@ -27,6 +29,13 @@ function Bubble({ m }: { m: Msg }) {
       {parts.map((p, i) => i % 2
         ? <pre key={i} className="my-2 overflow-x-auto rounded-lg border border-line bg-ink p-3 font-mono text-[13px]"><code>{p.replace(/^\w*\n/, "")}</code></pre>
         : <p key={i} className="whitespace-pre-wrap leading-relaxed">{p}</p>)}
+      {m.images?.map((src, i) => (
+        <figure key={i} className="mt-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="Generated image" className="max-h-[28rem] rounded-xl border border-line" />
+          <a href={src} download={`beeper-${Date.now()}-${i}.png`} className="mt-1 inline-block text-xs text-ember-soft underline">Download</a>
+        </figure>
+      ))}
     </div>
   );
 }
@@ -104,6 +113,7 @@ export default function Chat() {
         body: JSON.stringify({
           model: active.model,
           stream: true,
+          ...(model.image ? { modalities: ["image", "text"] } : {}),
           messages: [...(active.system.trim() ? [{ role: "system", content: active.system.trim() }] : []), ...history.map(({ role, content }) => ({ role, content }))],
         }),
       });
@@ -114,6 +124,7 @@ export default function Chat() {
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = "", text = "", tokens = 0;
+      const images: string[] = [];
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -124,13 +135,15 @@ export default function Chat() {
           if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
           try {
             const chunk = JSON.parse(line.slice(6));
-            text += chunk.choices?.[0]?.delta?.content ?? "";
+            const delta = chunk.choices?.[0]?.delta ?? {};
+            text += delta.content ?? "";
+            for (const img of delta.images ?? []) if (img?.image_url?.url) images.push(img.image_url.url);
             if (chunk.usage) tokens = (chunk.usage.prompt_tokens ?? 0) + (chunk.usage.completion_tokens ?? 0);
           } catch { /* partial line */ }
         }
-        update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text }] }));
+        update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text, images: [...images] }] }));
       }
-      update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text || "(no response)", tokens }] }));
+      update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text || (images.length ? "" : "(no response)"), tokens, images }] }));
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         setError((err as Error).message);
@@ -168,7 +181,7 @@ export default function Chat() {
           <button onClick={() => setSidebar(!sidebar)} className="rounded-full border border-line px-3 py-1.5 text-xs md:hidden">Chats</button>
           <select value={active.model} onChange={(e) => update(active.id, (c) => ({ ...c, model: e.target.value }))}
             className="min-w-0 max-w-[60vw] rounded-full border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
-            {MODELS.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
+            {MODELS.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : m.image ? "🖼 " : ""}{m.name}</option>)}
           </select>
           <button onClick={() => setShowSystem(!showSystem)} className={`rounded-full border px-3 py-1.5 text-xs ${active.system ? "border-ember text-bone" : "border-line text-mute"}`}>Persona</button>
           <span className="ml-auto font-mono text-xs text-mute">
@@ -187,7 +200,9 @@ export default function Chat() {
           {active.messages.length === 0 && (
             <div className="mx-auto mt-16 max-w-md text-center">
               <h2 className="font-serif text-4xl">Ask anything.</h2>
-              <p className="mt-2 text-sm text-mute">Private and unfiltered. Billed per token from your balance{model.uncensored ? " — this model is uncensored" : ""}.</p>
+              <p className="mt-2 text-sm text-mute">
+                {model.image ? "Describe an image to generate. This image model is filtered by its provider." : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? " — this model is uncensored" : ""}.</>}
+              </p>
             </div>
           )}
           {active.messages.map((m, i) => (

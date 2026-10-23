@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import RefCapture from "@/components/RefCapture";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" });
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${serif.variable}`}>
       <body className="grain font-sans antialiased">
         <Providers>
+          <RefCapture />
           <Nav />
           {children}
           <Footer />

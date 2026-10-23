@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./Providers";
 import { explorerTx } from "@/lib/chain";
 
-type Payout = { id: string; user_id: string; order_id: string; amount: number; address: string; status: string; tx_hash: string | null; created_at: string };
+type Payout = { id: string; kind: string; user_id: string; order_id: string | null; amount: number; address: string; status: string; tx_hash: string | null; created_at: string };
 
 export default function AdminPayouts() {
   const auth = useAuth();
@@ -47,13 +47,16 @@ export default function AdminPayouts() {
           <div key={p.id} className="card p-5 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-serif text-2xl">{p.amount.toFixed(6)} USDG</span>
-              <span className={p.status === "paid" ? "text-moss" : "text-[#f5c451]"}>{p.status}</span>
+              <span className="flex items-center gap-2">
+                <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] uppercase text-mute">{p.kind === "affiliate" ? "affiliate" : "seller"}</span>
+                <span className={p.status === "paid" ? "text-moss" : "text-[#f5c451]"}>{p.status}</span>
+              </span>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <code className="break-all font-mono text-xs text-bone">{p.address}</code>
               <button onClick={() => navigator.clipboard?.writeText(p.address)} className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-mute">Copy</button>
             </div>
-            <p className="mt-1 font-mono text-[11px] text-mute">{p.order_id} · {new Date(p.created_at).toLocaleString()}</p>
+            <p className="mt-1 font-mono text-[11px] text-mute">{p.order_id ?? "affiliate withdrawal"} · {new Date(p.created_at).toLocaleString()}</p>
             {p.status === "pending" ? (
               <div className="mt-3 flex gap-2">
                 <input value={hashes[p.id] ?? ""} onChange={(e) => setHashes({ ...hashes, [p.id]: e.target.value })} placeholder="0x… payout tx hash"

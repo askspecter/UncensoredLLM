@@ -4,6 +4,8 @@ import { HOUSE_DISCOUNT, MARKET_FEE, type Fill, type Quote } from "./data";
 import { MICROS, sql } from "./db";
 import { addToBalance } from "./billing";
 import { newId } from "./keys";
+import { recordCommission } from "./affiliate";
+import { notify } from "./notify";
 
 type Tx = postgres.TransactionSql;
 export const ORDER_TTL_MINUTES = 120;
@@ -109,10 +111,19 @@ export async function failOrder(orderId: string) {
  * no longer available is covered by Beeper at the price the buyer already paid.
  */
 export async function settleOrder(orderId: string, providerRef: string | null = null): Promise<boolean> {
+  const result = await settle(orderId, providerRef);
+  if (result) {
+    const owed = result.payouts.reduce((a, b) => a + b, 0);
+    await notify(`💳 Beeper order paid: $${result.credit.toFixed(2)} credit for $${result.paid.toFixed(2)}${owed ? ` · seller payouts owed: $${owed.toFixed(2)} USDG (see /admin)` : ""}`);
+  }
+  return Boolean(result);
+}
+
+async function settle(orderId: string, providerRef: string | null) {
   return sql.begin(async (tx) => {
-    const [o] = await tx<{ user_id: string; credit_micros: string; status: string }[]>`
-      SELECT user_id, credit_micros, status FROM orders WHERE id = ${orderId} FOR UPDATE`;
-    if (!o || (o.status !== "pending" && o.status !== "expired")) return false;
+    const [o] = await tx<{ user_id: string; credit_micros: string; status: string; total_cents: number }[]>`
+      SELECT user_id, credit_micros, status, total_cents FROM orders WHERE id = ${orderId} FOR UPDATE`;
+    if (!o || (o.status !== "pending" && o.status !== "expired")) return null;
 
     if (o.status === "expired") {
       const released = await tx<{ id: string; offer_id: string | null; credit_micros: string }[]>`
@@ -129,18 +140,21 @@ export async function settleOrder(orderId: string, providerRef: string | null = 
 
     await tx`UPDATE orders SET status = 'paid', paid_at = now(), provider_ref = coalesce(${providerRef}, provider_ref) WHERE id = ${orderId}`;
     await addToBalance(tx, o.user_id, BigInt(o.credit_micros), "topup", orderId);
+    await recordCommission(tx, orderId, o.user_id);
 
     const sold = await tx<{ offer_id: string; price_micros: string; seller: string; payout_address: string }[]>`
       UPDATE order_fills f SET status = 'settled' FROM offers o
       WHERE f.order_id = ${orderId} AND f.status = 'reserved' AND f.offer_id = o.id
       RETURNING f.offer_id, f.price_micros, o.user_id AS seller, o.payout_address`;
     await tx`UPDATE order_fills SET status = 'settled' WHERE order_id = ${orderId} AND status = 'reserved'`;
+    const payouts: number[] = [];
     for (const s of sold) {
       if (BigInt(s.price_micros) <= BigInt(0)) continue;
       await tx`INSERT INTO payouts (id, user_id, offer_id, order_id, amount_micros, address)
                VALUES (${newId("pay")}, ${s.seller}, ${s.offer_id}, ${orderId}, ${s.price_micros}, ${s.payout_address})`;
+      payouts.push(Number(s.price_micros) / MICROS);
     }
-    return true;
+    return { credit: Number(o.credit_micros) / MICROS, paid: o.total_cents / 100, payouts };
   });
 }
 

@@ -35,3 +35,25 @@ export async function GET(req: Request) {
     },
   });
 }
+
+const RESERVED = new Set(["admin", "beeper", "support", "root", "system", "anon", "official"]);
+
+/** Sets or clears the public handle shown on the leaderboard and recent buys. */
+export async function PATCH(req: Request) {
+  const auth = await requireUser(req);
+  if (auth.error) return auth.error;
+  const body = await req.json().catch(() => ({}));
+  const raw = typeof body?.handle === "string" ? body.handle.trim().toLowerCase() : "";
+  const handle = raw === "" ? null : raw;
+  if (handle && (!/^[a-z0-9_]{3,20}$/.test(handle) || RESERVED.has(handle) || handle.startsWith("anon_"))) {
+    return NextResponse.json({ error: "Handle must be 3–20 characters: a–z, 0–9 or _" }, { status: 400 });
+  }
+  try {
+    await sql`UPDATE users SET handle = ${handle} WHERE id = ${auth.userId}`;
+  } catch (e) {
+    if ((e as { code?: string }).code === "23505") return NextResponse.json({ error: "That handle is taken" }, { status: 409 });
+    throw e;
+  }
+  return NextResponse.json({ handle });
+}
+

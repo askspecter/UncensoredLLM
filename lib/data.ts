@@ -21,6 +21,7 @@ type UpstreamModel = {
   output: number;
   uncensored: boolean;
   tags: string[];
+  image?: boolean; // generates images (output tokens include image tokens)
 };
 
 /** `input`/`output` are Beeper's prices (upstream + MARGIN); `cost` is what we pay upstream. */
@@ -42,6 +43,7 @@ const UPSTREAM_MODELS: UpstreamModel[] = [
   { id: "beeper/glm-4.6", upstream: "z-ai/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "205K", input: 0.55, output: 2.2, uncensored: false, tags: ["agents", "code"] },
   { id: "beeper/mistral-large", upstream: "mistralai/mistral-large-2512", name: "Mistral Large", provider: "Mistral", context: "262K", input: 0.5, output: 1.5, uncensored: false, tags: ["chat", "code"] },
   { id: "beeper/gpt-oss-120b", upstream: "openai/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "131K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
+  { id: "beeper/gemini-flash-image", upstream: "google/gemini-2.5-flash-image", name: "Gemini 2.5 Flash Image (filtered)", provider: "Google", context: "33K", input: 0.3, output: 2.5, uncensored: false, tags: ["image"], image: true },
 ];
 
 const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;

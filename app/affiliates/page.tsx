@@ -12,7 +12,7 @@ const STEPS = [
 const FAQ = [
   ["Do I earn on repeat top-ups?", "Yes. Commission applies to every settled top-up, for the lifetime of the account. It’s paid by Beeper, never added to the buyer’s price."],
   ["How is a referral attributed?", "The most recent valid referral before the buyer’s first purchase wins and stays attached. Referrals are remembered in the browser for 12 months."],
-  ["When do I get paid?", "Commissions unlock after a 14-day hold. Withdraw from $10 in USDG on Robinhood Chain."],
+  ["When do I get paid?", "Commissions unlock after a 14-day hold. Withdraw from $10 — paid in USDG on Robinhood Chain, usually within 48 hours."],
   ["What about refunds and disputes?", "Refunds reduce commission proportionally. Disputed payments are held until resolved."],
   ["Can I refer myself?", "No. Purchases from your own account don’t earn commission."],
 ];
@@ -23,13 +23,12 @@ export default function Affiliates() {
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
         <div className="relative mx-auto max-w-6xl px-5 pb-6 pt-20 text-center">
-          <p className="eyebrow">Affiliate program · launching soon</p>
+          <p className="eyebrow">Affiliate program</p>
           <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl leading-[1.05] md:text-7xl">Page your friends. <em className="text-ember-soft">Get paid forever.</em></h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-mute">
             Earn {COMMISSION * 100}% of every deposit your referrals make — first purchase and every top-up after.
           </p>
           <div className="mt-8 flex justify-center"><ReferralLink /></div>
-          <p className="mt-3 text-xs text-mute">Referral tracking and payouts start at launch. Sign in now to reserve your link.</p>
         </div>
       </section>
 

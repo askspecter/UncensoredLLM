@@ -5,7 +5,7 @@ import { explorerTx, formatUsdg } from "@/lib/chain";
 
 type Key = { id: string; name: string; prefix: string; created_at: string; last_used_at: string | null };
 type Me = {
-  user: { id: string; balance: number; createdAt: string };
+  user: { id: string; handle: string | null; balance: number; createdAt: string };
   keys: Key[];
   orders: { id: string; status: string; credit: number; total: number; payment_method: string; checkout_url: string | null; pay_units: string | null; tx_hash: string | null; created_at: string }[];
   usage: { model: string; prompt_tokens: number; completion_tokens: number; cost: number; latency_ms: number | null; status: number; created_at: string }[];
@@ -25,6 +25,8 @@ export default function Account() {
   const [keyName, setKeyName] = useState("");
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [handle, setHandle] = useState<string | null>(null);
+  const [handleMsg, setHandleMsg] = useState("");
 
   const api = useCallback(async (path: string, init: RequestInit = {}) => {
     const res = await fetch(path, { ...init, headers: { "content-type": "application/json", ...(await auth.authHeaders()), ...init.headers } });
@@ -62,6 +64,15 @@ export default function Account() {
       const k = await api("/api/keys", { method: "POST", body: JSON.stringify({ name: keyName }) });
       setNewKey(k); setKeyName(""); await load();
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function saveHandle(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const r = await api("/api/me", { method: "PATCH", body: JSON.stringify({ handle: handle ?? "" }) });
+      setHandleMsg(r.handle ? `Saved — you appear as ${r.handle}` : "Cleared — you appear anonymously");
+      await load();
+    } catch (err) { setHandleMsg((err as Error).message); }
   }
 
   async function revoke(id: string) {
@@ -195,6 +206,16 @@ export default function Account() {
         </table>
         <p className="border-t border-line p-4 text-xs text-mute">Only billing metadata is logged. Prompt and completion content is never stored.</p>
       </div>
+      <form onSubmit={saveHandle} className="card mt-4 flex flex-wrap items-center gap-3 p-5">
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">Public handle</p>
+          <p className="mt-1 text-xs text-mute">Shown on the leaderboard and recent buys instead of an anonymous name. Leave empty to stay anonymous.</p>
+        </div>
+        <input value={handle ?? me.user.handle ?? ""} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="anonymous" maxLength={20}
+          className="w-44 rounded-full border border-line bg-ink px-4 py-2 font-mono text-sm outline-none focus:border-ember" />
+        <button className="btn btn-ghost text-sm">Save</button>
+        {handleMsg && <p className="w-full text-xs text-mute">{handleMsg}</p>}
+      </form>
       <p className="mt-6 break-all font-mono text-[11px] text-mute">User ID: {me.user.id}</p>
     </>
   );
