@@ -66,7 +66,7 @@ export default function BuyCard() {
     return (
       <div className="card slidein p-6">
         <p className="eyebrow">Order {order.id}</p>
-        <h3 className="mt-2 font-serif text-3xl">{paid ? "Credit added." : order.pay ? "Pay with USDG." : "Awaiting payment."}</h3>
+        <h3 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-bone">{paid ? "Credit added." : order.pay ? "Pay with USDG." : "Awaiting payment."}</h3>
         <p className="mt-2 text-sm text-mute">
           {paid
             ? <>{usd(order.credit)} of credit for {usd(order.total)}. Balance: <span className="text-bone">{usd(order.balance ?? order.credit)}</span>.</>

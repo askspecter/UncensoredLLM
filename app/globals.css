@@ -35,7 +35,7 @@ body { background: var(--color-ink); color: var(--color-bone); }
 .font-serif { font-size-adjust: 0.62; letter-spacing: 0; word-spacing: -0.3em; }
 body { letter-spacing: -0.006em; }
 
-.font-serif em, h1 em, h2 em { font-style: normal; color: var(--color-ember); }
+.font-serif em, h1 em, h2 em, h3 em { font-style: normal; color: var(--color-ember); }
 
 @layer components {
 .glow { background: radial-gradient(50% 60% at 50% 0%, rgba(168,251,40,.10), transparent 70%); }

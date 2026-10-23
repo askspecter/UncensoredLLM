@@ -14,7 +14,7 @@ function Code({ children }: { children: string }) {
 function Sec({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="scroll-mt-24 border-b border-line py-10">
-      <h2 className="font-serif text-3xl">{title}</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.035em] text-bone md:text-3xl">{title}</h2>
       <div className="mt-3 space-y-3 text-mute">{children}</div>
     </section>
   );
@@ -41,7 +41,7 @@ export default function Docs() {
 
       <div className="min-w-0">
         <p className="eyebrow">Developer docs</p>
-        <h1 className="mt-3 font-serif text-5xl uppercase leading-[1] md:text-6xl">Build on Beeper.</h1>
+        <h1 className="mt-3 text-4xl leading-[1.05] font-semibold tracking-[-0.035em] text-bone md:text-6xl">Build on Beeper.</h1>
         <p className="mt-4 max-w-2xl text-mute">An OpenAI-compatible API for private, uncensored inference. If your code talks to OpenAI, it talks to Beeper.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3 font-mono text-sm">
           <div className="card p-4"><p className="text-xs text-mute">Base URL</p><p className="mt-1 break-all">https://usebeeper.io/v1</p></div>

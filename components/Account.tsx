@@ -97,7 +97,7 @@ export default function Account() {
   if (!auth.authenticated) {
     return (
       <div className="card mt-10 p-10 text-center">
-        <h2 className="font-serif text-3xl">Sign in to see your account.</h2>
+        <h2 className="text-2xl font-semibold tracking-[-0.035em] text-bone">Sign in to see your account.</h2>
         <p className="mt-2 text-mute">Balance, API keys and usage live here.</p>
         <button onClick={auth.login} className="btn btn-primary mt-6">Sign in</button>
       </div>
@@ -123,7 +123,7 @@ export default function Account() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
         <div className="card p-6">
           <p className="eyebrow">Spend by day · 14d</p>
           <div className="mt-6 flex h-44 items-end gap-2">
@@ -167,7 +167,7 @@ export default function Account() {
               </li>
             ))}
           </ul>
-          <form onSubmit={createKey} className="mt-3 flex gap-2">
+          <form onSubmit={createKey} className="mt-3 flex min-w-0 gap-2">
             <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Key name" maxLength={40}
               className="min-w-0 flex-1 rounded border border-line bg-ink px-4 py-2 text-sm outline-none focus:border-ember" />
             <button disabled={busy} className="btn btn-ghost text-sm">+ New key</button>

@@ -19,7 +19,7 @@ export default function Models() {
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
-      <h2 className="mt-16 font-serif text-4xl uppercase text-ember md:text-5xl">Image models</h2>
+      <h2 className="mt-14 text-3xl leading-[1.1] font-semibold tracking-[-0.035em] text-bone md:text-4xl">Image models</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {IMAGE_MODELS.map((m) => (
           <div key={m.id} className="card p-5">

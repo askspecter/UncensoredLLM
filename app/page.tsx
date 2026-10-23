@@ -12,7 +12,7 @@ function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: 
   return (
     <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-14 md:pt-24">
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 max-w-3xl font-serif text-[2.1rem] uppercase leading-[1] md:text-5xl">{title}</h2>
+      <h2 className="mt-3 max-w-3xl text-[1.9rem] leading-[1.1] font-semibold tracking-[-0.035em] text-bone md:text-5xl">{title}</h2>
       {sub && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mute md:mt-4 md:text-base">{sub}</p>}
       <div className="mt-7 md:mt-10">{children}</div>
     </section>
@@ -155,7 +155,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-5 pt-14 md:pt-24">
         <div className="card relative overflow-hidden p-10 text-center md:p-16">
           <div className="glow pointer-events-none absolute inset-0" />
-          <h2 className="relative font-serif text-4xl md:text-6xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>
+          <h2 className="relative text-3xl leading-[1.1] font-semibold tracking-[-0.035em] text-bone md:text-5xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>
           <p className="relative mt-4 text-mute">10%+ off every top-up. Pay in USDG or by card. Your key in under a minute.</p>
           <div className="relative mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>

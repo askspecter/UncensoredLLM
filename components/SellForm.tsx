@@ -56,7 +56,7 @@ export default function SellForm() {
   if (auth.ready && !auth.authenticated) {
     return (
       <div className="card p-8 text-center">
-        <h3 className="font-serif text-3xl">Sign in to sell credit.</h3>
+        <h3 className="text-2xl font-semibold tracking-[-0.035em] text-bone">Sign in to sell credit.</h3>
         <p className="mt-2 text-sm text-mute">You can list any part of your Beeper balance.</p>
         <button onClick={auth.login} className="btn btn-primary mt-5">Sign in</button>
       </div>
