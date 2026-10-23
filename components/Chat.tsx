@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Providers";
-import { MODELS } from "@/lib/data";
+import { IMAGE_MODELS, MODELS } from "@/lib/data";
 
 type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[] };
 type Convo = { id: string; title: string; model: string; system: string; messages: Msg[]; updated: number };
@@ -25,14 +25,14 @@ function Bubble({ m }: { m: Msg }) {
   // Minimal formatting: fenced code blocks in mono, everything else as wrapped text.
   const parts = m.content.split(/```/);
   return (
-    <div className={m.role === "user" ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-panel-2 px-4 py-2.5" : "max-w-full"}>
+    <div className={m.role === "user" ? "ml-auto max-w-[85%] rounded-lg rounded-br-none bg-panel-2 px-4 py-2.5" : "max-w-full"}>
       {parts.map((p, i) => i % 2
         ? <pre key={i} className="my-2 overflow-x-auto rounded-lg border border-line bg-ink p-3 font-mono text-[13px]"><code>{p.replace(/^\w*\n/, "")}</code></pre>
         : <p key={i} className="whitespace-pre-wrap leading-relaxed">{p}</p>)}
       {m.images?.map((src, i) => (
         <figure key={i} className="mt-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="Generated image" className="max-h-[28rem] rounded-xl border border-line" />
+          <img src={src} alt="Generated image" className="max-h-[28rem] rounded-md border border-line" />
           <a href={src} download={`beeper-${Date.now()}-${i}.png`} className="mt-1 inline-block text-xs text-ember-soft underline">Download</a>
         </figure>
       ))}
@@ -62,7 +62,9 @@ export default function Chat() {
   useEffect(() => { if (chats.length) saveChats(chats); }, [chats]);
 
   const active = chats.find((c) => c.id === activeId) ?? chats[0];
+  const imageModel = IMAGE_MODELS.find((m) => m.id === active?.model) ?? null;
   const model = MODELS.find((m) => m.id === active?.model) ?? MODELS[0];
+  const [size, setSize] = useState<"square" | "portrait" | "landscape">("square");
 
   const refreshBalance = useCallback(async () => {
     try {
@@ -103,6 +105,26 @@ export default function Chat() {
     setInput("");
     setBusy(true);
 
+    if (imageModel) {
+      try {
+        const res = await fetch("/api/image", {
+          method: "POST",
+          headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
+          body: JSON.stringify({ model: imageModel.id, prompt: history.at(-1)!.content, size }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
+        update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: "", images: data.images }] }));
+      } catch (err) {
+        setError((err as Error).message);
+        update(id, (c) => ({ ...c, messages: history }));
+      } finally {
+        setBusy(false);
+        refreshBalance();
+      }
+      return;
+    }
+
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
@@ -113,7 +135,6 @@ export default function Chat() {
         body: JSON.stringify({
           model: active.model,
           stream: true,
-          ...(model.image ? { modalities: ["image", "text"] } : {}),
           messages: [...(active.system.trim() ? [{ role: "system", content: active.system.trim() }] : []), ...history.map(({ role, content }) => ({ role, content }))],
         }),
       });
@@ -178,30 +199,45 @@ export default function Chat() {
       {/* Conversation */}
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
-          <button onClick={() => setSidebar(!sidebar)} className="rounded-full border border-line px-3 py-1.5 text-xs md:hidden">Chats</button>
+          <button onClick={() => setSidebar(!sidebar)} className="rounded border border-line px-3 py-1.5 text-xs md:hidden">Chats</button>
           <select value={active.model} onChange={(e) => update(active.id, (c) => ({ ...c, model: e.target.value }))}
-            className="min-w-0 max-w-[60vw] rounded-full border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
-            {MODELS.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : m.image ? "🖼 " : ""}{m.name}</option>)}
+            className="min-w-0 max-w-[60vw] rounded border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
+            <optgroup label="Chat">
+              {MODELS.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
+            </optgroup>
+            <optgroup label="Image">
+              {IMAGE_MODELS.map((m) => <option key={m.id} value={m.id}>🖼 {m.uncensored ? "🔓 " : ""}{m.name}</option>)}
+            </optgroup>
           </select>
-          <button onClick={() => setShowSystem(!showSystem)} className={`rounded-full border px-3 py-1.5 text-xs ${active.system ? "border-ember text-bone" : "border-line text-mute"}`}>Persona</button>
+          {imageModel ? (
+            <div className="flex rounded border border-line p-0.5 text-xs">
+              {(["square", "portrait", "landscape"] as const).map((sz) => (
+                <button key={sz} onClick={() => setSize(sz)} className={`rounded px-2 py-1 uppercase ${size === sz ? "bg-ember text-ink" : "text-mute"}`}>{sz}</button>
+              ))}
+            </div>
+          ) : (
+            <button onClick={() => setShowSystem(!showSystem)} className={`rounded border px-3 py-1.5 text-xs ${active.system ? "border-ember text-bone" : "border-line text-mute"}`}>Persona</button>
+          )}
           <span className="ml-auto font-mono text-xs text-mute">
-            {balance !== null && <>balance {usd(balance)} · </>}${model.input}/${model.output} per 1M
+            {balance !== null && <>balance {usd(balance)} · </>}{imageModel ? `$${imageModel.perImage} / image` : `$${model.input}/$${model.output} per 1M`}
           </span>
         </div>
         {showSystem && (
           <div className="border-b border-line p-4">
             <textarea value={active.system} onChange={(e) => update(active.id, (c) => ({ ...c, system: e.target.value }))} rows={3}
               placeholder="System prompt / persona — e.g. “You are a blunt, unfiltered writing partner.”"
-              className="w-full rounded-xl border border-line bg-ink p-3 text-sm outline-none focus:border-ember" />
+              className="w-full rounded-md border border-line bg-ink p-3 text-sm outline-none focus:border-ember" />
           </div>
         )}
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6">
           {active.messages.length === 0 && (
             <div className="mx-auto mt-16 max-w-md text-center">
-              <h2 className="font-serif text-4xl">Ask anything.</h2>
+              <h2 className="font-serif text-5xl uppercase text-ember">{imageModel ? "Imagine anything." : "Ask anything."}</h2>
               <p className="mt-2 text-sm text-mute">
-                {model.image ? "Describe an image to generate. This image model is filtered by its provider." : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? " — this model is uncensored" : ""}.</>}
+                {imageModel
+                  ? <>Describe the image you want — {imageModel.style.toLowerCase()}. ${imageModel.perImage} per image. Prompts involving minors are blocked.</>
+                  : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? " — this model is uncensored" : ""}.</>}
               </p>
             </div>
           )}
@@ -216,15 +252,15 @@ export default function Chat() {
         </div>
 
         {error && (
-          <p className="mx-4 mb-2 rounded-lg border border-ember/40 bg-ember/10 p-2.5 text-sm text-ember-soft">
+          <p className="mx-4 mb-2 rounded-lg border border-danger/40 bg-danger/10 p-2.5 text-sm text-ember-soft">
             {error} {/credit|balance/i.test(error) && <a href="/#buy" className="underline">Top up</a>}
           </p>
         )}
         <form onSubmit={send} className="flex items-end gap-2 border-t border-line p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window)) { e.preventDefault(); send(); } }}
-            placeholder={auth.authenticated ? "Ask anything…" : "Sign in to start chatting"}
-            className="max-h-40 min-h-[2.75rem] flex-1 resize-none rounded-xl border border-line bg-ink px-4 py-2.5 text-base outline-none focus:border-ember" />
+            placeholder={!auth.authenticated ? "Sign in to start chatting" : imageModel ? "Describe an image…" : "Ask anything…"}
+            className="max-h-40 min-h-[2.75rem] flex-1 resize-none rounded-md border border-line bg-ink px-4 py-2.5 text-base outline-none focus:border-ember" />
           {busy
             ? <button type="button" onClick={() => abortRef.current?.abort()} className="btn btn-ghost h-11 text-sm">Stop</button>
             : <button className="btn btn-primary h-11 text-sm">{auth.authenticated ? "Send" : "Sign in"}</button>}

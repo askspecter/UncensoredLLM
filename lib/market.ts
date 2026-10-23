@@ -5,7 +5,6 @@ import { MICROS, sql } from "./db";
 import { addToBalance } from "./billing";
 import { newId } from "./keys";
 import { recordCommission } from "./affiliate";
-import { notify } from "./notify";
 
 type Tx = postgres.TransactionSql;
 export const ORDER_TTL_MINUTES = 120;
@@ -111,12 +110,7 @@ export async function failOrder(orderId: string) {
  * no longer available is covered by Beeper at the price the buyer already paid.
  */
 export async function settleOrder(orderId: string, providerRef: string | null = null): Promise<boolean> {
-  const result = await settle(orderId, providerRef);
-  if (result) {
-    const owed = result.payouts.reduce((a, b) => a + b, 0);
-    await notify(`💳 Beeper order paid: $${result.credit.toFixed(2)} credit for $${result.paid.toFixed(2)}${owed ? ` · seller payouts owed: $${owed.toFixed(2)} USDG (see /admin)` : ""}`);
-  }
-  return Boolean(result);
+  return Boolean(await settle(orderId, providerRef));
 }
 
 async function settle(orderId: string, providerRef: string | null) {

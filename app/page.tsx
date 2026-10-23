@@ -5,12 +5,13 @@ import ModelTable from "@/components/ModelTable";
 import CodeTabs from "@/components/CodeTabs";
 import Faq from "@/components/Faq";
 import { MODELS, PRIVACY_TIERS } from "@/lib/data";
+import { IMAGE_MODELS } from "@/lib/images";
 
 function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: string; title: React.ReactNode; sub?: string; children: React.ReactNode }) {
   return (
     <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-28">
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 max-w-3xl font-serif text-4xl leading-tight md:text-5xl">{title}</h2>
+      <h2 className="mt-3 max-w-3xl font-serif text-4xl uppercase leading-[0.95] md:text-5xl">{title}</h2>
       {sub && <p className="mt-4 max-w-2xl text-mute">{sub}</p>}
       <div className="mt-10">{children}</div>
     </section>
@@ -22,36 +23,40 @@ const FEATURES = [
   { t: "No logs", d: "We never store prompts or outputs. Only token counts and cost are kept for billing." },
   { t: "Wallet sign-in", d: "No KYC. Sign in with a wallet, Google or email, pay with USDG on Robinhood Chain or card and get a key instantly." },
   { t: "Always 10%+ off", d: "Beeper backs every order at −10%. Users reselling unused credit push discounts deeper." },
-  { t: "One key, every model", d: "Uncensored roleplay models and frontier open models behind one OpenAI-compatible endpoint." },
+  { t: "Unfiltered images", d: "Lustify, Chroma, Z-Image and anime models from $0.012 per image — in the chat or via the API." },
   { t: "Streaming & transparent", d: "Full streaming support. Every response reports the exact upstream model and what it cost you." },
 ];
 
 export default function Home() {
-  const uncensored = MODELS.filter((m) => m.uncensored).length;
+  const uncensored = MODELS.filter((m) => m.uncensored).length + IMAGE_MODELS.filter((m) => m.uncensored).length;
   return (
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20 text-center md:pt-28">
-          <p className="eyebrow">Private · Uncensored · 10%+ off</p>
-          <h1 className="mx-auto mt-5 max-w-4xl font-serif text-5xl leading-[1.02] md:text-7xl">
-            Ask anything.<br /><em className="text-ember-soft">No filters.</em> No trace.
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-mute">
-            The marketplace for discounted AI credits. Unfiltered open models, no logs, one OpenAI-compatible API key.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <a href="/chat" className="btn btn-primary">Start chatting</a>
-            <a href="#buy" className="btn btn-ghost">Buy credits</a>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-10 pt-14 md:pt-20 lg:grid-cols-[1.1fr_1fr]">
+          <div>
+            <p className="eyebrow">Private · Uncensored · USDG</p>
+            <h1 className="mt-5 font-serif text-5xl uppercase leading-[0.9] text-ember sm:text-6xl lg:text-[4.1rem]">
+              Ask anything.<br />No filters.<br />No trace.
+            </h1>
+            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-mute">
+              Your AI on a burner. Unfiltered chat and image models, zero logs, one key — with credits from the order book at 10%+ off.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="/chat" className="btn btn-primary">&gt; Start chatting</a>
+              <a href="#buy" className="btn btn-ghost">Buy credits</a>
+            </div>
           </div>
-          <div className="mt-14"><HeroChat /></div>
-          <dl className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-6 text-left md:grid-cols-4">
-            {[[`${MODELS.length}`, "models"], [`${uncensored}`, "uncensored models"], ["10%+", "off every top-up"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
-              <div key={l}><dt className="font-serif text-3xl">{v}</dt><dd className="text-xs uppercase tracking-wider text-mute">{l}</dd></div>
-            ))}
-          </dl>
+          <HeroChat />
         </div>
+        <dl className="relative mx-auto mt-6 grid max-w-6xl grid-cols-2 border-y-2 border-line md:grid-cols-4">
+          {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off every top-up"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
+            <div key={l} className="border-line px-5 py-5 even:border-l-2 md:border-l-2 md:first:border-l-0">
+              <dt className="font-serif text-4xl text-ember">{v}</dt><dd className="text-[11px] uppercase tracking-widest text-mute">{l}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       {/* Buy */}
@@ -68,7 +73,7 @@ export default function Home() {
 
       {/* Features */}
       <Section eyebrow="Why Beeper" title="Built for people who don’t want a chaperone.">
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div key={f.t} className="bg-panel p-6">
               <h3 className="text-lg">{f.t}</h3>
@@ -87,7 +92,7 @@ export default function Home() {
               <div className="flex gap-1">
                 {[1, 2, 3, 4].map((i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= p.level ? "bg-ember" : "bg-panel-2"}`} />)}
               </div>
-              <h3 className="mt-5 flex items-center gap-2 text-lg">{p.name}{p.soon && <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-mute">SOON</span>}</h3>
+              <h3 className="mt-5 flex items-center gap-2 text-lg">{p.name}{p.soon && <span className="rounded border border-line px-2 py-0.5 font-mono text-[10px] text-mute">SOON</span>}</h3>
               <p className="mt-2 text-sm text-mute">{p.desc}</p>
             </div>
           ))}

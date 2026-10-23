@@ -8,7 +8,7 @@ const TOC = [
 ];
 
 function Code({ children }: { children: string }) {
-  return <pre className="mt-4 overflow-x-auto rounded-xl border border-line bg-ink p-4 font-mono text-[13px] leading-relaxed text-bone/90"><code>{children}</code></pre>;
+  return <pre className="mt-4 overflow-x-auto rounded-md border border-line bg-ink p-4 font-mono text-[13px] leading-relaxed text-bone/90"><code>{children}</code></pre>;
 }
 
 function Sec({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export default function Docs() {
 
       <div className="min-w-0">
         <p className="eyebrow">Developer docs</p>
-        <h1 className="mt-3 font-serif text-5xl md:text-6xl">Build on Beeper.</h1>
+        <h1 className="mt-3 font-serif text-5xl uppercase leading-[0.92] md:text-6xl">Build on Beeper.</h1>
         <p className="mt-4 max-w-2xl text-mute">An OpenAI-compatible API for private, uncensored inference. If your code talks to OpenAI, it talks to Beeper.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3 font-mono text-sm">
           <div className="card p-4"><p className="text-xs text-mute">Base URL</p><p className="mt-1 break-all">https://usebeeper.io/v1</p></div>
@@ -77,6 +77,15 @@ export default function Docs() {
   -H "Authorization: Bearer $BEEPER_KEY" -H "Content-Type: application/json" \\
   -d '{"model":"beeper/dolphin-mistral-24b","stream":true,
        "messages":[{"role":"user","content":"Tell me a dark story."}]}'`}</Code>
+        </Sec>
+
+        <Sec id="images" title="Images">
+          <p><code className="text-bone">POST /v1/images/generations</code> with an image model such as <code className="text-bone">beeper/lustify-sdxl</code>. Sizes: <code className="text-bone">square</code>, <code className="text-bone">portrait</code>, <code className="text-bone">landscape</code>; up to 4 images per request, billed per image returned.</p>
+          <Code>{`curl https://usebeeper.io/v1/images/generations \\
+  -H "Authorization: Bearer $BEEPER_KEY" -H "Content-Type: application/json" \\
+  -d '{"model":"beeper/chroma","prompt":"noir city at 3am, rain, neon","size":"portrait","n":1}'
+# → { "data": [{ "b64_json": "…" }], "cost_usd": 0.012 }`}</Code>
+          <p>Prompts involving minors are refused for every model.</p>
         </Sec>
 
         <Sec id="models" title="List models">

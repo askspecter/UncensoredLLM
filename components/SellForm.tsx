@@ -74,14 +74,14 @@ export default function SellForm() {
         <div>
           <label htmlFor="credit" className="text-sm text-mute">Credit to sell (USD)</label>
           <input id="credit" type="number" min={MIN_OFFER} step="0.01" value={Number.isNaN(credit) ? "" : credit} onChange={(e) => setCredit(e.target.valueAsNumber)}
-            className="mt-2 w-full rounded-xl border border-line bg-ink px-4 py-3 text-2xl outline-none focus:border-ember" />
+            className="mt-2 w-full rounded-md border border-line bg-ink px-4 py-3 text-2xl outline-none focus:border-ember" />
           {balance !== null && <button type="button" onClick={() => setCredit(Math.floor(balance * 100) / 100)} className="mt-2 text-xs text-ember-soft underline">Use full balance</button>}
         </div>
 
         <div>
           <div className="flex justify-between text-sm"><label htmlFor="disc" className="text-mute">Discount to buyers</label><span className="font-mono text-moss">−{discount}%</span></div>
-          <input id="disc" type="range" min={1} max={90} value={discount} onChange={(e) => setDiscount(+e.target.value)} className="mt-3 w-full accent-[#e5484d]" />
-          <p className={`mt-1 text-xs ${tooShallow ? "text-[#f5c451]" : "text-mute"}`}>
+          <input id="disc" type="range" min={1} max={90} value={discount} onChange={(e) => setDiscount(+e.target.value)} className="mt-3 w-full" />
+          <p className={`mt-1 text-xs ${tooShallow ? "text-warn" : "text-mute"}`}>
             {tooShallow
               ? `Beeper already sells at −${HOUSE_DISCOUNT * 100}%, so offers at or below that won’t fill.`
               : "Deeper discounts fill first."}
@@ -91,17 +91,17 @@ export default function SellForm() {
         <div>
           <label htmlFor="payout" className="text-sm text-mute">Payout address (USDG · Robinhood Chain)</label>
           <input id="payout" value={payout} onChange={(e) => setPayout(e.target.value)} placeholder="0x…"
-            className="mt-2 w-full rounded-xl border border-line bg-ink px-4 py-3 font-mono text-sm outline-none focus:border-ember" />
+            className="mt-2 w-full rounded-md border border-line bg-ink px-4 py-3 font-mono text-sm outline-none focus:border-ember" />
         </div>
 
-        <div className="flex items-center justify-between rounded-xl bg-panel-2 p-4">
+        <div className="flex items-center justify-between rounded-md bg-panel-2 p-4">
           <span className="text-sm text-mute">You receive when it sells</span>
           <span className="font-serif text-3xl">{usd(receive)}</span>
         </div>
 
         <button disabled={state.busy} className="btn btn-primary w-full disabled:opacity-40">{state.busy ? "Listing…" : "List on the order book"}</button>
         {state.ok && <p className="text-sm text-moss">{state.ok}</p>}
-        {state.err && <p className="text-sm text-ember-soft">{state.err}</p>}
+        {state.err && <p className="text-sm text-danger">{state.err}</p>}
         <p className="text-xs text-mute">Listed credit leaves your balance and is held in escrow until it sells. Cancel any time to get unsold credit back.</p>
       </form>
 
@@ -122,8 +122,8 @@ export default function SellForm() {
                   <td className="p-4 text-right">
                     {o.status === "live" && (confirmCancel === o.id ? (
                       <span className="inline-flex gap-1">
-                        <button onClick={() => cancel(o.id)} className="rounded-full bg-ember px-3 py-1 font-sans text-xs text-white">Cancel offer</button>
-                        <button onClick={() => setConfirmCancel(null)} className="rounded-full border border-line px-3 py-1 font-sans text-xs">Keep</button>
+                        <button onClick={() => cancel(o.id)} className="rounded bg-danger px-3 py-1 font-sans text-xs text-ink">Cancel offer</button>
+                        <button onClick={() => setConfirmCancel(null)} className="rounded border border-line px-3 py-1 font-sans text-xs">Keep</button>
                       </span>
                     ) : <button onClick={() => setConfirmCancel(o.id)} className="font-sans text-xs text-mute hover:text-ember-soft">Cancel</button>)}
                   </td>
@@ -143,7 +143,7 @@ export default function SellForm() {
                 <tr key={p.id}>
                   <td className="p-4">{usd(p.amount)} USDG</td>
                   <td className="p-4 text-mute">{new Date(p.createdAt).toLocaleDateString()}</td>
-                  <td className={`p-4 ${p.status === "paid" ? "text-moss" : "text-[#f5c451]"}`}>
+                  <td className={`p-4 ${p.status === "paid" ? "text-moss" : "text-warn"}`}>
                     {p.status}{p.txHash && <a href={explorerTx(p.txHash)} target="_blank" rel="noreferrer" className="ml-2 font-sans text-xs text-ember-soft underline">tx</a>}
                   </td>
                 </tr>

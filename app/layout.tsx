@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Space_Mono, VT323 } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import RefCapture from "@/components/RefCapture";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" });
+const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-mono-ui" });
+const pixel = VT323({ subsets: ["latin"], weight: "400", variable: "--font-pixel" });
 
 export const metadata: Metadata = {
   title: "Beeper — Private, uncensored AI credits at a discount",
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${serif.variable}`}>
-      <body className="grain font-sans antialiased">
+    <html lang="en" className={`${mono.variable} ${pixel.variable}`}>
+      <body className="scanlines font-sans antialiased">
         <Providers>
           <RefCapture />
           <Nav />

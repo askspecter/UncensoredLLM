@@ -22,9 +22,9 @@ export default function Footer() {
             Private, uncensored inference. No logs, no lectures — just the model.
           </p>
           <div className="mt-5 flex gap-2 text-sm">
-            <span className="rounded-full border border-line px-3 py-1 text-mute">X @beeper</span>
-            <span className="rounded-full border border-line px-3 py-1 text-mute">Discord</span>
-            <span className="rounded-full border border-line px-3 py-1 text-mute">Telegram</span>
+            <span className="rounded border border-line px-3 py-1 text-mute">X @beeper</span>
+            <span className="rounded border border-line px-3 py-1 text-mute">Discord</span>
+            <span className="rounded border border-line px-3 py-1 text-mute">Telegram</span>
           </div>
         </div>
         {COLS.map((c) => (

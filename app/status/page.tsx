@@ -35,15 +35,15 @@ export default async function Status() {
   return (
     <main className="mx-auto max-w-4xl px-5 pt-16">
       <PageHeader eyebrow="System status" title={allOk ? "All systems paging." : "Some systems need attention."} />
-      <div className={`card mt-8 flex items-center gap-3 p-5 ${allOk ? "border-moss/40" : "border-[#f5c451]/40"}`}>
-        <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${allOk ? "bg-moss" : "bg-[#f5c451]"}`} />
+      <div className={`card mt-8 flex items-center gap-3 p-5 ${allOk ? "border-moss/40" : "border-warn/40"}`}>
+        <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${allOk ? "bg-moss" : "bg-warn"}`} />
         <span>{allOk ? "All systems operational" : "Degraded"}</span>
         <span className="ml-auto font-mono text-xs text-mute">checked {new Date().toISOString().slice(11, 16)} UTC</span>
       </div>
       <div className="card mt-4 divide-y divide-line">
         {list.map((c) => (
           <div key={c.name} className="flex items-center justify-between gap-4 p-5 text-sm">
-            <span className="flex items-center gap-3"><span className={`h-2 w-2 rounded-full ${c.ok ? "bg-moss" : "bg-[#f5c451]"}`} />{c.name}</span>
+            <span className="flex items-center gap-3"><span className={`h-2 w-2 rounded-full ${c.ok ? "bg-moss" : "bg-warn"}`} />{c.name}</span>
             <span className="text-right font-mono text-xs text-mute">{c.detail}</span>
           </div>
         ))}

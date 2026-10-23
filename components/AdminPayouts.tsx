@@ -29,7 +29,7 @@ export default function AdminPayouts() {
   }
 
   if (!auth.authenticated) return <button onClick={auth.login} className="btn btn-primary mt-8">Sign in</button>;
-  if (error) return <p className="mt-8 rounded-lg border border-ember/40 bg-ember/10 p-3 text-sm text-ember-soft">{error}</p>;
+  if (error) return <p className="mt-8 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-ember-soft">{error}</p>;
   if (!rows) return <p className="mt-8 text-mute">Loading…</p>;
 
   const pending = rows.filter((r) => r.status === "pending");
@@ -48,19 +48,19 @@ export default function AdminPayouts() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-serif text-2xl">{p.amount.toFixed(6)} USDG</span>
               <span className="flex items-center gap-2">
-                <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] uppercase text-mute">{p.kind === "affiliate" ? "affiliate" : "seller"}</span>
-                <span className={p.status === "paid" ? "text-moss" : "text-[#f5c451]"}>{p.status}</span>
+                <span className="rounded border border-line px-2 py-0.5 font-mono text-[10px] uppercase text-mute">{p.kind === "affiliate" ? "affiliate" : "seller"}</span>
+                <span className={p.status === "paid" ? "text-moss" : "text-warn"}>{p.status}</span>
               </span>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <code className="break-all font-mono text-xs text-bone">{p.address}</code>
-              <button onClick={() => navigator.clipboard?.writeText(p.address)} className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-mute">Copy</button>
+              <button onClick={() => navigator.clipboard?.writeText(p.address)} className="shrink-0 rounded border border-line px-2 py-0.5 text-xs text-mute">Copy</button>
             </div>
             <p className="mt-1 font-mono text-[11px] text-mute">{p.order_id ?? "affiliate withdrawal"} · {new Date(p.created_at).toLocaleString()}</p>
             {p.status === "pending" ? (
               <div className="mt-3 flex gap-2">
                 <input value={hashes[p.id] ?? ""} onChange={(e) => setHashes({ ...hashes, [p.id]: e.target.value })} placeholder="0x… payout tx hash"
-                  className="min-w-0 flex-1 rounded-full border border-line bg-ink px-4 py-2 font-mono text-xs outline-none focus:border-ember" />
+                  className="min-w-0 flex-1 rounded border border-line bg-ink px-4 py-2 font-mono text-xs outline-none focus:border-ember" />
                 <button onClick={() => markPaid(p.id)} className="btn btn-primary px-4 py-2 text-xs">Mark paid</button>
               </div>
             ) : p.tx_hash && <a href={explorerTx(p.tx_hash)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-ember-soft underline">view tx</a>}

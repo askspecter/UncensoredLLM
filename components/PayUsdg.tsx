@@ -10,7 +10,7 @@ function Copy({ text, label }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
   return (
     <button type="button" onClick={() => { navigator.clipboard?.writeText(text); setDone(true); setTimeout(() => setDone(false), 1500); }}
-      className="shrink-0 rounded-full border border-line px-3 py-1 text-xs text-mute hover:text-bone">
+      className="shrink-0 rounded border border-line px-3 py-1 text-xs text-mute hover:text-bone">
       {done ? "Copied ✓" : label ?? "Copy"}
     </button>
   );
@@ -58,7 +58,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
 
   return (
     <div className="mt-5 space-y-4">
-      <div className="rounded-xl border border-line bg-ink p-4">
+      <div className="rounded-md border border-line bg-ink p-4">
         <p className="text-xs text-mute">Send exactly</p>
         <div className="mt-1 flex items-center justify-between gap-3">
           <p className="font-mono text-2xl text-bone">{pay.amount} <span className="text-base text-mute">USDG</span></p>
@@ -67,7 +67,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
         <p className="mt-1 text-[11px] text-mute">The last digits identify your order — send this exact amount.</p>
       </div>
 
-      <div className="rounded-xl border border-line bg-ink p-4">
+      <div className="rounded-md border border-line bg-ink p-4">
         <p className="text-xs text-mute">To address · Robinhood Chain ({robinhood.id})</p>
         <div className="mt-1 flex items-center justify-between gap-3">
           <p className="break-all font-mono text-sm text-bone">{pay.to}</p>
@@ -83,7 +83,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
       )}
 
       <div className="flex items-center gap-2 text-sm text-mute">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f5c451]" />
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warn" />
         {note || "Watching Robinhood Chain for your payment…"}
         {txHash && <a href={explorerTx(txHash)} target="_blank" rel="noreferrer" className="ml-auto text-xs text-ember-soft underline">view tx</a>}
       </div>
@@ -92,7 +92,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
         <summary className="cursor-pointer text-mute hover:text-bone">Paid from another wallet or exchange?</summary>
         <form onSubmit={(e) => { e.preventDefault(); setTxHash(manualHash.trim()); confirm(manualHash.trim()); }} className="mt-2 flex gap-2">
           <input value={manualHash} onChange={(e) => setManualHash(e.target.value)} placeholder="0x… transaction hash"
-            className="min-w-0 flex-1 rounded-full border border-line bg-ink px-4 py-2 font-mono text-xs outline-none focus:border-ember" />
+            className="min-w-0 flex-1 rounded border border-line bg-ink px-4 py-2 font-mono text-xs outline-none focus:border-ember" />
           <button className="btn btn-ghost text-sm">Check</button>
         </form>
         <p className="mt-2 text-xs text-mute">Payments are detected automatically too. Wallet payments need a little ETH on Robinhood Chain for gas.</p>

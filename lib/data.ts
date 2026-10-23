@@ -43,7 +43,6 @@ const UPSTREAM_MODELS: UpstreamModel[] = [
   { id: "beeper/glm-4.6", upstream: "z-ai/glm-4.6", name: "GLM 4.6", provider: "Zhipu", context: "205K", input: 0.55, output: 2.2, uncensored: false, tags: ["agents", "code"] },
   { id: "beeper/mistral-large", upstream: "mistralai/mistral-large-2512", name: "Mistral Large", provider: "Mistral", context: "262K", input: 0.5, output: 1.5, uncensored: false, tags: ["chat", "code"] },
   { id: "beeper/gpt-oss-120b", upstream: "openai/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "131K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
-  { id: "beeper/gemini-flash-image", upstream: "google/gemini-2.5-flash-image", name: "Gemini 2.5 Flash Image (filtered)", provider: "Google", context: "33K", input: 0.3, output: 2.5, uncensored: false, tags: ["image"], image: true },
 ];
 
 const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;
@@ -56,6 +55,20 @@ export const MODELS: Model[] = UPSTREAM_MODELS.map((m) => ({
 }));
 
 export const findModel = (id: string) => MODELS.find((m) => m.id === id);
+
+export type ImageModel = { id: string; upstream: string; name: string; perImage: number; uncensored: boolean; style: string };
+
+
+/** Venice per-image prices (USD) + MARGIN. Keep in sync with https://docs.venice.ai/overview/pricing */
+export const IMAGE_MODELS: ImageModel[] = [
+  { id: "beeper/lustify-sdxl", upstream: "lustify-sdxl", name: "Lustify SDXL", perImage: withMargin(0.01), uncensored: true, style: "Photoreal, unfiltered" },
+  { id: "beeper/chroma", upstream: "chroma", name: "Chroma", perImage: withMargin(0.01), uncensored: true, style: "Versatile, unfiltered" },
+  { id: "beeper/z-image-turbo", upstream: "z-image-turbo", name: "Z-Image Turbo", perImage: withMargin(0.01), uncensored: true, style: "Fast, unfiltered" },
+  { id: "beeper/anime-wai", upstream: "wai-Illustrious", name: "Anime (WAI)", perImage: withMargin(0.01), uncensored: true, style: "Anime / illustration" },
+  { id: "beeper/hunyuan-image-3", upstream: "hunyuan-image-v3", name: "Hunyuan Image 3.0", perImage: withMargin(0.09), uncensored: false, style: "High detail" },
+];
+export const findImageModel = (id: string) => IMAGE_MODELS.find((m) => m.id === id);
+
 
 export type Fill = { offerId: string | null; discount: number; credit: number; price: number };
 export type Quote = { credit: number; fills: Fill[]; subtotal: number; fee: number; total: number; savings: number; discount: number };

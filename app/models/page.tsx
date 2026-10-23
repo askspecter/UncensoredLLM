@@ -1,7 +1,7 @@
 import ModelTable from "@/components/ModelTable";
 import PriceExamples from "@/components/PriceExamples";
 import PageHeader from "@/components/PageHeader";
-import { MODELS } from "@/lib/data";
+import { IMAGE_MODELS, MODELS } from "@/lib/data";
 
 export const metadata = { title: "Models — Beeper" };
 
@@ -18,7 +18,21 @@ export default function Models() {
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
-      <div className="mt-6 max-w-xl"><PriceExamples /></div>
+      <h2 className="mt-16 font-serif text-5xl uppercase text-ember">Image models</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {IMAGE_MODELS.map((m) => (
+          <div key={m.id} className="card p-5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-bold">{m.name}</p>
+              {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 text-[10px] text-ember-soft">UNCENSORED</span>}
+            </div>
+            <p className="mt-1 text-xs text-mute">{m.style}</p>
+            <p className="mt-4 font-serif text-4xl text-ember">${m.perImage}<span className="ml-1 font-sans text-xs text-mute">/ image</span></p>
+            <p className="mt-1 font-mono text-[11px] text-mute">{m.id}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-10 max-w-xl"><PriceExamples /></div>
       <p className="mt-4 text-xs text-mute">Prices in USD per 1M tokens, billed from your credit balance. Reasoning tokens count as output.</p>
     </main>
   );

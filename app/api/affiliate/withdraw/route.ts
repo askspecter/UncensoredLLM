@@ -4,7 +4,6 @@ import { requireUser } from "@/lib/auth";
 import { sql, fromMicros } from "@/lib/db";
 import { MIN_WITHDRAW } from "@/lib/affiliate";
 import { newId } from "@/lib/keys";
-import { notify } from "@/lib/notify";
 
 /** Requests a USDG payout of all commission that has cleared its hold. */
 export async function POST(req: Request) {
@@ -25,6 +24,5 @@ export async function POST(req: Request) {
     return total;
   });
   if (amount === null) return NextResponse.json({ error: `You need at least $${MIN_WITHDRAW} available to withdraw` }, { status: 400 });
-  await notify(`🤝 Affiliate withdrawal requested: $${fromMicros(amount).toFixed(2)} USDG (see /admin)`);
   return NextResponse.json({ id, amount: fromMicros(amount) }, { status: 201 });
 }

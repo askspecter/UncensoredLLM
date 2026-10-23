@@ -42,7 +42,7 @@ export default function CodeTabs() {
       <div className="flex gap-1 border-b border-line px-3 pt-3">
         {(Object.keys(SNIPPETS) as (keyof typeof SNIPPETS)[]).map((k) => (
           <button key={k} onClick={() => setTab(k)}
-            className={`rounded-t-lg px-3 py-2 font-mono text-xs ${tab === k ? "bg-ink text-bone" : "text-mute hover:text-bone"}`}>{k}</button>
+            className={`rounded-t px-3 py-2 font-mono text-xs ${tab === k ? "bg-ink text-bone" : "text-mute hover:text-bone"}`}>{k}</button>
         ))}
       </div>
       <pre className="overflow-x-auto bg-ink p-5 font-mono text-[13px] leading-relaxed text-bone/90"><code>{SNIPPETS[tab]}</code></pre>

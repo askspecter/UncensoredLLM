@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { Day } from "@/lib/metrics";
 
-const COLORS = ["#e5484d", "#ff9b8f", "#7a5b55", "#4cc38a"];
+const COLORS = ["#b6ff3b", "#7cf7c8", "#4b6b3f", "#ffb347"];
 const RANGES = [7, 14, 30] as const;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -24,9 +24,9 @@ export default function BarChart({ title, data, keys, format = "usd" }: { title:
           <p className="mt-1 font-serif text-4xl">{fmt(sum)}</p>
           <p className="font-mono text-[11px] text-mute">last {range} days</p>
         </div>
-        <div className="flex rounded-full border border-line p-0.5 font-mono text-xs">
+        <div className="flex rounded border border-line p-0.5 font-mono text-xs">
           {RANGES.map((r) => (
-            <button key={r} onClick={() => setRange(r)} className={`rounded-full px-2.5 py-1 ${range === r ? "bg-panel-2 text-bone" : "text-mute"}`}>{r}D</button>
+            <button key={r} onClick={() => setRange(r)} className={`rounded px-2.5 py-1 ${range === r ? "bg-panel-2 text-bone" : "text-mute"}`}>{r}D</button>
           ))}
         </div>
       </div>

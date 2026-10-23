@@ -2,11 +2,12 @@
 import { useEffect, useState } from "react";
 
 const SCRIPT = [
-  { q: "Write a brutally honest roast of my startup idea.", a: "Sure. You've built a to-do app with a blockchain. Nobody asked for this, and the gas fees cost more than the tasks…" },
-  { q: "Explain how lock-picking works, step by step.", a: "A pin tumbler lock has spring-loaded key pins and driver pins. Apply light tension with a wrench, then set each pin at the shear line…" },
-  { q: "Continue my dark fantasy story — no sanitizing.", a: "The crows had already found the battlefield by the time Maera woke, and the mud beneath her was warm in a way mud should never be…" },
+  { model: "DOLPHIN-24B", q: "roast my startup idea", a: "A TODO APP ON A BLOCKCHAIN. NOBODY ASKED. THE GAS FEES COST MORE THAN THE TASKS." },
+  { model: "HERMES-4-405B", q: "how do pin tumbler locks work", a: "SPRING PINS STACK IN THE PLUG. LIGHT TENSION + SET EACH PIN AT THE SHEAR LINE AND IT TURNS." },
+  { model: "EURYALE-70B", q: "continue my dark fantasy story", a: "THE CROWS FOUND THE BATTLEFIELD FIRST. MAERA WOKE IN MUD THAT WAS WARM IN A WAY MUD SHOULD NEVER BE." },
 ];
 
+/** The hero device: a pager whose LCD types out an unfiltered answer. */
 export default function HeroChat() {
   const [i, setI] = useState(0);
   const [n, setN] = useState(0);
@@ -14,24 +15,22 @@ export default function HeroChat() {
 
   useEffect(() => {
     if (n < cur.a.length) {
-      const t = setTimeout(() => setN(n + 2), 18);
+      const t = setTimeout(() => setN(n + 1), 28);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(() => { setI((i + 1) % SCRIPT.length); setN(0); }, 2600);
+    const t = setTimeout(() => { setI((i + 1) % SCRIPT.length); setN(0); }, 2800);
     return () => clearTimeout(t);
   }, [n, i, cur.a.length]);
 
   return (
-    <div className="card mx-auto w-full max-w-2xl p-4 text-left shadow-2xl shadow-ember/5">
-      <div className="mb-3 flex items-center justify-between font-mono text-[11px] text-mute">
-        <span>beeper/hermes-4-405b</span>
-        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-moss" />private · no logs</span>
+    <div className="mx-auto w-full max-w-xl rounded-[34px] border-[3px] border-[#2f352d] bg-[#1b1e1a] p-5 shadow-[0_40px_80px_rgba(0,0,0,.6),inset_0_2px_0_#3a4137] sm:p-6">
+      <div className="lcd min-h-[13.5rem] p-4 text-left font-serif text-[1.55rem] leading-[1.15] sm:p-5">
+        <p className="text-lg opacity-70">MSG 0{i + 1} · {cur.model} · PRIVATE</p>
+        <p>&gt; {cur.q}</p>
+        <p className="caret-lcd">{cur.a.slice(0, n)}<span className="animate-pulse">█</span></p>
       </div>
-      <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-panel-2 px-4 py-2.5 text-sm">{cur.q}</div>
-      <p className="caret mt-3 min-h-[4.5rem] px-1 text-sm leading-relaxed text-bone/90">{cur.a.slice(0, n)}</p>
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-line bg-ink px-4 py-3 text-sm text-mute">
-        Ask anything…
-        <span className="ml-auto rounded-md bg-ember px-2 py-1 text-xs text-white">↵</span>
+      <div className="mt-5 flex justify-center gap-3" aria-hidden>
+        {[0, 1, 2].map((k) => <span key={k} className="h-6 w-14 rounded-full border-2 border-[#3b4239] bg-[#2c312a]" />)}
       </div>
     </div>
   );

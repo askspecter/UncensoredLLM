@@ -12,8 +12,8 @@ export default function AuthButton() {
   return (
     <div className="relative">
       <button onClick={() => setOpen(!open)} className="btn btn-ghost text-sm">
-        <span className="h-1.5 w-1.5 rounded-full bg-moss" />
-        <span className="max-w-[9rem] truncate">{label}</span>
+        <span className="h-1.5 w-1.5 rounded bg-moss" />
+        <span className="max-w-[6.5rem] truncate normal-case sm:max-w-[9rem]">{label}</span>
       </button>
       {open && (
         <div className="card absolute right-0 mt-2 w-44 p-1 text-sm" onMouseLeave={() => setOpen(false)}>

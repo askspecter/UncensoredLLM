@@ -36,7 +36,7 @@ export function LiquidityBook() {
         {book.bands.map((b) => (
           <li key={b.from} className="grid grid-cols-[4.5rem_1fr_5.5rem] items-center gap-3 font-mono text-sm">
             <span className="text-moss">−{Math.round(b.from * 100)}%</span>
-            <span className="h-2 overflow-hidden rounded-full bg-panel-2">
+            <span className="h-2 overflow-hidden rounded bg-panel-2">
               <span className="block h-full rounded-full bg-gradient-to-r from-ember to-ember-soft" style={{ width: `${(b.liquidity / max) * 100}%` }} />
             </span>
             <span className="text-right text-mute">{usd0(b.liquidity)}</span>
@@ -61,7 +61,7 @@ export function RecentBuys() {
     <div className="card p-6">
       <div className="flex items-baseline justify-between">
         <p className="eyebrow">Recent buys</p>
-        <span className="flex items-center gap-1.5 font-mono text-xs text-mute"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" />live</span>
+        <span className="flex items-center gap-1.5 font-mono text-xs text-mute"><span className="h-1.5 w-1.5 animate-pulse rounded bg-moss" />live</span>
       </div>
       {buys.length === 0 ? (
         <p className="mt-5 text-sm text-mute">No purchases yet.</p>

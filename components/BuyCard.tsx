@@ -96,11 +96,11 @@ export default function BuyCard() {
     <div className="card p-6">
       <div className="flex items-center justify-between">
         <p className="eyebrow">Buy credits</p>
-        <span className="rounded-full bg-moss/10 px-2.5 py-1 font-mono text-xs text-moss">−{Math.round(q.discount * 100)}% vs list</span>
+        <span className="rounded bg-moss/10 px-2.5 py-1 font-mono text-xs text-moss">−{Math.round(q.discount * 100)}% vs list</span>
       </div>
 
       <label className="mt-5 block text-sm text-mute" htmlFor="amt">Credit amount</label>
-      <div className="mt-2 flex items-center rounded-xl border border-line bg-ink px-4 focus-within:border-ember">
+      <div className="mt-2 flex items-center rounded-md border border-line bg-ink px-4 focus-within:border-ember">
         <span className="text-2xl text-mute">$</span>
         <input
           id="amt"
@@ -115,7 +115,7 @@ export default function BuyCard() {
       <div className="mt-3 flex flex-wrap gap-2">
         {PRESETS.map((p) => (
           <button key={p} onClick={() => setAmount(p)}
-            className={`rounded-full border px-3 py-1 text-sm ${amount === p ? "border-ember text-bone" : "border-line text-mute hover:text-bone"}`}>
+            className={`rounded border px-3 py-1 text-sm ${amount === p ? "border-ember text-bone" : "border-line text-mute hover:text-bone"}`}>
             ${p.toLocaleString()}
           </button>
         ))}
@@ -134,17 +134,17 @@ export default function BuyCard() {
           : <>Filled by Beeper at −{HOUSE_DISCOUNT * 100}%. Deeper discounts appear when users list credit on the order book.</>}
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-line p-1 text-sm">
+      <div className="mt-5 grid grid-cols-2 gap-2 rounded border border-line p-1 text-sm">
         {([["usdg", "USDG · Robinhood Chain"], ["card", "Card"]] as const).map(([m, label]) => (
           <button key={m} onClick={() => setMethod(m)}
-            className={`rounded-full py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
+            className={`rounded py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
         ))}
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
         {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
-      {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Price is held for 2 hours after you create the order. No KYC. Minimum ${MIN_PURCHASE}.</p>
     </div>
   );

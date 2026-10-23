@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { MODELS } from "@/lib/data";
 
 const fmt = (n: number) => (n === 0 ? "—" : `$${n.toFixed(2)}`);
-const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents", "image"] as const;
+const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents"] as const;
 
 export default function ModelTable() {
   const [q, setQ] = useState("");
@@ -23,7 +23,7 @@ export default function ModelTable() {
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((x) => (
             <button key={x} onClick={() => setF(x)}
-              className={`rounded-full border px-3 py-1 text-xs capitalize ${f === x ? "border-ember text-bone" : "border-line text-mute hover:text-bone"}`}>{x}</button>
+              className={`rounded border px-3 py-1 text-xs capitalize ${f === x ? "border-ember text-bone" : "border-line text-mute hover:text-bone"}`}>{x}</button>
           ))}
         </div>
       </div>

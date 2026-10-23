@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 type Row = { handle: string; value: number; count: number };
-const MEDAL = ["text-[#f5c451]", "text-[#c9ccd1]", "text-[#d08a5a]"];
+const MEDAL = ["text-warn", "text-[#c9ccd1]", "text-[#d08a5a]"];
 const fmtTokens = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : `${n}`);
 
 export default function Leaderboard({ buyers, users }: { buyers: Row[]; users: Row[] }) {
@@ -18,7 +18,7 @@ export default function Leaderboard({ buyers, users }: { buyers: Row[]; users: R
       <div className="flex flex-wrap gap-2">
         {TABS.map((x) => (
           <button key={x.key} onClick={() => setTab(x.key)}
-            className={`rounded-full border px-4 py-2 text-sm ${tab === x.key ? "border-ember bg-ember/10" : "border-line text-mute hover:text-bone"}`}>{x.label}</button>
+            className={`rounded border px-4 py-2 text-sm ${tab === x.key ? "border-ember bg-ember/10" : "border-line text-mute hover:text-bone"}`}>{x.label}</button>
         ))}
       </div>
       {t.rows.length === 0 ? (

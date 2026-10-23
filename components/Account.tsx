@@ -15,7 +15,7 @@ type Me = {
 
 const usd = (n: number, digits = 2) => n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) });
 const when = (s: string | null) => (s ? new Date(s).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "never");
-const STATUS: Record<string, string> = { paid: "text-moss", pending: "text-[#f5c451]", failed: "text-ember-soft", expired: "text-mute", refunded: "text-mute" };
+const STATUS: Record<string, string> = { paid: "text-moss", pending: "text-warn", failed: "text-ember-soft", expired: "text-mute", refunded: "text-mute" };
 
 export default function Account() {
   const auth = useAuth();
@@ -98,12 +98,12 @@ export default function Account() {
   return (
     <>
       {returning && hasPending && (
-        <p className="mt-6 flex items-center gap-2 rounded-lg border border-[#f5c451]/40 bg-[#f5c451]/10 p-3 text-sm text-[#f5c451]">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f5c451]" />
+        <p className="mt-6 flex items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warn" />
           Waiting for your payment to confirm. Credit is added automatically.
         </p>
       )}
-      {error && <p className="mt-6 rounded-lg border border-ember/40 bg-ember/10 p-3 text-sm text-ember-soft">{error}</p>}
+      {error && <p className="mt-6 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">{error}</p>}
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[["Balance", usd(me.user.balance)], ["Saved vs list", usd(me.totals.saved)], ["Credit bought", usd(me.totals.bought)], ["Requests (14d)", me.totals.requests.toLocaleString()]].map(([l, v]) => (
@@ -146,8 +146,8 @@ export default function Account() {
                 </div>
                 {confirmRevoke === k.id ? (
                   <span className="flex shrink-0 gap-1">
-                    <button disabled={busy} onClick={() => revoke(k.id)} className="rounded-full bg-ember px-3 py-1 text-xs text-white">Revoke</button>
-                    <button onClick={() => setConfirmRevoke(null)} className="rounded-full border border-line px-3 py-1 text-xs">Cancel</button>
+                    <button disabled={busy} onClick={() => revoke(k.id)} className="rounded bg-danger px-3 py-1 text-xs text-ink">Revoke</button>
+                    <button onClick={() => setConfirmRevoke(null)} className="rounded border border-line px-3 py-1 text-xs">Cancel</button>
                   </span>
                 ) : (
                   <button onClick={() => setConfirmRevoke(k.id)} className="shrink-0 text-xs text-mute hover:text-ember-soft">Revoke</button>
@@ -157,7 +157,7 @@ export default function Account() {
           </ul>
           <form onSubmit={createKey} className="mt-3 flex gap-2">
             <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Key name" maxLength={40}
-              className="min-w-0 flex-1 rounded-full border border-line bg-ink px-4 py-2 text-sm outline-none focus:border-ember" />
+              className="min-w-0 flex-1 rounded border border-line bg-ink px-4 py-2 text-sm outline-none focus:border-ember" />
             <button disabled={busy} className="btn btn-ghost text-sm">+ New key</button>
           </form>
         </div>
@@ -212,7 +212,7 @@ export default function Account() {
           <p className="mt-1 text-xs text-mute">Shown on the leaderboard and recent buys instead of an anonymous name. Leave empty to stay anonymous.</p>
         </div>
         <input value={handle ?? me.user.handle ?? ""} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="anonymous" maxLength={20}
-          className="w-44 rounded-full border border-line bg-ink px-4 py-2 font-mono text-sm outline-none focus:border-ember" />
+          className="w-44 rounded border border-line bg-ink px-4 py-2 font-mono text-sm outline-none focus:border-ember" />
         <button className="btn btn-ghost text-sm">Save</button>
         {handleMsg && <p className="w-full text-xs text-mute">{handleMsg}</p>}
       </form>

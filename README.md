@@ -42,6 +42,10 @@ DATABASE_URL=postgres://... DEV_AUTH_BYPASS=1 NEXT_PUBLIC_DEV_USER=did:privy:dev
 per token at the catalogue price in `lib/data.ts`. `max_tokens` is capped to what the balance can pay for;
 streaming responses are billed from the final usage chunk (or an estimate if the client disconnects).
 
+## Images
+`POST /v1/images/generations` and the chat's image mode use the Venice API (`VENICE_API_KEY`), billed per image
+(Venice price + margin). Prompts referencing minors are rejected for every model.
+
 ## Structure
 - `app/page.tsx` — landing: hero chat demo, buy card, liquidity book, live buys, privacy tiers, model catalogue, API snippets, FAQ
 - `app/sell` — list unused credits · `app/dashboard` — balance/usage (demo data)
