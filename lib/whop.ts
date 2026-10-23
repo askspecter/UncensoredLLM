@@ -22,26 +22,31 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export type Checkout = { id: string; purchase_url: string };
 
-export function createCheckout(o: { orderId: string; usd: number; credit: number; siteUrl: string }) {
-  return call<Checkout>("/checkout_configurations", {
-    method: "POST",
-    headers: { "idempotency-key": o.orderId },
-    body: JSON.stringify({
-      mode: "payment",
-      plan: {
-        company_id: COMPANY_ID,
-        currency: "usd",
-        plan_type: "one_time",
-        release_method: "buy_now",
-        visibility: "hidden",
-        initial_price: o.usd,
-        title: `$${o.credit} Beeper credit`,
-        product: { external_identifier: "beeper-credits", title: "Beeper Credits" },
-      },
-      metadata: { order_id: o.orderId },
-      redirect_url: `${o.siteUrl}/dashboard?order=${o.orderId}`,
-    }),
+export async function createCheckout(o: { orderId: string; usd: number; credit: number; siteUrl: string }) {
+  const body = (idField: "account_id" | "company_id") => JSON.stringify({
+    mode: "payment",
+    plan: {
+      [idField]: COMPANY_ID,
+      currency: "usd",
+      plan_type: "one_time",
+      release_method: "buy_now",
+      visibility: "hidden",
+      initial_price: o.usd,
+      title: `$${o.credit} Beeper credit`,
+      product: { external_identifier: "beeper-credits", title: "Beeper Credits" },
+    },
+    metadata: { order_id: o.orderId },
+    redirect_url: `${o.siteUrl}/dashboard?order=${o.orderId}`,
   });
+  const post = (idField: "account_id" | "company_id") =>
+    call<Checkout>("/checkout_configurations", { method: "POST", headers: { "idempotency-key": `${o.orderId}-${idField}` }, body: body(idField) });
+  // Newer API versions call the business `account_id`; older ones `company_id`.
+  try {
+    return await post("account_id");
+  } catch (e) {
+    if (!/\b400\b|\b422\b/.test((e as Error).message)) throw e;
+    return post("company_id");
+  }
 }
 
 export type Payment = {
