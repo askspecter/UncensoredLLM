@@ -42,8 +42,8 @@ export default function Home() {
             The marketplace for discounted AI credits. Unfiltered open models, no logs, one OpenAI-compatible API key.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <a href="#buy" className="btn btn-primary">Buy credits</a>
-            <a href="/sell" className="btn btn-ghost">Sell unused credits</a>
+            <a href="/chat" className="btn btn-primary">Start chatting</a>
+            <a href="#buy" className="btn btn-ghost">Buy credits</a>
           </div>
           <div className="mt-14"><HeroChat /></div>
           <dl className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-6 text-left md:grid-cols-4">

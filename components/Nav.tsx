@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import AuthButton from "./AuthButton";
 
 export const NAV = [
+  { href: "/chat", label: "Chat" },
   { href: "/#buy", label: "Buy" },
   { href: "/sell", label: "Sell" },
   { href: "/models", label: "Models" },

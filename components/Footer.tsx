@@ -1,14 +1,18 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 
 const COLS = [
-  { title: "Product", links: [["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/models", "Models"], ["/dashboard", "Account"]] },
+  { title: "Product", links: [["/chat", "Chat"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/models", "Models"], ["/dashboard", "Account"]] },
   { title: "Network", links: [["/analytics", "Analytics"], ["/leaderboard", "Leaderboard"], ["/affiliates", "Affiliates"], ["/status", "Status"]] },
   { title: "Developers", links: [["/docs", "Docs"], ["/docs#quickstart", "Quickstart"], ["/docs#mcp", "MCP server"], ["/docs#errors", "Errors"]] },
   { title: "Legal", links: [["/terms", "Terms"], ["/aup", "Acceptable use"], ["/privacy", "Privacy"]] },
 ];
 
 export default function Footer() {
+  // The chat is a full-height app; no footer there.
+  if (usePathname() === "/chat") return null;
   return (
     <footer className="mt-24 border-t border-line">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-6">

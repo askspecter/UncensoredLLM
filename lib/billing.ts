@@ -11,7 +11,7 @@ export async function addToBalance(tx: postgres.TransactionSql, userId: string, 
  * remaining balance, so the balance can't go negative; returns the amount actually charged.
  */
 export async function chargeUsage(u: {
-  userId: string; keyId: string; model: string; promptTokens: number; completionTokens: number;
+  userId: string; keyId: string | null; model: string; promptTokens: number; completionTokens: number;
   costMicros: bigint; latencyMs: number; status: number;
 }): Promise<bigint> {
   return sql.begin(async (tx) => {
