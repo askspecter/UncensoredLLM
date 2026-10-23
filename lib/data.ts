@@ -1,24 +1,27 @@
-// Static catalogue + marketplace logic. Swap for a real DB / provider feed in production.
+// Model catalogue + pricing.
 
-export const PLATFORM_FEE = 0.05;
+/** Markup on upstream (OpenRouter) token prices. Credit is sold 1:1 — $1 buys $1 of usage. */
+export const MARGIN = 0.2;
 export const MIN_PURCHASE = 5;
 export const MAX_PURCHASE = 10_000;
 export const AFFILIATE_COMMISSION = 0.02;
 
-export type Model = {
+type UpstreamModel = {
   id: string;
   upstream: string; // OpenRouter model slug
   name: string;
   provider: string;
   context: string;
-  input: number; // list price USD per 1M tokens (what a request costs in credit)
+  input: number; // OpenRouter price, USD per 1M tokens — keep in sync with upstream
   output: number;
   uncensored: boolean;
   tags: string[];
 };
 
-// Prices mirror OpenRouter list prices — keep them in sync when upstream changes.
-export const MODELS: Model[] = [
+/** `input`/`output` are Beeper's prices (upstream + MARGIN); `cost` is what we pay upstream. */
+export type Model = UpstreamModel & { cost: { input: number; output: number } };
+
+const UPSTREAM_MODELS: UpstreamModel[] = [
   { id: "beeper/dolphin-mistral-24b", upstream: "cognitivecomputations/dolphin-mistral-24b-venice-edition", name: "Dolphin Mistral 24B (Venice)", provider: "Cognitive Computations", context: "128K", input: 0.2, output: 0.9, uncensored: true, tags: ["chat", "roleplay"] },
   { id: "beeper/hermes-4-405b", upstream: "nousresearch/hermes-4-405b", name: "Hermes 4 405B", provider: "Nous Research", context: "131K", input: 1.0, output: 3.0, uncensored: true, tags: ["reasoning", "chat"] },
   { id: "beeper/hermes-3-405b", upstream: "nousresearch/hermes-3-llama-3.1-405b", name: "Hermes 3 405B", provider: "Nous Research", context: "131K", input: 1.0, output: 1.0, uncensored: true, tags: ["chat", "roleplay"] },
@@ -36,72 +39,38 @@ export const MODELS: Model[] = [
   { id: "beeper/gpt-oss-120b", upstream: "openai/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "131K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
 ];
 
+const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;
+
+export const MODELS: Model[] = UPSTREAM_MODELS.map((m) => ({
+  ...m,
+  input: withMargin(m.input),
+  output: withMargin(m.output),
+  cost: { input: m.input, output: m.output },
+}));
+
 export const findModel = (id: string) => MODELS.find((m) => m.id === id);
 
-export type Tier = { discount: number; available: number };
+export type Quote = { credit: number; subtotal: number; fee: number; total: number };
 
-// Liquidity book: unused credit listed by sellers, grouped by discount.
-export const LIQUIDITY: Tier[] = [
-  { discount: 0.5, available: 1840 },
-  { discount: 0.45, available: 3260 },
-  { discount: 0.4, available: 5120 },
-  { discount: 0.35, available: 7480 },
-  { discount: 0.3, available: 12_900 },
-  { discount: 0.2, available: 21_400 },
-  { discount: 0, available: 1_000_000 },
-];
-
-export type Fill = { discount: number; credit: number; cost: number };
-export type Quote = {
-  credit: number;
-  fills: Fill[];
-  subtotal: number;
-  fee: number;
-  total: number;
-  savings: number;
-  effectiveDiscount: number;
-};
-
-const round = (n: number) => Math.round(n * 100) / 100;
-
-/** Fill a credit order from the deepest discount first, then add the platform fee. */
-export function quote(credit: number, book: Tier[] = LIQUIDITY): Quote {
-  let remaining = credit;
-  const fills: Fill[] = [];
-  for (const tier of [...book].sort((a, b) => b.discount - a.discount)) {
-    if (remaining <= 0) break;
-    const take = Math.min(remaining, tier.available);
-    if (take <= 0) continue;
-    fills.push({ discount: tier.discount, credit: take, cost: take * (1 - tier.discount) });
-    remaining -= take;
-  }
-  const subtotal = fills.reduce((s, f) => s + f.cost, 0);
-  const fee = subtotal * PLATFORM_FEE;
-  const total = subtotal + fee;
-  return {
-    credit,
-    fills: fills.map((f) => ({ ...f, cost: round(f.cost) })),
-    subtotal: round(subtotal),
-    fee: round(fee),
-    total: round(total),
-    savings: round(credit - total),
-    effectiveDiscount: credit > 0 ? 1 - total / credit : 0,
-  };
+/** Credit is sold at face value; the margin is in the token prices. */
+export function quote(credit: number): Quote {
+  const total = Math.round(credit * 100) / 100;
+  return { credit: total, subtotal: total, fee: 0, total };
 }
 
 export const PRIVACY_TIERS = [
-  { name: "Anonymized", desc: "Requests are stripped of identity and relayed through our gateway. Providers never see who you are.", level: 1 },
-  { name: "Zero retention", desc: "Prompts and completions are never written to disk. We keep billing metadata only: tokens, model, cost.", level: 2 },
-  { name: "TEE inference", desc: "Selected open models run inside trusted execution enclaves with remote attestation.", level: 3 },
-  { name: "End-to-end encrypted", desc: "Encrypt prompts client-side to an enclave key. Not even the gateway can read them.", level: 4 },
+  { name: "Anonymized", desc: "Requests reach model providers from Beeper’s account, not yours. Providers never see who you are.", level: 1, soon: false },
+  { name: "No logs, no training", desc: "We never store prompts or outputs — only billing metadata. Requests only route to providers that don’t train on or collect your data.", level: 2, soon: false },
+  { name: "Zero-retention routing", desc: "Restrict routing to providers with zero-data-retention agreements.", level: 3, soon: true },
+  { name: "End-to-end encrypted", desc: "Encrypt prompts client-side to an attested enclave. Not even the gateway can read them.", level: 4, soon: true },
 ];
 
 export const FAQ = [
   { q: "What does “uncensored” mean here?", a: "We route to open-weight models served without extra moderation layers or system-prompt filters added by us. You get the model’s raw behaviour. You are still responsible for complying with the law and our Acceptable Use Policy — illegal content (e.g. CSAM) is prohibited and accounts are terminated." },
-  { q: "Where do discounted credits come from?", a: "Sellers list unused prepaid inference credit on the order book. When you buy, your order is filled from the deepest discount first. Sellers are paid when the credit is consumed." },
-  { q: "What fees do you charge?", a: "A flat 5% platform fee on the discounted price. No subscription, minimum purchase $5." },
-  { q: "Do you store my prompts?", a: "No. Inference runs on zero-retention endpoints. We store only billing metadata (model, token counts, cost, timestamp) attached to an anonymous key." },
+  { q: "How does pricing work?", a: "$1 buys $1 of credit — no subscription, minimum $5. Each request is billed per token at the price shown in the model catalogue." },
+  { q: "How do I pay?", a: "With USDG on Robinhood Chain (from your wallet or any exchange) or by card. Credit appears automatically once the payment confirms." },
+  { q: "Do you store my prompts?", a: "No. We store only billing metadata (model, token counts, cost, timestamp). Requests are routed only to providers that don’t collect or train on your data." },
   { q: "Do I need an account or KYC?", a: "No KYC. Sign in with Google, email, or just connect an Ethereum wallet for a fully pseudonymous account. Your sign-in is never linked to prompt content." },
   { q: "Is it compatible with my SDK?", a: "Yes. The API is OpenAI-compatible. Change the base URL and API key in the OpenAI SDK, Vercel AI SDK, LangChain, LiteLLM and most agents." },
-  { q: "Can I get a refund?", a: "Unused credit can be relisted on the marketplace at any time. Credits are not redeemable for cash directly." },
+  { q: "Can I get a refund?", a: "If a card payment goes wrong, contact us and it’s refunded through the card processor. Credit is a prepaid grant of API access and isn’t redeemable for cash." },
 ];

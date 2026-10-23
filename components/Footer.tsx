@@ -15,7 +15,7 @@ export default function Footer() {
         <div className="sm:col-span-2">
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-mute">
-            Private, uncensored inference at a discount. No logs, no lectures — just the model.
+            Private, uncensored inference. No logs, no lectures — just the model.
           </p>
           <div className="mt-5 flex gap-2 text-sm">
             <span className="rounded-full border border-line px-3 py-1 text-mute">X @beeper</span>
@@ -35,8 +35,7 @@ export default function Footer() {
         ))}
       </div>
       <div className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-mute/80">
-        Credits are a prepaid grant of API access and are not redeemable for cash. Discounts depend on
-        available marketplace liquidity. “Uncensored” means no additional filtering is applied by Beeper;
+        Credits are a prepaid grant of API access and are not redeemable for cash. “Uncensored” means no additional filtering is applied by Beeper;
         users remain bound by applicable law and the Acceptable Use Policy. © {new Date().getFullYear()} Beeper.
       </div>
     </footer>

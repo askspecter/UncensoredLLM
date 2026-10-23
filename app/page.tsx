@@ -1,6 +1,6 @@
 import BuyCard from "@/components/BuyCard";
 import HeroChat from "@/components/HeroChat";
-import { LiquidityBook, LiveFeed } from "@/components/Market";
+import PriceExamples from "@/components/PriceExamples";
 import ModelTable from "@/components/ModelTable";
 import CodeTabs from "@/components/CodeTabs";
 import Faq from "@/components/Faq";
@@ -19,11 +19,11 @@ function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: 
 
 const FEATURES = [
   { t: "No filters added", d: "Open-weight models served raw. No hidden system prompts, no refusals bolted on by us." },
-  { t: "Zero data retention", d: "Prompts and outputs never touch disk. Only token counts and cost are kept for billing." },
+  { t: "No logs", d: "We never store prompts or outputs. Only token counts and cost are kept for billing." },
   { t: "Wallet sign-in", d: "No KYC. Sign in with a wallet, Google or email, pay with USDG on Robinhood Chain or card and get a key instantly." },
-  { t: "Up to 50% cheaper", d: "Buy unused credit from sellers on the order book. Flat 5% fee, no subscription." },
-  { t: "One key, every model", d: "Text, code, image and audio models behind a single OpenAI-compatible endpoint." },
-  { t: "<40 ms overhead", d: "Edge gateway with streaming passthrough. Responses report the exact upstream model ID." },
+  { t: "Pay as you go", d: "$1 buys $1 of credit. No subscription, no expiry games — billed per token." },
+  { t: "One key, every model", d: "Uncensored roleplay models and frontier open models behind one OpenAI-compatible endpoint." },
+  { t: "Streaming & transparent", d: "Full streaming support. Every response reports the exact upstream model and what it cost you." },
 ];
 
 export default function Home() {
@@ -34,20 +34,20 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
         <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20 text-center md:pt-28">
-          <p className="eyebrow">Private · Uncensored · Up to 50% off</p>
+          <p className="eyebrow">Private · Uncensored · Pay in USDG</p>
           <h1 className="mx-auto mt-5 max-w-4xl font-serif text-5xl leading-[1.02] md:text-7xl">
-            Ask anything.<br /><em className="text-ember-soft">Pay half.</em> Leave no trace.
+            Ask anything.<br /><em className="text-ember-soft">No filters.</em> No trace.
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-mute">
-            The marketplace for discounted AI inference credits. Unfiltered open models, zero logs, one anonymous API key.
+            Prepaid credits for private, uncensored AI. Unfiltered open models, no logs, one OpenAI-compatible API key.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>
-            <a href="/sell" className="btn btn-ghost">Sell unused credits</a>
+            <a href="/docs" className="btn btn-ghost">Read the docs</a>
           </div>
           <div className="mt-14"><HeroChat /></div>
           <dl className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-6 text-left md:grid-cols-4">
-            {[["$2.4M", "credit traded"], [`${MODELS.length}+`, "models"], [`${uncensored}`, "uncensored models"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
+            {[[`${MODELS.length}`, "models"], [`${uncensored}`, "uncensored models"], ["$5", "minimum"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
               <div key={l}><dt className="font-serif text-3xl">{v}</dt><dd className="text-xs uppercase tracking-wider text-mute">{l}</dd></div>
             ))}
           </dl>
@@ -55,14 +55,11 @@ export default function Home() {
       </section>
 
       {/* Buy */}
-      <Section id="buy" eyebrow="Marketplace" title={<>Discounted credit, <em>filled live</em> from the order book.</>}
-        sub="Sellers list unused prepaid inference. Your order fills from the deepest discount first — you see exactly what you pay before you pay it.">
+      <Section id="buy" eyebrow="Buy credits" title={<>Top up once. <em>Use any model.</em></>}
+        sub="Pay with USDG on Robinhood Chain or by card. Credit lands on your account the moment the payment confirms.">
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
           <BuyCard />
-          <div className="grid gap-5">
-            <LiquidityBook />
-            <LiveFeed />
-          </div>
+          <PriceExamples />
         </div>
       </Section>
 
@@ -80,14 +77,14 @@ export default function Home() {
 
       {/* Privacy */}
       <Section id="privacy" eyebrow="Privacy architecture" title={<>Your prompts are <em>yours</em>. Pick how private.</>}
-        sub="Every request is anonymized by default. Step up to enclave inference or full end-to-end encryption when it matters.">
+        sub="Every request is anonymized and never logged. Zero-retention routing and end-to-end encryption are next.">
         <div className="grid gap-4 md:grid-cols-4">
           {PRIVACY_TIERS.map((p) => (
             <div key={p.name} className="card p-6">
               <div className="flex gap-1">
                 {[1, 2, 3, 4].map((i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= p.level ? "bg-ember" : "bg-panel-2"}`} />)}
               </div>
-              <h3 className="mt-5 text-lg">{p.name}</h3>
+              <h3 className="mt-5 flex items-center gap-2 text-lg">{p.name}{p.soon && <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-mute">SOON</span>}</h3>
               <p className="mt-2 text-sm text-mute">{p.desc}</p>
             </div>
           ))}
@@ -95,8 +92,8 @@ export default function Home() {
       </Section>
 
       {/* Models */}
-      <Section id="models" eyebrow="Model catalogue" title="List price, crossed out."
-        sub="Prices shown at the current best book discount (−50%). Actual discount depends on liquidity at the time of purchase.">
+      <Section id="models" eyebrow="Model catalogue" title="Pick your model."
+        sub="Prices per 1M tokens, billed from your credit balance.">
         <ModelTable />
       </Section>
 
@@ -111,9 +108,9 @@ export default function Home() {
               ))}
             </ul>
             <div className="card grid grid-cols-3 gap-4 p-5 font-mono text-sm">
-              <div><p className="text-xs text-mute">p50</p><p className="text-bone">31 ms</p></div>
-              <div><p className="text-xs text-mute">p95</p><p className="text-bone">47 ms</p></div>
-              <div><p className="text-xs text-mute">uptime</p><p className="text-bone">99.95%</p></div>
+              <div><p className="text-xs text-mute">format</p><p className="text-bone">OpenAI</p></div>
+              <div><p className="text-xs text-mute">streaming</p><p className="text-bone">yes</p></div>
+              <div><p className="text-xs text-mute">models</p><p className="text-bone">{MODELS.length}</p></div>
             </div>
           </div>
           <CodeTabs />
@@ -130,10 +127,10 @@ export default function Home() {
         <div className="card relative overflow-hidden p-10 text-center md:p-16">
           <div className="glow pointer-events-none absolute inset-0" />
           <h2 className="relative font-serif text-4xl md:text-6xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>
-          <p className="relative mt-4 text-mute">$5 minimum. Sign in with a wallet. Your key in under a minute.</p>
+          <p className="relative mt-4 text-mute">$5 minimum. Pay in USDG or by card. Your key in under a minute.</p>
           <div className="relative mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>
-            <a href="/sell" className="btn btn-ghost">Sell credits</a>
+            <a href="/models" className="btn btn-ghost">Browse models</a>
           </div>
         </div>
       </section>

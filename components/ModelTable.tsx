@@ -5,7 +5,7 @@ import { MODELS } from "@/lib/data";
 const fmt = (n: number) => (n === 0 ? "—" : `$${n.toFixed(2)}`);
 const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents"] as const;
 
-export default function ModelTable({ discount = 0.5 }: { discount?: number }) {
+export default function ModelTable() {
   const [q, setQ] = useState("");
   const [f, setF] = useState<(typeof FILTERS)[number]>("all");
 
@@ -30,7 +30,7 @@ export default function ModelTable({ discount = 0.5 }: { discount?: number }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
-            <tr><th className="p-4">Model</th><th className="p-4">Context</th><th className="p-4">Input / 1M</th><th className="p-4">Output / 1M</th><th className="p-4">With Beeper</th></tr>
+            <tr><th className="p-4">Model</th><th className="p-4">Context</th><th className="p-4">Input / 1M</th><th className="p-4">Output / 1M</th><th className="p-4">Tags</th></tr>
           </thead>
           <tbody className="divide-y divide-line">
             {rows.map((m) => (
@@ -43,9 +43,9 @@ export default function ModelTable({ discount = 0.5 }: { discount?: number }) {
                   <div className="font-mono text-xs text-mute">{m.id}</div>
                 </td>
                 <td className="p-4 text-mute">{m.context}</td>
-                <td className="p-4 text-mute line-through decoration-mute/50">{fmt(m.input)}</td>
-                <td className="p-4 text-mute line-through decoration-mute/50">{fmt(m.output)}</td>
-                <td className="p-4 font-mono text-moss">{fmt(m.input * (1 - discount))} / {fmt(m.output * (1 - discount))}</td>
+                <td className="p-4 font-mono">{fmt(m.input)}</td>
+                <td className="p-4 font-mono">{fmt(m.output)}</td>
+                <td className="p-4 text-xs text-mute">{m.tags.join(" · ")}</td>
               </tr>
             ))}
             {rows.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-mute">No models match.</td></tr>}

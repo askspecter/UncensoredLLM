@@ -1,18 +1,19 @@
 "use client";
 import { useState } from "react";
-import type { Day } from "@/lib/stats";
+import type { Day } from "@/lib/metrics";
 
 const COLORS = ["#e5484d", "#ff9b8f", "#7a5b55", "#4cc38a"];
 const RANGES = [7, 14, 30] as const;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export default function BarChart({ title, data, keys, format = "usd" }: { title: string; data: Day[]; keys: string[]; format?: "usd" | "num" }) {
   const [range, setRange] = useState<number>(14);
   const [hover, setHover] = useState<number | null>(null);
   const rows = data.slice(-range);
   const totals = rows.map((d) => keys.reduce((s, k) => s + d.values[k], 0));
-  const max = Math.max(...totals);
+  const max = Math.max(...totals, 1e-9);
   const sum = totals.reduce((a, b) => a + b, 0);
-  const fmt = (n: number) => format === "usd" ? (n >= 1000 ? `$${(n / 1000).toFixed(2)}K` : `$${n}`) : n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n.toLocaleString();
+  const fmt = (n: number) => format === "usd" ? (n >= 1000 ? `$${(n / 1000).toFixed(2)}K` : `$${round2(n)}`) : n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n.toLocaleString();
   const shown = hover ?? rows.length - 1;
 
   return (

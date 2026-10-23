@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "Beeper — Private, uncensored AI credits up to 50% off",
-  description: "Buy and sell discounted inference credits for private, uncensored open models. One anonymous API key, zero data retention.",
+  title: "Beeper — Private, uncensored AI",
+  description: "Prepaid credits for private, uncensored AI models. One OpenAI-compatible API key, no logs, pay in USDG or by card.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

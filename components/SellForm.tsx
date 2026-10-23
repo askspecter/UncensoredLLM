@@ -17,7 +17,6 @@ export default function SellForm() {
   const [state, setState] = useState<{ ok?: string; err?: string; busy?: boolean }>({});
 
   const payoutAmt = (credit || 0) * (1 - discount / 100);
-  const speed = discount >= 45 ? "Minutes" : discount >= 35 ? "Hours" : discount >= 20 ? "1–3 days" : "Slow";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,10 +35,9 @@ export default function SellForm() {
     return (
       <div className="card slidein p-8">
         <p className="eyebrow">Listing {state.ok}</p>
-        <h3 className="mt-2 font-serif text-3xl">Submitted for verification.</h3>
+        <h3 className="mt-2 font-serif text-3xl">You’re on the list.</h3>
         <p className="mt-3 text-sm text-mute">
-          We’ll verify the balance via a read-only key, then your {usd(credit)} goes live at −{discount}%. You’re paid {usd(payoutAmt)} as buyers consume it.
-        </p>
+          When the seller marketplace opens we’ll verify the balance and list your {usd(credit)} at −{discount}%. You’d receive about {usd(payoutAmt)} as it sells.</p>
         <button className="btn btn-ghost mt-6 text-sm" onClick={() => setState({})}>List more</button>
       </div>
     );
@@ -66,7 +64,7 @@ export default function SellForm() {
       <div>
         <div className="flex justify-between text-sm"><label htmlFor="disc" className="text-mute">Discount to buyers</label><span className="font-mono text-moss">−{discount}%</span></div>
         <input id="disc" type="range" min={5} max={70} value={discount} onChange={(e) => setDiscount(+e.target.value)} className="mt-3 w-full accent-[#e5484d]" />
-        <p className="mt-1 text-xs text-mute">Expected time to sell: <span className="text-bone">{speed}</span>. Deeper discounts fill first.</p>
+        <p className="mt-1 text-xs text-mute">Deeper discounts will sell first once the marketplace opens.</p>
       </div>
 
       <div>
@@ -76,11 +74,11 @@ export default function SellForm() {
       </div>
 
       <div className="flex items-center justify-between rounded-xl bg-panel-2 p-4">
-        <span className="text-sm text-mute">You receive</span>
+        <span className="text-sm text-mute">You’d receive</span>
         <span className="font-serif text-3xl">{usd(payoutAmt)}</span>
       </div>
 
-      <button disabled={state.busy} className="btn btn-primary w-full disabled:opacity-40">{state.busy ? "Submitting…" : auth.enabled && !auth.authenticated ? "Sign in to list" : "List credits"}</button>
+      <button disabled={state.busy} className="btn btn-primary w-full disabled:opacity-40">{state.busy ? "Submitting…" : auth.enabled && !auth.authenticated ? "Sign in to apply" : "Apply to sell"}</button>
       {state.err && <p className="text-sm text-ember-soft">{state.err}</p>}
     </form>
   );

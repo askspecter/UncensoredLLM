@@ -68,7 +68,7 @@ export default function Docs() {
   "choices": [{ "message": { "role": "assistant", "content": "…" } }],
   "usage": { "prompt_tokens": 18, "completion_tokens": 212, "total_tokens": 230, "cost_usd": 0.000654 }
 }`}</Code>
-          <p>Every response reports the exact <code className="text-bone">upstream_model</code> and the discounted <code className="text-bone">cost_usd</code>.</p>
+          <p>Every response reports the exact <code className="text-bone">upstream_model</code> and the <code className="text-bone">cost_usd</code>.</p>
         </Sec>
 
         <Sec id="streaming" title="Streaming">
