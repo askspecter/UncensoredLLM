@@ -23,10 +23,13 @@ migrations automatically when `DATABASE_URL` is set (or run `npm run db:migrate`
 On Vercel: **Storage → Create Database → Neon (Postgres)** and connect it to the project — that sets
 `DATABASE_URL`. Supabase works too (use the pooled connection string). Then redeploy.
 
-Payments use NOWPayments hosted crypto invoices. `POST /api/orders` creates a pending order + invoice; the signed
-IPN webhook (`/api/payments/nowpayments`) re-checks the payment via the API and credits the balance once.
-Without NOWPayments keys you can set `PAYMENTS_MODE=test` to settle orders
-instantly while testing — turn it off before the API gateway goes live.
+Payments:
+- **USDG on Robinhood Chain** (chain 4663): each order asks for a unique exact amount (total + sub-cent suffix)
+  sent to `NEXT_PUBLIC_PAYMENT_ADDRESS`. The buyer pays from their Privy-connected wallet or any wallet/exchange;
+  `POST /api/orders/:id/confirm` verifies the Transfer on-chain (by tx hash or by scanning logs) and credits once.
+- **Card via Whop**: `POST /api/orders` creates a Whop checkout; the signed `payment.succeeded` webhook
+  (`/api/payments/whop`) re-fetches the payment from Whop, checks order/amount and credits once.
+- `PAYMENTS_MODE=test` settles orders instantly — local testing only.
 
 Local dev without Privy:
 ```bash

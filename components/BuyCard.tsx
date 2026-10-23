@@ -1,16 +1,19 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useAuth } from "./Providers";
+import PayUsdg, { type Paid, type UsdgPay } from "./PayUsdg";
 import { MAX_PURCHASE, MIN_PURCHASE, PLATFORM_FEE, quote } from "@/lib/data";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const PRESETS = [25, 100, 500, 2500];
 
-type Order = { id: string; status: "paid" | "pending"; credit: number; total: number; balance?: number; apiKey: string | null; checkoutUrl?: string | null };
+type Order = { id: string; status: "paid" | "pending"; credit: number; total: number; balance?: number; apiKey?: string | null; checkoutUrl?: string | null; pay?: UsdgPay; txHash?: string };
+type Method = "usdg" | "card";
 
 export default function BuyCard() {
   const [amount, setAmount] = useState(100);
-    const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState<Method>("usdg");
+  const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
   const auth = useAuth();
@@ -26,11 +29,11 @@ export default function BuyCard() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
-        body: JSON.stringify({ credit: amount, payment: "crypto" }),
+        body: JSON.stringify({ credit: amount, payment: method }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      if (data.checkoutUrl) { window.location.href = data.checkoutUrl; return; }
       setOrder(data);
     } catch (e) {
       setError((e as Error).message);
@@ -44,12 +47,16 @@ export default function BuyCard() {
     return (
       <div className="card slidein p-6">
         <p className="eyebrow">Order {order.id}</p>
-        <h3 className="mt-2 font-serif text-3xl">{paid ? "Credit added." : "Awaiting payment."}</h3>
+        <h3 className="mt-2 font-serif text-3xl">{paid ? "Credit added." : order.pay ? "Pay with USDG." : "Awaiting payment."}</h3>
         <p className="mt-2 text-sm text-mute">
           {paid
             ? <>{usd(order.credit)} of credit for {usd(order.total)}. Balance: <span className="text-bone">{usd(order.balance ?? order.credit)}</span>.</>
-            : <>Your order for {usd(order.credit)} ({usd(order.total)}) is created. Credit is added as soon as payment confirms.</>}
+            : <>{usd(order.credit)} of credit for {usd(order.total)}. Credit is added as soon as the payment confirms.</>}
         </p>
+        {!paid && order.pay && (
+          <PayUsdg orderId={order.id} pay={order.pay}
+            onPaid={(r: Paid) => setOrder({ ...order, status: "paid", balance: r.balance, apiKey: r.apiKey, txHash: r.txHash })} />
+        )}
         {order.apiKey && (
           <>
             <p className="mt-4 text-sm text-mute">Your first API key — save it now, it’s shown once:</p>
@@ -59,8 +66,8 @@ export default function BuyCard() {
         <div className="mt-5 flex flex-wrap gap-2">
           {!paid && order.checkoutUrl && <a href={order.checkoutUrl} className="btn btn-primary text-sm">Open checkout</a>}
           {order.apiKey && <button className="btn btn-primary text-sm" onClick={() => navigator.clipboard?.writeText(order.apiKey!)}>Copy key</button>}
-          <a href="/dashboard" className={`btn text-sm ${order.apiKey ? "btn-ghost" : "btn-primary"}`}>Go to account</a>
-          <button className="btn btn-ghost text-sm" onClick={() => setOrder(null)}>Buy more</button>
+          {paid && <a href="/dashboard" className={`btn text-sm ${order.apiKey ? "btn-ghost" : "btn-primary"}`}>Go to account</a>}
+          <button className="btn btn-ghost text-sm" onClick={() => setOrder(null)}>{paid ? "Buy more" : "Cancel"}</button>
         </div>
       </div>
     );
@@ -112,12 +119,14 @@ export default function BuyCard() {
       )}
 
       <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-line p-1 text-sm">
-        <span className="rounded-full bg-panel-2 py-1.5 text-center text-bone">Crypto · BTC / USDT / XMR +</span>
-        <span className="rounded-full py-1.5 text-center text-mute/60" title="Coming soon">Card · soon</span>
+        {([["usdg", "USDG · Robinhood Chain"], ["card", "Card"]] as const).map(([m, label]) => (
+          <button key={m} onClick={() => setMethod(m)}
+            className={`rounded-full py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
+        ))}
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? "Opening checkout…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Sign in with Google, email or a wallet. No KYC. Minimum ${MIN_PURCHASE}.</p>

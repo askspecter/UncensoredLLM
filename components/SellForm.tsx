@@ -70,8 +70,8 @@ export default function SellForm() {
       </div>
 
       <div>
-        <label htmlFor="payout" className="text-sm text-mute">Payout address (XMR / BTC / USDC)</label>
-        <input id="payout" value={payout} onChange={(e) => setPayout(e.target.value)} placeholder="bc1q… / 4… / 0x…"
+        <label htmlFor="payout" className="text-sm text-mute">Payout address (USDG · Robinhood Chain)</label>
+        <input id="payout" value={payout} onChange={(e) => setPayout(e.target.value)} placeholder="0x…"
           className="mt-2 w-full rounded-xl border border-line bg-ink px-4 py-3 font-mono text-sm outline-none focus:border-ember" />
       </div>
 

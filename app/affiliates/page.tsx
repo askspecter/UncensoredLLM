@@ -12,7 +12,7 @@ const STEPS = [
 const FAQ = [
   ["Do I earn on repeat top-ups?", "Yes. Commission applies to every settled top-up, for the lifetime of the account. It’s paid by Beeper, never added to the buyer’s price."],
   ["How is a referral attributed?", "The most recent valid referral before the buyer’s first purchase wins and stays attached. Referrals are remembered in the browser for 12 months."],
-  ["When do I get paid?", "Commissions unlock after a 14-day hold. Withdraw from $10 in USDC, BTC or XMR — no KYC under standard limits."],
+  ["When do I get paid?", "Commissions unlock after a 14-day hold. Withdraw from $10 in USDG on Robinhood Chain."],
   ["What about refunds and disputes?", "Refunds reduce commission proportionally. Disputed payments are held until resolved."],
   ["Can I refer myself?", "No. Purchases from your own account don’t earn commission."],
 ];

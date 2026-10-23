@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./Providers";
+import { explorerTx, formatUsdg } from "@/lib/chain";
 
 type Key = { id: string; name: string; prefix: string; created_at: string; last_used_at: string | null };
 type Me = {
   user: { id: string; balance: number; createdAt: string };
   keys: Key[];
-  orders: { id: string; status: string; credit: number; total: number; payment_method: string; checkout_url: string | null; created_at: string }[];
+  orders: { id: string; status: string; credit: number; total: number; payment_method: string; checkout_url: string | null; pay_units: string | null; tx_hash: string | null; created_at: string }[];
   usage: { model: string; prompt_tokens: number; completion_tokens: number; cost: number; latency_ms: number | null; status: number; created_at: string }[];
   daily: { date: string; cost: number }[];
   totals: { bought: number; saved: number; requests: number };
@@ -42,9 +43,15 @@ export default function Account() {
   const hasPending = me?.orders.some((o) => o.status === "pending" && Date.now() - Date.parse(o.created_at) < 3 * 3600_000);
   useEffect(() => {
     if (!hasPending) return;
-    const t = setInterval(load, 10_000);
+    const tick = async () => {
+      // USDG payments are detected by checking the chain for each open order.
+      const open = me?.orders.filter((o) => o.status === "pending" && o.payment_method === "usdg") ?? [];
+      await Promise.all(open.map((o) => api(`/api/orders/${o.id}/confirm`, { method: "POST", body: "{}" }).catch(() => null)));
+      await load();
+    };
+    const t = setInterval(tick, 10_000);
     return () => clearInterval(t);
-  }, [hasPending, load]);
+  }, [hasPending, load, api, me?.orders]);
   const [returning, setReturning] = useState(false);
   useEffect(() => { setReturning(new URLSearchParams(window.location.search).has("order")); }, []);
 
@@ -82,7 +89,7 @@ export default function Account() {
       {returning && hasPending && (
         <p className="mt-6 flex items-center gap-2 rounded-lg border border-[#f5c451]/40 bg-[#f5c451]/10 p-3 text-sm text-[#f5c451]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f5c451]" />
-          Payment received — waiting for on-chain confirmation. Credit is added automatically (usually 1–20 min).
+          Waiting for your payment to confirm. Credit is added automatically.
         </p>
       )}
       {error && <p className="mt-6 rounded-lg border border-ember/40 bg-ember/10 p-3 text-sm text-ember-soft">{error}</p>}
@@ -160,6 +167,8 @@ export default function Account() {
                 <td className="p-4 text-mute">{o.payment_method}</td><td className={`p-4 ${STATUS[o.status] ?? ""}`}>
                   {o.status}
                   {o.status === "pending" && o.checkout_url && <a href={o.checkout_url} className="ml-2 font-sans text-xs text-ember-soft underline">pay</a>}
+                  {o.status === "pending" && o.pay_units && <span className="ml-2 font-sans text-xs text-mute">send {formatUsdg(o.pay_units)} USDG</span>}
+                  {o.tx_hash && o.payment_method === "usdg" && <a href={explorerTx(o.tx_hash)} target="_blank" rel="noreferrer" className="ml-2 font-sans text-xs text-ember-soft underline">tx</a>}
                 </td>
               </tr>
             ))}
