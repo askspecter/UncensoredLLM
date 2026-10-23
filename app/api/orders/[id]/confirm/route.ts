@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { sql, fromMicros } from "@/lib/db";
-import { settleOrder } from "@/lib/billing";
+import { settleOrder } from "@/lib/market";
 import { createApiKey } from "@/lib/keys";
 import { explorerTx } from "@/lib/chain";
 import { findTransfer, verifyTx, type Found } from "@/lib/usdg";
@@ -17,7 +17,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     SELECT status, pay_units, start_block, tx_hash FROM orders WHERE id = ${id} AND user_id = ${auth.userId} AND payment_method = 'usdg'`;
   if (!o || !o.pay_units) return NextResponse.json({ error: "Order not found" }, { status: 404 });
   if (o.status === "paid") return NextResponse.json({ status: "paid", txHash: o.tx_hash });
-  if (o.status !== "pending") return NextResponse.json({ status: o.status });
+  // Expired orders still accept a late payment; settleOrder re-takes or covers their fills.
+  if (o.status !== "pending" && o.status !== "expired") return NextResponse.json({ status: o.status });
 
   const units = BigInt(o.pay_units);
   let found: Found | null = null;

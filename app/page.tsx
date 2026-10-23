@@ -1,6 +1,6 @@
 import BuyCard from "@/components/BuyCard";
 import HeroChat from "@/components/HeroChat";
-import PriceExamples from "@/components/PriceExamples";
+import { LiquidityBook, RecentBuys } from "@/components/Market";
 import ModelTable from "@/components/ModelTable";
 import CodeTabs from "@/components/CodeTabs";
 import Faq from "@/components/Faq";
@@ -21,7 +21,7 @@ const FEATURES = [
   { t: "No filters added", d: "Open-weight models served raw. No hidden system prompts, no refusals bolted on by us." },
   { t: "No logs", d: "We never store prompts or outputs. Only token counts and cost are kept for billing." },
   { t: "Wallet sign-in", d: "No KYC. Sign in with a wallet, Google or email, pay with USDG on Robinhood Chain or card and get a key instantly." },
-  { t: "Pay as you go", d: "$1 buys $1 of credit. No subscription, no expiry games — billed per token." },
+  { t: "Always 10%+ off", d: "Beeper backs every order at −10%. Users reselling unused credit push discounts deeper." },
   { t: "One key, every model", d: "Uncensored roleplay models and frontier open models behind one OpenAI-compatible endpoint." },
   { t: "Streaming & transparent", d: "Full streaming support. Every response reports the exact upstream model and what it cost you." },
 ];
@@ -34,20 +34,20 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
         <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20 text-center md:pt-28">
-          <p className="eyebrow">Private · Uncensored · Pay in USDG</p>
+          <p className="eyebrow">Private · Uncensored · 10%+ off</p>
           <h1 className="mx-auto mt-5 max-w-4xl font-serif text-5xl leading-[1.02] md:text-7xl">
             Ask anything.<br /><em className="text-ember-soft">No filters.</em> No trace.
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-mute">
-            Prepaid credits for private, uncensored AI. Unfiltered open models, no logs, one OpenAI-compatible API key.
+            The marketplace for discounted AI credits. Unfiltered open models, no logs, one OpenAI-compatible API key.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>
-            <a href="/docs" className="btn btn-ghost">Read the docs</a>
+            <a href="/sell" className="btn btn-ghost">Sell unused credits</a>
           </div>
           <div className="mt-14"><HeroChat /></div>
           <dl className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-6 text-left md:grid-cols-4">
-            {[[`${MODELS.length}`, "models"], [`${uncensored}`, "uncensored models"], ["$5", "minimum"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
+            {[[`${MODELS.length}`, "models"], [`${uncensored}`, "uncensored models"], ["10%+", "off every top-up"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
               <div key={l}><dt className="font-serif text-3xl">{v}</dt><dd className="text-xs uppercase tracking-wider text-mute">{l}</dd></div>
             ))}
           </dl>
@@ -55,11 +55,14 @@ export default function Home() {
       </section>
 
       {/* Buy */}
-      <Section id="buy" eyebrow="Buy credits" title={<>Top up once. <em>Use any model.</em></>}
-        sub="Pay with USDG on Robinhood Chain or by card. Credit lands on your account the moment the payment confirms.">
+      <Section id="buy" eyebrow="Marketplace" title={<>Discounted credit, <em>filled live</em> from the order book.</>}
+        sub="Users resell credit they won’t use; Beeper backs every order at −10%. Your order fills from the deepest discount first — pay with USDG on Robinhood Chain or by card.">
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
           <BuyCard />
-          <PriceExamples />
+          <div className="grid content-start gap-5">
+            <LiquidityBook />
+            <RecentBuys />
+          </div>
         </div>
       </Section>
 
@@ -93,7 +96,7 @@ export default function Home() {
 
       {/* Models */}
       <Section id="models" eyebrow="Model catalogue" title="Pick your model."
-        sub="Prices per 1M tokens, billed from your credit balance.">
+        sub="List prices per 1M tokens, billed from your credit balance — and you buy that credit at a discount.">
         <ModelTable />
       </Section>
 
@@ -127,7 +130,7 @@ export default function Home() {
         <div className="card relative overflow-hidden p-10 text-center md:p-16">
           <div className="glow pointer-events-none absolute inset-0" />
           <h2 className="relative font-serif text-4xl md:text-6xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>
-          <p className="relative mt-4 text-mute">$5 minimum. Pay in USDG or by card. Your key in under a minute.</p>
+          <p className="relative mt-4 text-mute">10%+ off every top-up. Pay in USDG or by card. Your key in under a minute.</p>
           <div className="relative mt-8 flex justify-center gap-3">
             <a href="#buy" className="btn btn-primary">Buy credits</a>
             <a href="/models" className="btn btn-ghost">Browse models</a>

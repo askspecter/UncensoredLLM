@@ -1,7 +1,12 @@
 // Model catalogue + pricing.
 
-/** Markup on upstream (OpenRouter) token prices. Credit is sold 1:1 — $1 buys $1 of usage. */
+/** Markup on upstream (OpenRouter) token prices. */
 export const MARGIN = 0.2;
+/** Beeper's own unlimited liquidity on the order book, funded by the token margin. */
+export const HOUSE_DISCOUNT = 0.1;
+/** Fee on credit bought from other users' offers (charged on the discounted price). */
+export const MARKET_FEE = 0.05;
+export const MIN_OFFER = 10;
 export const MIN_PURCHASE = 5;
 export const MAX_PURCHASE = 10_000;
 export const AFFILIATE_COMMISSION = 0.02;
@@ -50,13 +55,8 @@ export const MODELS: Model[] = UPSTREAM_MODELS.map((m) => ({
 
 export const findModel = (id: string) => MODELS.find((m) => m.id === id);
 
-export type Quote = { credit: number; subtotal: number; fee: number; total: number };
-
-/** Credit is sold at face value; the margin is in the token prices. */
-export function quote(credit: number): Quote {
-  const total = Math.round(credit * 100) / 100;
-  return { credit: total, subtotal: total, fee: 0, total };
-}
+export type Fill = { offerId: string | null; discount: number; credit: number; price: number };
+export type Quote = { credit: number; fills: Fill[]; subtotal: number; fee: number; total: number; savings: number; discount: number };
 
 export const PRIVACY_TIERS = [
   { name: "Anonymized", desc: "Requests reach model providers from Beeper’s account, not yours. Providers never see who you are.", level: 1, soon: false },
@@ -67,7 +67,8 @@ export const PRIVACY_TIERS = [
 
 export const FAQ = [
   { q: "What does “uncensored” mean here?", a: "We route to open-weight models served without extra moderation layers or system-prompt filters added by us. You get the model’s raw behaviour. You are still responsible for complying with the law and our Acceptable Use Policy — illegal content (e.g. CSAM) is prohibited and accounts are terminated." },
-  { q: "How does pricing work?", a: "$1 buys $1 of credit — no subscription, minimum $5. Each request is billed per token at the price shown in the model catalogue." },
+  { q: "Where do the discounts come from?", a: "Beeper sells credit at 10% below list on every order. Users who won’t use their credit can list it on the order book at a deeper discount; your order fills from the deepest offers first, plus a 5% fee on that part. Requests are billed per token at the list prices in the model catalogue." },
+  { q: "How do I sell credit?", a: "List part of your balance on the Sell page with the discount you want. It’s held in escrow until it sells, and you’re paid in USDG on Robinhood Chain. Cancel any time to get unsold credit back." },
   { q: "How do I pay?", a: "With USDG on Robinhood Chain (from your wallet or any exchange) or by card. Credit appears automatically once the payment confirms." },
   { q: "Do you store my prompts?", a: "No. We store only billing metadata (model, token counts, cost, timestamp). Requests are routed only to providers that don’t collect or train on your data." },
   { q: "Do I need an account or KYC?", a: "No KYC. Sign in with Google, email, or just connect an Ethereum wallet for a fully pseudonymous account. Your sign-in is never linked to prompt content." },

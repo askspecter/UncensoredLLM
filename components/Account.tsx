@@ -195,6 +195,7 @@ export default function Account() {
         </table>
         <p className="border-t border-line p-4 text-xs text-mute">Only billing metadata is logged. Prompt and completion content is never stored.</p>
       </div>
+      <p className="mt-6 break-all font-mono text-[11px] text-mute">User ID: {me.user.id}</p>
     </>
   );
 }

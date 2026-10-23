@@ -1,4 +1,5 @@
 import ModelTable from "@/components/ModelTable";
+import PriceExamples from "@/components/PriceExamples";
 import PageHeader from "@/components/PageHeader";
 import { MODELS } from "@/lib/data";
 
@@ -17,6 +18,7 @@ export default function Models() {
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
+      <div className="mt-6 max-w-xl"><PriceExamples /></div>
       <p className="mt-4 text-xs text-mute">Prices in USD per 1M tokens, billed from your credit balance. Reasoning tokens count as output.</p>
     </main>
   );

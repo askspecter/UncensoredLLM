@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { settleOrder } from "@/lib/billing";
+import { settleOrder } from "@/lib/market";
 import { getPayment, verifyWebhook } from "@/lib/whop";
 
 // Whop webhook. Retries until 2xx, so every branch is idempotent.

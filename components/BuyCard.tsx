@@ -1,8 +1,8 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./Providers";
 import PayUsdg, { type Paid, type UsdgPay } from "./PayUsdg";
-import { MAX_PURCHASE, MIN_PURCHASE, quote } from "@/lib/data";
+import { HOUSE_DISCOUNT, MARKET_FEE, MAX_PURCHASE, MIN_PURCHASE, type Quote } from "@/lib/data";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const PRESETS = [10, 25, 100, 500];
@@ -19,7 +19,26 @@ export default function BuyCard() {
   const auth = useAuth();
 
   const valid = amount >= MIN_PURCHASE && amount <= MAX_PURCHASE;
-  const q = useMemo(() => quote(valid ? amount : 0), [amount, valid]);
+  // Fallback while the live quote loads: house price only.
+  const fallback: Quote = { credit: valid ? amount : 0, fills: [], subtotal: 0, fee: 0, total: 0, savings: 0, discount: HOUSE_DISCOUNT };
+  fallback.total = fallback.subtotal = Math.round(fallback.credit * (1 - HOUSE_DISCOUNT) * 100) / 100;
+  fallback.savings = Math.round((fallback.credit - fallback.total) * 100) / 100;
+  const [live, setLive] = useState<Quote | null>(null);
+  const q = live && live.credit === amount ? live : fallback;
+
+  useEffect(() => {
+    if (!valid) return;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/quote?credit=${amount}`, { headers: await auth.authHeaders() });
+        if (res.ok) setLive(await res.json());
+      } catch { /* keep fallback */ }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [amount, valid, auth]);
+
+  const fromBook = q.fills.filter((f) => f.offerId);
+  const bookCredit = fromBook.reduce((s, f) => s + f.credit, 0);
 
   async function checkout() {
     if (auth.enabled && !auth.authenticated) return auth.login();
@@ -77,7 +96,7 @@ export default function BuyCard() {
     <div className="card p-6">
       <div className="flex items-center justify-between">
         <p className="eyebrow">Buy credits</p>
-        <span className="rounded-full bg-moss/10 px-2.5 py-1 font-mono text-xs text-moss">$1 = $1 credit</span>
+        <span className="rounded-full bg-moss/10 px-2.5 py-1 font-mono text-xs text-moss">−{Math.round(q.discount * 100)}% vs list</span>
       </div>
 
       <label className="mt-5 block text-sm text-mute" htmlFor="amt">Credit amount</label>
@@ -103,10 +122,17 @@ export default function BuyCard() {
       </div>
 
       <dl className="mt-6 space-y-2 text-sm">
-        <div className="flex justify-between"><dt className="text-mute">Credit added</dt><dd>{usd(q.credit)}</dd></div>
-        <div className="flex justify-between"><dt className="text-mute">Fees</dt><dd>{usd(q.fee)}</dd></div>
+        <div className="flex justify-between"><dt className="text-mute">List value</dt><dd className="text-mute line-through">{usd(q.credit)}</dd></div>
+        <div className="flex justify-between"><dt className="text-mute">Discounted credit</dt><dd>{usd(q.subtotal)}</dd></div>
+        <div className="flex justify-between"><dt className="text-mute">Market fee ({MARKET_FEE * 100}% on order-book fills)</dt><dd>{usd(q.fee)}</dd></div>
         <div className="flex justify-between border-t border-line pt-3 text-base"><dt>You pay</dt><dd className="font-semibold">{usd(q.total)}</dd></div>
+        <div className="flex justify-between text-moss"><dt>You save</dt><dd>{usd(q.savings)}</dd></div>
       </dl>
+      <p className="mt-3 font-mono text-[11px] leading-relaxed text-mute">
+        {fromBook.length > 0
+          ? <>{usd(bookCredit)} from {fromBook.length} order-book offer{fromBook.length > 1 ? "s" : ""} ({fromBook.map((f) => `−${Math.round(f.discount * 100)}%`).join(", ")}) · rest from Beeper at −{HOUSE_DISCOUNT * 100}%</>
+          : <>Filled by Beeper at −{HOUSE_DISCOUNT * 100}%. Deeper discounts appear when users list credit on the order book.</>}
+      </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-line p-1 text-sm">
         {([["usdg", "USDG · Robinhood Chain"], ["card", "Card"]] as const).map(([m, label]) => (
@@ -119,7 +145,7 @@ export default function BuyCard() {
         {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
-      <p className="mt-3 text-center text-xs text-mute">No subscription. No KYC. Minimum ${MIN_PURCHASE}. Credit never expires.</p>
+      <p className="mt-3 text-center text-xs text-mute">Price is held for 2 hours after you create the order. No KYC. Minimum ${MIN_PURCHASE}.</p>
     </div>
   );
 }
