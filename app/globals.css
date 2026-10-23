@@ -8,7 +8,7 @@
   --color-line: #1f2c1c;
   --color-mute: #76946f;
   --color-bone: #dcffd4;
-  --color-ember: #b6ff3b;       /* primary — phosphor lime */
+  --color-ember: #a8fb28;       /* primary — logo lime */
   --color-ember-soft: #d4ff7a;
   --color-moss: #7cf7c8;        /* positive / discounts — mint */
   --color-warn: #ffb347;        /* pending — amber */
@@ -32,15 +32,15 @@ body { background: var(--color-ink); color: var(--color-bone); }
 
 /* Pixel display type renders small; scale it up and give it a phosphor glow. */
 .font-serif { font-size-adjust: 0.62; letter-spacing: .01em; }
-h1.font-serif, h2.font-serif, .display { text-shadow: 0 0 18px rgba(182,255,59,.35); }
+h1.font-serif, h2.font-serif, .display { text-shadow: 0 0 18px rgba(168,251,40,.35); }
 .font-serif em, h1 em, h2 em { font-style: normal; color: var(--color-ember); }
 
 @layer components {
-.glow { background: radial-gradient(50% 60% at 50% 0%, rgba(182,255,59,.10), transparent 70%); }
+.glow { background: radial-gradient(50% 60% at 50% 0%, rgba(168,251,40,.10), transparent 70%); }
 .card { background: var(--color-panel); border: 2px solid var(--color-line); border-radius: 6px; }
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:4px; padding:.65rem 1.1rem; font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; transition: all .12s; }
 .btn-primary { background: var(--color-ember); color: var(--color-ink); border: 2px solid var(--color-ember); }
-.btn-primary:hover { background: var(--color-ember-soft); border-color: var(--color-ember-soft); box-shadow: 0 0 18px rgba(182,255,59,.35); }
+.btn-primary:hover { background: var(--color-ember-soft); border-color: var(--color-ember-soft); box-shadow: 0 0 18px rgba(168,251,40,.35); }
 .btn-ghost { border: 2px solid var(--color-line); color: var(--color-bone); }
 .btn-ghost:hover { border-color: var(--color-ember); color: var(--color-ember); }
 .eyebrow { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--color-mute); }

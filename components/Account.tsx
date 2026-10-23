@@ -17,6 +17,18 @@ const usd = (n: number, digits = 2) => n.toLocaleString("en-US", { style: "curre
 const when = (s: string | null) => (s ? new Date(s).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "never");
 const STATUS: Record<string, string> = { paid: "text-moss", pending: "text-warn", failed: "text-ember-soft", expired: "text-mute", refunded: "text-mute" };
 
+type OrderRow = Me["orders"][number];
+
+function OrderExtras({ o }: { o: OrderRow }) {
+  return (
+    <>
+      {o.status === "pending" && o.checkout_url && <a href={o.checkout_url} className="ml-2 font-sans text-xs text-ember-soft underline">pay</a>}
+      {o.status === "pending" && o.pay_units && <span className="ml-2 font-sans text-xs text-mute">send {formatUsdg(o.pay_units)} USDG</span>}
+      {o.tx_hash && o.payment_method === "usdg" && <a href={explorerTx(o.tx_hash)} target="_blank" rel="noreferrer" className="ml-2 font-sans text-xs text-ember-soft underline">tx</a>}
+    </>
+  );
+}
+
 export default function Account() {
   const auth = useAuth();
   const [me, setMe] = useState<Me | null>(null);
@@ -163,56 +175,85 @@ export default function Account() {
         </div>
       </div>
 
-      <div className="card mt-4 overflow-x-auto">
+      <div className="card mt-4">
         <p className="eyebrow p-5 pb-0">Orders</p>
-        <table className="w-full min-w-[560px] text-sm">
-          <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
-            <tr><th className="p-4">Order</th><th className="p-4">Date</th><th className="p-4">Credit</th><th className="p-4">Paid</th><th className="p-4">Method</th><th className="p-4">Status</th></tr>
-          </thead>
-          <tbody className="divide-y divide-line font-mono">
-            {me.orders.length === 0 && <tr><td colSpan={6} className="p-6 text-center font-sans text-mute">No orders yet. <a href="/#buy" className="text-ember-soft underline">Buy credits</a></td></tr>}
-            {me.orders.map((o) => (
-              <tr key={o.id}>
-                <td className="p-4 text-mute">{o.id}</td><td className="p-4 text-mute">{when(o.created_at)}</td>
-                <td className="p-4">{usd(o.credit)}</td><td className="p-4">{usd(o.total)}</td>
-                <td className="p-4 text-mute">{o.payment_method}</td><td className={`p-4 ${STATUS[o.status] ?? ""}`}>
-                  {o.status}
-                  {o.status === "pending" && o.checkout_url && <a href={o.checkout_url} className="ml-2 font-sans text-xs text-ember-soft underline">pay</a>}
-                  {o.status === "pending" && o.pay_units && <span className="ml-2 font-sans text-xs text-mute">send {formatUsdg(o.pay_units)} USDG</span>}
-                  {o.tx_hash && o.payment_method === "usdg" && <a href={explorerTx(o.tx_hash)} target="_blank" rel="noreferrer" className="ml-2 font-sans text-xs text-ember-soft underline">tx</a>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {me.orders.length === 0 && <p className="p-6 text-center text-sm text-mute">No orders yet. <a href="/#buy" className="text-ember-soft underline">Buy credits</a></p>}
+        {/* Mobile: compact rows */}
+        <ul className="divide-y divide-line md:hidden">
+          {me.orders.map((o) => (
+            <li key={o.id} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
+              <div className="min-w-0">
+                <p className="font-bold">{usd(o.credit)} <span className="font-normal text-mute">for {usd(o.total)}</span></p>
+                <p className="truncate text-xs text-mute">{when(o.created_at)} · {o.payment_method}</p>
+                <OrderExtras o={o} />
+              </div>
+              <span className={`shrink-0 text-xs uppercase ${STATUS[o.status] ?? ""}`}>{o.status}</span>
+            </li>
+          ))}
+        </ul>
+        {/* Desktop: table */}
+        {me.orders.length > 0 && (
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
+                <tr><th className="p-4">Order</th><th className="p-4">Date</th><th className="p-4">Credit</th><th className="p-4">Paid</th><th className="p-4">Method</th><th className="p-4">Status</th></tr>
+              </thead>
+              <tbody className="divide-y divide-line font-mono">
+                {me.orders.map((o) => (
+                  <tr key={o.id}>
+                    <td className="p-4 text-mute">{o.id}</td><td className="p-4 text-mute">{when(o.created_at)}</td>
+                    <td className="p-4">{usd(o.credit)}</td><td className="p-4">{usd(o.total)}</td>
+                    <td className="p-4 text-mute">{o.payment_method}</td>
+                    <td className={`p-4 ${STATUS[o.status] ?? ""}`}>{o.status}<OrderExtras o={o} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <div className="card mt-4 overflow-x-auto">
+      <div className="card mt-4">
         <p className="eyebrow p-5 pb-0">Recent requests</p>
-        <table className="w-full min-w-[560px] text-sm">
-          <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
-            <tr><th className="p-4">Model</th><th className="p-4">In</th><th className="p-4">Out</th><th className="p-4">Cost</th><th className="p-4">Latency</th><th className="p-4">Time</th></tr>
-          </thead>
-          <tbody className="divide-y divide-line font-mono">
-            {me.usage.length === 0 && <tr><td colSpan={6} className="p-6 text-center font-sans text-mute">No requests yet. See the <a href="/docs#quickstart" className="text-ember-soft underline">quickstart</a>.</td></tr>}
-            {me.usage.map((u, i) => (
-              <tr key={i}>
-                <td className="p-4">{u.model}</td><td className="p-4 text-mute">{u.prompt_tokens.toLocaleString()}</td>
-                <td className="p-4 text-mute">{u.completion_tokens.toLocaleString()}</td><td className="p-4">{usd(u.cost, 4)}</td>
-                <td className="p-4 text-mute">{u.latency_ms ?? "—"} ms</td><td className="p-4 text-mute">{when(u.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {me.usage.length === 0 && <p className="p-6 text-center text-sm text-mute">No requests yet. See the <a href="/docs#quickstart" className="text-ember-soft underline">quickstart</a>.</p>}
+        <ul className="divide-y divide-line md:hidden">
+          {me.usage.map((u, i) => (
+            <li key={i} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
+              <div className="min-w-0">
+                <p className="truncate">{u.model.replace("beeper/", "")}</p>
+                <p className="text-xs text-mute">{u.prompt_tokens === 0 ? `${u.completion_tokens} image${u.completion_tokens === 1 ? "" : "s"}` : `${u.prompt_tokens.toLocaleString()} in · ${u.completion_tokens.toLocaleString()} out`} · {when(u.created_at)}</p>
+              </div>
+              <span className="shrink-0 font-mono text-xs">{usd(u.cost, 4)}</span>
+            </li>
+          ))}
+        </ul>
+        {me.usage.length > 0 && (
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
+                <tr><th className="p-4">Model</th><th className="p-4">In</th><th className="p-4">Out</th><th className="p-4">Cost</th><th className="p-4">Latency</th><th className="p-4">Time</th></tr>
+              </thead>
+              <tbody className="divide-y divide-line font-mono">
+                {me.usage.map((u, i) => (
+                  <tr key={i}>
+                    <td className="p-4">{u.model}</td><td className="p-4 text-mute">{u.prompt_tokens.toLocaleString()}</td>
+                    <td className="p-4 text-mute">{u.completion_tokens.toLocaleString()}</td><td className="p-4">{usd(u.cost, 4)}</td>
+                    <td className="p-4 text-mute">{u.latency_ms ?? "—"} ms</td><td className="p-4 text-mute">{when(u.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <p className="border-t border-line p-4 text-xs text-mute">Only billing metadata is logged. Prompt and completion content is never stored.</p>
       </div>
-      <form onSubmit={saveHandle} className="card mt-4 flex flex-wrap items-center gap-3 p-5">
-        <div className="min-w-0 flex-1">
+      <form onSubmit={saveHandle} className="card mt-4 flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+        <div className="min-w-0 sm:flex-1">
           <p className="eyebrow">Public handle</p>
           <p className="mt-1 text-xs text-mute">Shown on the leaderboard and recent buys instead of an anonymous name. Leave empty to stay anonymous.</p>
         </div>
         <input value={handle ?? me.user.handle ?? ""} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="anonymous" maxLength={20}
-          className="w-44 rounded border border-line bg-ink px-4 py-2 font-mono text-sm outline-none focus:border-ember" />
+          className="w-full rounded border border-line bg-ink px-4 py-2 font-mono text-sm outline-none focus:border-ember sm:w-44" />
         <button className="btn btn-ghost text-sm">Save</button>
         {handleMsg && <p className="w-full text-xs text-mute">{handleMsg}</p>}
       </form>

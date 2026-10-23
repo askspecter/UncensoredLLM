@@ -88,7 +88,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         defaultChain: robinhood,
         appearance: {
           theme: "#0d110c",
-          accentColor: "#b6ff3b",
+          accentColor: "#a8fb28",
           logo: "/beeper-logo.svg",
           landingHeader: "Sign in to Beeper",
           walletChainType: "ethereum-only",

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { Day } from "@/lib/metrics";
 
-const COLORS = ["#b6ff3b", "#7cf7c8", "#4b6b3f", "#ffb347"];
+const COLORS = ["#a8fb28", "#7cf7c8", "#4b6b3f", "#ffb347"];
 const RANGES = [7, 14, 30] as const;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

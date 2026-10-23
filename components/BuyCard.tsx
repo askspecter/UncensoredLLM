@@ -124,7 +124,7 @@ export default function BuyCard() {
       <dl className="mt-6 space-y-2 text-sm">
         <div className="flex justify-between"><dt className="text-mute">List value</dt><dd className="text-mute line-through">{usd(q.credit)}</dd></div>
         <div className="flex justify-between"><dt className="text-mute">Discounted credit</dt><dd>{usd(q.subtotal)}</dd></div>
-        <div className="flex justify-between"><dt className="text-mute">Market fee ({MARKET_FEE * 100}% on order-book fills)</dt><dd>{usd(q.fee)}</dd></div>
+        <div className="flex justify-between"><dt className="text-mute">Market fee ({MARKET_FEE * 100}%)</dt><dd>{usd(q.fee)}</dd></div>
         <div className="flex justify-between border-t border-line pt-3 text-base"><dt>You pay</dt><dd className="font-semibold">{usd(q.total)}</dd></div>
         <div className="flex justify-between text-moss"><dt>You save</dt><dd>{usd(q.savings)}</dd></div>
       </dl>
@@ -135,9 +135,9 @@ export default function BuyCard() {
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-2 rounded border border-line p-1 text-sm">
-        {([["usdg", "USDG · Robinhood Chain"], ["card", "Card"]] as const).map(([m, label]) => (
+        {([["usdg", "USDG", "· Robinhood"], ["card", "Card", ""]] as const).map(([m, label, extra]) => (
           <button key={m} onClick={() => setMethod(m)}
-            className={`rounded py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
+            className={`rounded py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}<span className="hidden sm:inline"> {extra}</span></button>
         ))}
       </div>
 

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Providers";
 import { IMAGE_MODELS, MODELS } from "@/lib/data";
+import ProviderLogo from "./ProviderLogo";
 
 type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[] };
 type Convo = { id: string; title: string; model: string; system: string; messages: Msg[]; updated: number };
@@ -200,6 +201,7 @@ export default function Chat() {
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <button onClick={() => setSidebar(!sidebar)} className="rounded border border-line px-3 py-1.5 text-xs md:hidden">Chats</button>
+          <ProviderLogo provider={imageModel ? imageModel.provider : model.provider} size={30} />
           <select value={active.model} onChange={(e) => update(active.id, (c) => ({ ...c, model: e.target.value }))}
             className="min-w-0 max-w-[60vw] rounded border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
             <optgroup label="Chat">

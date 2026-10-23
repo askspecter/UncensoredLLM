@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 71 46" fill="none">
+  <defs>
+    <pattern id="scan" width="4" height="1.3" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1.3" fill="#a8fb28"/>
+      <rect y="0.95" width="4" height="0.35" fill="#84c617"/>
+    </pattern>
+  </defs>
+  <g fill="url(#scan)">
+    <path d="M0.8 0H17.2a0.8 0.8 0 0 1 .8.8V5.8a0.8 0.8 0 0 1-.8.8H8V39H17.2a0.8 0.8 0 0 1 .8.8v5a0.8 0.8 0 0 1-.8.8H0.8A0.8 0.8 0 0 1 0 44.8V0.8A0.8 0.8 0 0 1 .8 0Z"/>
+    <path d="M70.2 0H53.8a0.8 0.8 0 0 0-.8.8V5.8a0.8 0.8 0 0 0 .8.8H63V39H53.8a0.8 0.8 0 0 0-.8.8v5a0.8 0.8 0 0 0 .8.8H70.2a0.8 0.8 0 0 0 .8-.8V0.8A0.8 0.8 0 0 0 70.2 0Z"/>
+    <rect x="15.5" y="15.6" width="17.6" height="17" rx="0.8"/>
+    <rect x="38" y="15.6" width="17.6" height="17" rx="0.8"/>
+  </g>
+</svg>

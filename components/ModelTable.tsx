@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { MODELS } from "@/lib/data";
+import ProviderLogo from "./ProviderLogo";
 
 const fmt = (n: number) => (n === 0 ? "—" : `$${n.toFixed(2)}`);
 const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents"] as const;
@@ -27,8 +28,27 @@ export default function ModelTable() {
           ))}
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+      {/* Mobile: stacked cards */}
+      <ul className="divide-y divide-line md:hidden">
+        {rows.map((m) => (
+          <li key={m.id} className="flex items-start gap-3 p-4">
+            <ProviderLogo provider={m.provider} size={34} />
+            <div className="min-w-0 flex-1">
+              <p className="flex flex-wrap items-center gap-2 font-bold">
+                {m.name}
+                {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 text-[10px] font-normal text-ember-soft">UNCENSORED</span>}
+              </p>
+              <p className="text-xs text-mute">{m.provider} · {m.context} context</p>
+              <p className="mt-1.5 font-mono text-xs">{fmt(m.input)} in · {fmt(m.output)} out <span className="text-mute">/ 1M</span></p>
+            </div>
+          </li>
+        ))}
+        {rows.length === 0 && <li className="p-8 text-center text-mute">No models match.</li>}
+      </ul>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-sm">
           <thead className="text-left font-mono text-[11px] uppercase tracking-wider text-mute">
             <tr><th className="p-4">Model</th><th className="p-4">Context</th><th className="p-4">Input / 1M</th><th className="p-4">Output / 1M</th><th className="p-4">Tags</th></tr>
           </thead>
@@ -36,11 +56,16 @@ export default function ModelTable() {
             {rows.map((m) => (
               <tr key={m.id} className="hover:bg-panel-2/60">
                 <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    {m.name}
-                    {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 font-mono text-[10px] text-ember-soft">UNCENSORED</span>}
+                  <div className="flex items-center gap-3">
+                    <ProviderLogo provider={m.provider} />
+                    <div>
+                      <div className="flex items-center gap-2 font-bold">
+                        {m.name}
+                        {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 font-mono text-[10px] font-normal text-ember-soft">UNCENSORED</span>}
+                      </div>
+                      <div className="font-mono text-xs text-mute">{m.id}</div>
+                    </div>
                   </div>
-                  <div className="font-mono text-xs text-mute">{m.id}</div>
                 </td>
                 <td className="p-4 text-mute">{m.context}</td>
                 <td className="p-4 font-mono">{fmt(m.input)}</td>

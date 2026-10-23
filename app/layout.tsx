@@ -9,10 +9,23 @@ import RefCapture from "@/components/RefCapture";
 const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-mono-ui" });
 const pixel = VT323({ subsets: ["latin"], weight: "400", variable: "--font-pixel" });
 
+const SITE = process.env.SITE_URL ?? "https://usebeeper.io";
+const TITLE = "Beeper — Private, uncensored AI";
+const DESCRIPTION = "Ask anything. No filters. No trace. Uncensored chat, images and an OpenAI-compatible API — credits 10%+ off, pay in USDG or card.";
+
 export const metadata: Metadata = {
-  title: "Beeper — Private, uncensored AI credits at a discount",
-  description: "Prepaid credits for private, uncensored AI models. One OpenAI-compatible API key, no logs, pay in USDG or by card.",
+  metadataBase: new URL(SITE),
+  title: { default: TITLE, template: "%s" },
+  description: DESCRIPTION,
+  applicationName: "Beeper",
+  openGraph: {
+    type: "website", url: SITE, siteName: "Beeper", title: TITLE, description: DESCRIPTION,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Beeper — Ask anything. No filters. No trace." }],
+  },
+  twitter: { card: "summary_large_image", site: "@usebeeper", creator: "@usebeeper", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };
+
+export const viewport = { themeColor: "#000000" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

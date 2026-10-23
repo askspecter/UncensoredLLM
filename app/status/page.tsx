@@ -43,7 +43,7 @@ export default async function Status() {
       <div className="card mt-4 divide-y divide-line">
         {list.map((c) => (
           <div key={c.name} className="flex items-center justify-between gap-4 p-5 text-sm">
-            <span className="flex items-center gap-3"><span className={`h-2 w-2 rounded-full ${c.ok ? "bg-moss" : "bg-warn"}`} />{c.name}</span>
+            <span className="flex items-center gap-3"><span className={`h-2 w-2 shrink-0 rounded-full ${c.ok ? "bg-moss" : "bg-warn"}`} />{c.name}</span>
             <span className="text-right font-mono text-xs text-mute">{c.detail}</span>
           </div>
         ))}

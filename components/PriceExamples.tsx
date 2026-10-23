@@ -1,4 +1,5 @@
 import { MODELS } from "@/lib/data";
+import ProviderLogo from "./ProviderLogo";
 
 // What $10 buys, assuming a typical chat turn of ~600 prompt + ~400 completion tokens.
 const PROMPT = 600, COMPLETION = 400;
@@ -14,14 +15,15 @@ export default function PriceExamples() {
       <ul className="mt-5 divide-y divide-line">
         {rows.map(({ m, messages }) => (
           <li key={m.id} className="flex items-center justify-between gap-3 py-3">
-            <div className="min-w-0">
-              <p className="flex items-center gap-2 truncate">
+            <ProviderLogo provider={m.provider} />
+            <div className="min-w-0 flex-1">
+              <p className="flex flex-wrap items-center gap-x-2 font-bold">
                 {m.name}
-                {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 font-mono text-[10px] text-ember-soft">UNCENSORED</span>}
+                {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 font-mono text-[10px] font-normal text-ember-soft">UNCENSORED</span>}
               </p>
-              <p className="font-mono text-xs text-mute">${m.input} in · ${m.output} out / 1M tokens</p>
+              <p className="font-mono text-[11px] text-mute">${m.input.toFixed(2)} in · ${m.output.toFixed(2)} out / 1M</p>
             </div>
-            <p className="shrink-0 text-right"><span className="font-serif text-2xl">~{messages.toLocaleString()}</span><br /><span className="text-xs text-mute">messages</span></p>
+            <p className="shrink-0 text-right"><span className="font-serif text-xl sm:text-2xl">≈{messages.toLocaleString()}</span><br /><span className="text-xs text-mute">messages</span></p>
           </li>
         ))}
       </ul>

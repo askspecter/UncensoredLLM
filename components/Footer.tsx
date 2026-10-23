@@ -15,17 +15,17 @@ export default function Footer() {
   if (usePathname() === "/chat") return null;
   return (
     <footer className="mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-6">
-        <div className="sm:col-span-2">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-5 py-14 md:grid-cols-6">
+        <div className="col-span-2">
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-mute">
             Private, uncensored inference. No logs, no lectures — just the model.
           </p>
-          <div className="mt-5 flex gap-2 text-sm">
-            <span className="rounded border border-line px-3 py-1 text-mute">X @beeper</span>
-            <span className="rounded border border-line px-3 py-1 text-mute">Discord</span>
-            <span className="rounded border border-line px-3 py-1 text-mute">Telegram</span>
-          </div>
+          <a href="https://x.com/usebeeper" target="_blank" rel="noreferrer"
+            className="mt-5 inline-flex items-center gap-2 rounded border-2 border-line px-3 py-2 text-sm hover:border-ember hover:text-ember">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+            @usebeeper
+          </a>
         </div>
         {COLS.map((c) => (
           <div key={c.title} className="text-sm">

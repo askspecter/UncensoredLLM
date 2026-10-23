@@ -1,5 +1,6 @@
 import ModelTable from "@/components/ModelTable";
 import PriceExamples from "@/components/PriceExamples";
+import ProviderLogo from "@/components/ProviderLogo";
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_MODELS, MODELS } from "@/lib/data";
 
@@ -18,15 +19,19 @@ export default function Models() {
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
-      <h2 className="mt-16 font-serif text-5xl uppercase text-ember">Image models</h2>
+      <h2 className="mt-16 font-serif text-4xl uppercase text-ember md:text-5xl">Image models</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {IMAGE_MODELS.map((m) => (
           <div key={m.id} className="card p-5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-bold">{m.name}</p>
+            <div className="flex items-center gap-3">
+              <ProviderLogo provider={m.provider} size={34} />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold">{m.name}</p>
+                <p className="text-xs text-mute">{m.provider}</p>
+              </div>
               {m.uncensored && <span className="rounded bg-ember/15 px-1.5 py-0.5 text-[10px] text-ember-soft">UNCENSORED</span>}
             </div>
-            <p className="mt-1 text-xs text-mute">{m.style}</p>
+            <p className="mt-3 text-xs text-mute">{m.style}</p>
             <p className="mt-4 font-serif text-4xl text-ember">${m.perImage}<span className="ml-1 font-sans text-xs text-mute">/ image</span></p>
             <p className="mt-1 font-mono text-[11px] text-mute">{m.id}</p>
           </div>

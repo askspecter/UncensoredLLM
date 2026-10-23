@@ -106,10 +106,10 @@ MODEL=beeper/hermes-4-405b`}</Code>
 
         <Sec id="errors" title="Errors">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] font-mono text-sm">
+            <table className="w-full font-mono text-sm">
               <tbody className="divide-y divide-line">
                 {ERRORS.map(([code, type, desc]) => (
-                  <tr key={code}><td className="py-3 pr-4 text-ember-soft">{code}</td><td className="py-3 pr-4 text-bone">{type}</td><td className="py-3 font-sans text-mute">{desc}</td></tr>
+                  <tr key={code} className="align-top"><td className="py-3 pr-4 text-ember-soft">{code}</td><td className="py-3"><span className="text-bone">{type}</span><span className="mt-0.5 block font-sans text-xs text-mute sm:hidden">{desc}</span></td><td className="hidden py-3 pl-4 font-sans text-mute sm:table-cell">{desc}</td></tr>
                 ))}
               </tbody>
             </table>

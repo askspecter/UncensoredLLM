@@ -25,28 +25,28 @@ export default function Leaderboard({ buyers, users }: { buyers: Row[]; users: R
         <p className="card mt-6 p-8 text-center text-mute">No activity in the last 30 days yet — be the first.</p>
       ) : (
         <>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
             {t.rows.slice(0, 3).map((r, i) => (
-              <div key={r.handle} className="card p-6">
-                <p className={`font-serif text-5xl ${MEDAL[i]}`}>#{i + 1}</p>
-                <p className="mt-3 font-mono">{r.handle}</p>
-                <p className="mt-1 text-2xl">{t.fmt(r.value)}</p>
-                <p className="text-xs text-mute">{t.vol.toLowerCase()} · 30d</p>
+              <div key={r.handle} className="card min-w-0 p-3 sm:p-6">
+                <p className={`font-serif text-3xl sm:text-5xl ${MEDAL[i]}`}>#{i + 1}</p>
+                <p className="mt-2 truncate font-mono text-xs sm:mt-3 sm:text-base">{r.handle}</p>
+                <p className="mt-1 truncate text-sm sm:text-2xl">{t.fmt(r.value)}</p>
+                <p className="hidden text-xs text-mute sm:block">{t.vol.toLowerCase()} · 30d</p>
               </div>
             ))}
           </div>
           <div className="card mt-4 overflow-x-auto">
-            <table className="w-full min-w-[480px] font-mono text-sm">
+            <table className="w-full font-mono text-sm">
               <thead className="text-left text-[11px] uppercase tracking-wider text-mute">
-                <tr><th className="p-4">Rank</th><th className="p-4">Handle</th><th className="p-4 text-right">{t.vol}</th><th className="p-4 text-right">{t.cnt}</th></tr>
+                <tr><th className="p-3 sm:p-4">#</th><th className="p-3 sm:p-4">Handle</th><th className="p-3 text-right sm:p-4">{t.vol}</th><th className="hidden p-4 text-right sm:table-cell">{t.cnt}</th></tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {t.rows.map((r, i) => (
                   <tr key={r.handle} className="hover:bg-panel-2/60">
-                    <td className={`p-4 ${MEDAL[i] ?? "text-mute"}`}>{i + 1}</td>
-                    <td className="p-4">{r.handle}</td>
-                    <td className="p-4 text-right">{t.fmt(r.value)}</td>
-                    <td className="p-4 text-right text-mute">{r.count.toLocaleString()}</td>
+                    <td className={`p-3 sm:p-4 ${MEDAL[i] ?? "text-mute"}`}>{i + 1}</td>
+                    <td className="max-w-[9rem] truncate p-3 sm:max-w-none sm:p-4">{r.handle}</td>
+                    <td className="p-3 text-right sm:p-4">{t.fmt(r.value)}</td>
+                    <td className="hidden p-4 text-right text-mute sm:table-cell">{r.count.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

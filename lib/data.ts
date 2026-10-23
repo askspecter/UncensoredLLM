@@ -56,16 +56,16 @@ export const MODELS: Model[] = UPSTREAM_MODELS.map((m) => ({
 
 export const findModel = (id: string) => MODELS.find((m) => m.id === id);
 
-export type ImageModel = { id: string; upstream: string; name: string; perImage: number; uncensored: boolean; style: string };
+export type ImageModel = { id: string; upstream: string; name: string; provider: string; perImage: number; uncensored: boolean; style: string };
 
 
 /** Venice per-image prices (USD) + MARGIN. Keep in sync with https://docs.venice.ai/overview/pricing */
 export const IMAGE_MODELS: ImageModel[] = [
-  { id: "beeper/lustify-sdxl", upstream: "lustify-sdxl", name: "Lustify SDXL", perImage: withMargin(0.01), uncensored: true, style: "Photoreal, unfiltered" },
-  { id: "beeper/chroma", upstream: "chroma", name: "Chroma", perImage: withMargin(0.01), uncensored: true, style: "Versatile, unfiltered" },
-  { id: "beeper/z-image-turbo", upstream: "z-image-turbo", name: "Z-Image Turbo", perImage: withMargin(0.01), uncensored: true, style: "Fast, unfiltered" },
-  { id: "beeper/anime-wai", upstream: "wai-Illustrious", name: "Anime (WAI)", perImage: withMargin(0.01), uncensored: true, style: "Anime / illustration" },
-  { id: "beeper/hunyuan-image-3", upstream: "hunyuan-image-v3", name: "Hunyuan Image 3.0", perImage: withMargin(0.09), uncensored: false, style: "High detail" },
+  { id: "beeper/lustify-sdxl", upstream: "lustify-sdxl", name: "Lustify SDXL", provider: "Lustify (community)", perImage: withMargin(0.01), uncensored: true, style: "Photoreal, unfiltered" },
+  { id: "beeper/chroma", upstream: "chroma", name: "Chroma", provider: "Lodestones", perImage: withMargin(0.01), uncensored: true, style: "Versatile, unfiltered" },
+  { id: "beeper/z-image-turbo", upstream: "z-image-turbo", name: "Z-Image Turbo", provider: "Alibaba Tongyi", perImage: withMargin(0.01), uncensored: true, style: "Fast, unfiltered" },
+  { id: "beeper/anime-wai", upstream: "wai-Illustrious", name: "Anime (WAI)", provider: "WAI (community)", perImage: withMargin(0.01), uncensored: true, style: "Anime / illustration" },
+  { id: "beeper/hunyuan-image-3", upstream: "hunyuan-image-v3", name: "Hunyuan Image 3.0", provider: "Tencent", perImage: withMargin(0.09), uncensored: false, style: "High detail" },
 ];
 export const findImageModel = (id: string) => IMAGE_MODELS.find((m) => m.id === id);
 

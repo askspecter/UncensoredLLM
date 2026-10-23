@@ -6,10 +6,11 @@ import CodeTabs from "@/components/CodeTabs";
 import Faq from "@/components/Faq";
 import { MODELS, PRIVACY_TIERS } from "@/lib/data";
 import { IMAGE_MODELS } from "@/lib/images";
+import ProviderLogo, { PROVIDERS_WITH_LOGOS } from "@/components/ProviderLogo";
 
 function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: string; title: React.ReactNode; sub?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-28">
+    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-20 md:pt-28">
       <p className="eyebrow">{eyebrow}</p>
       <h2 className="mt-3 max-w-3xl font-serif text-4xl uppercase leading-[0.95] md:text-5xl">{title}</h2>
       {sub && <p className="mt-4 max-w-2xl text-mute">{sub}</p>}
@@ -51,12 +52,21 @@ export default function Home() {
           <HeroChat />
         </div>
         <dl className="relative mx-auto mt-6 grid max-w-6xl grid-cols-2 border-y-2 border-line md:grid-cols-4">
-          {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off every top-up"], ["0 bytes", "prompts stored"]].map(([v, l]) => (
+          {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off every top-up"], ["0", "prompts stored"]].map(([v, l]) => (
             <div key={l} className="border-line px-5 py-5 even:border-l-2 md:border-l-2 md:first:border-l-0">
               <dt className="font-serif text-4xl text-ember">{v}</dt><dd className="text-[11px] uppercase tracking-widest text-mute">{l}</dd>
             </div>
           ))}
         </dl>
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 py-8">
+          <span className="text-[11px] uppercase tracking-widest text-mute">Models from</span>
+          {PROVIDERS_WITH_LOGOS.filter((p) => p !== "Alibaba Tongyi").map((p) => (
+            <span key={p} className="flex items-center gap-2 text-xs text-mute">
+              <ProviderLogo provider={p} size={24} />
+              <span className="hidden sm:inline">{p.replace(" (open weights)", "")}</span>
+            </span>
+          ))}
+        </div>
       </section>
 
       {/* Buy */}
