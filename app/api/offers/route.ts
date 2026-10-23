@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const discount = Number(b?.discount);
   const payout = String(b?.payout ?? "").trim();
   if (!Number.isFinite(credit) || credit < MIN_OFFER) return NextResponse.json({ error: `Minimum offer is $${MIN_OFFER}` }, { status: 400 });
-  if (!Number.isFinite(discount) || discount < 0.01 || discount > 0.9) return NextResponse.json({ error: "Discount must be 1–90%" }, { status: 400 });
+  if (!Number.isFinite(discount) || discount < 0.01 || discount > 0.9) return NextResponse.json({ error: "Discount must be 1 to 90%" }, { status: 400 });
   if (!isAddress(payout)) return NextResponse.json({ error: "Enter a valid 0x payout address" }, { status: 400 });
 
   const micros = BigInt(toMicros(credit));

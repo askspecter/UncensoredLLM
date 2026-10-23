@@ -3,7 +3,7 @@ import PageHeader from "@/components/PageHeader";
 import { networkMetrics } from "@/lib/metrics";
 import { bookSummary } from "@/lib/market";
 
-export const metadata = { title: "Analytics — Beeper" };
+export const metadata = { title: "Analytics | Beeper" };
 export const revalidate = 60;
 
 const compact = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : `${n}`);
@@ -17,7 +17,7 @@ export default async function Analytics() {
   return (
     <main className="mx-auto max-w-6xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="Analytics · public" title={<>The big picture, <em className="text-ember-soft">in the open.</em></>}
-        sub="Live network numbers, refreshed every minute. We publish totals — never prompts.">
+        sub="Live network numbers, refreshed every minute. We publish totals, never prompts.">
         <span className="flex items-center gap-2 font-mono text-xs text-mute"><span className="h-1.5 w-1.5 animate-pulse rounded bg-moss" />live · UTC</span>
       </PageHeader>
 
@@ -56,7 +56,7 @@ export default async function Analytics() {
               <tbody>
                 {book.bands.map((b) => (
                   <tr key={b.from} className="border-t border-line">
-                    <td className="py-3 text-moss">{Math.round(b.from * 100)}–{Math.round(b.to * 100)}%</td>
+                    <td className="py-3 text-moss">{Math.round(b.from * 100)} to {Math.round(b.to * 100)}%</td>
                     <td className="w-1/2 py-3 pr-6"><span className="block h-2 rounded-full bg-gradient-to-r from-ember to-ember-soft" style={{ width: `${(b.liquidity / maxLiq) * 100}%` }} /></td>
                     <td className="py-3 text-right">${b.liquidity.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
                     <td className="py-3 text-right text-mute">{b.offers}</td>
@@ -65,7 +65,7 @@ export default async function Analytics() {
                 <tr className="border-t border-line">
                   <td className="py-3 text-moss">{Math.round(book.house * 100)}%</td>
                   <td className="py-3 text-xs text-mute">Beeper · always available</td>
-                  <td className="py-3 text-right">∞</td><td className="py-3 text-right text-mute">—</td>
+                  <td className="py-3 text-right">∞</td><td className="py-3 text-right text-mute"></td>
                 </tr>
               </tbody>
             </table>

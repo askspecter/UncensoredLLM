@@ -105,7 +105,7 @@ export async function failOrder(orderId: string) {
 }
 
 /**
- * Marks an order paid, credits the buyer and records seller payouts — exactly once.
+ * Marks an order paid, credits the buyer and records seller payouts, exactly once.
  * A late payment on an expired order re-takes its old offers where possible; anything
  * no longer available is covered by Beeper at the price the buyer already paid.
  */

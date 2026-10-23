@@ -24,7 +24,7 @@ const FEATURES = [
   { t: "No logs", d: "We never store prompts or outputs. Only token counts and cost are kept for billing." },
   { t: "Wallet sign-in", d: "No KYC. Sign in with a wallet, Google or email, pay with USDG on Robinhood Chain or card and get a key instantly." },
   { t: "Always 10%+ off", d: "Beeper backs every order at −10%. Users reselling unused credit push discounts deeper." },
-  { t: "Unfiltered images", d: "Lustify, Chroma, Z-Image and anime models from $0.012 per image — in the chat or via the API." },
+  { t: "Unfiltered images", d: "Lustify, Chroma, Z-Image and anime models from $0.012 per image, in the chat or via the API." },
   { t: "Streaming & transparent", d: "Full streaming support. Every response reports the exact upstream model and what it cost you." },
 ];
 
@@ -44,7 +44,7 @@ export default function Home() {
               Ask anything.<br />No filters.<br />No trace.
             </h1>
             <p className="mt-5 max-w-md text-[15px] leading-relaxed text-mute">
-              Your AI on a burner. Unfiltered chat and image models, zero logs, one key — with credits from the order book at 10%+ off.
+              Your AI on a burner. Unfiltered chat and image models, zero logs, one key, with credits from the order book at 10%+ off.
             </p>
             <div className="mt-7 grid grid-cols-2 gap-3 sm:flex">
               <a href="/chat" className="btn btn-primary whitespace-nowrap">&gt; Chat now</a>
@@ -82,7 +82,7 @@ export default function Home() {
 
       {/* Buy */}
       <Section id="buy" eyebrow="Marketplace" title={<>Discounted credit, <em>filled live</em> from the order book.</>}
-        sub="Users resell credit they won’t use; Beeper backs every order at −10%. Your order fills from the deepest discount first — pay with USDG on Robinhood Chain or by card.">
+        sub="Users resell credit they won’t use; Beeper backs every order at −10%. Your order fills from the deepest discount first. Pay with USDG on Robinhood Chain or by card.">
         <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
           <BuyCard />
           <div className="grid content-start gap-5">
@@ -122,7 +122,7 @@ export default function Home() {
 
       {/* Models */}
       <Section id="models" eyebrow="Model catalogue" title="Pick your model."
-        sub="List prices per 1M tokens, billed from your credit balance — and you buy that credit at a discount.">
+        sub="List prices per 1M tokens, billed from your credit balance. You buy that credit at a discount.">
         <ModelTable />
       </Section>
 

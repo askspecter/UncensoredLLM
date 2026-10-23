@@ -1,6 +1,6 @@
 import CodeTabs from "@/components/CodeTabs";
 
-export const metadata = { title: "Docs — Beeper" };
+export const metadata = { title: "Docs | Beeper" };
 
 const TOC = [
   ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"],
@@ -55,12 +55,12 @@ export default function Docs() {
         </Sec>
 
         <Sec id="auth" title="Authentication">
-          <p>Send your key in the <code className="text-bone">Authorization</code> header. Keys are shown once — we only store a hash. Rotate them any time from Account.</p>
+          <p>Send your key in the <code className="text-bone">Authorization</code> header. Keys are shown once. We only store a hash. Rotate them any time from Account.</p>
           <Code>{`Authorization: Bearer sk-beeper-XXXXXXXXXXXXXXXX`}</Code>
         </Sec>
 
         <Sec id="chat" title="Chat completions">
-          <p><code className="text-bone">POST /v1/chat/completions</code> — same parameters as OpenAI: <code className="text-bone">model</code>, <code className="text-bone">messages</code>, <code className="text-bone">temperature</code>, <code className="text-bone">max_tokens</code>, <code className="text-bone">tools</code>, <code className="text-bone">response_format</code>.</p>
+          <p><code className="text-bone">POST /v1/chat/completions</code> takes the same parameters as OpenAI: <code className="text-bone">model</code>, <code className="text-bone">messages</code>, <code className="text-bone">temperature</code>, <code className="text-bone">max_tokens</code>, <code className="text-bone">tools</code>, <code className="text-bone">response_format</code>.</p>
           <Code>{`{
   "id": "chatcmpl-9x2…",
   "model": "beeper/hermes-4-405b",
@@ -93,7 +93,7 @@ export default function Docs() {
         </Sec>
 
         <Sec id="mcp" title="MCP & agents">
-          <p>Use Beeper as the model provider in any agent that supports OpenAI-compatible endpoints — Claude Code proxies, Cursor, Cline, OpenWebUI, SillyTavern, LiteLLM.</p>
+          <p>Use Beeper as the model provider in any agent that supports OpenAI-compatible endpoints: Claude Code proxies, Cursor, Cline, OpenWebUI, SillyTavern, LiteLLM.</p>
           <Code>{`# LiteLLM / OpenWebUI / Cline
 OPENAI_API_BASE=https://usebeeper.io/v1
 OPENAI_API_KEY=$BEEPER_KEY

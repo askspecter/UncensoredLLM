@@ -4,14 +4,14 @@ import ProviderLogo from "@/components/ProviderLogo";
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_MODELS, MODELS } from "@/lib/data";
 
-export const metadata = { title: "Models — Beeper" };
+export const metadata = { title: "Models | Beeper" };
 
 export default function Models() {
   const unc = MODELS.filter((m) => m.uncensored).length;
   return (
     <main className="mx-auto max-w-6xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="Model catalogue" title={<>Every model. <em className="text-ember-soft">One key.</em></>}
-        sub="Open-weight and frontier models behind one OpenAI-compatible key. Uncensored models are served raw — no extra system prompts, no moderation layer.">
+        sub="Open-weight and frontier models behind one OpenAI-compatible key. Uncensored models are served raw: no extra system prompts, no moderation layer.">
         <div className="grid grid-cols-3 gap-6 font-mono text-sm">
           <div><p className="text-xs text-mute">models</p><p className="text-2xl text-bone">{MODELS.length}</p></div>
           <div><p className="text-xs text-mute">uncensored</p><p className="text-2xl text-ember-soft">{unc}</p></div>

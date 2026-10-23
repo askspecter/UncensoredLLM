@@ -8,10 +8,10 @@
   --color-line: #1c261a;
   --color-mute: #76946f;
   --color-bone: #dcffd4;
-  --color-ember: #a8fb28;       /* primary — logo lime */
+  --color-ember: #a8fb28;       /* primary / logo lime */
   --color-ember-soft: #d4ff7a;
-  --color-moss: #7cf7c8;        /* positive / discounts — mint */
-  --color-warn: #ffb347;        /* pending — amber */
+  --color-moss: #7cf7c8;        /* positive / discounts / mint */
+  --color-warn: #ffb347;        /* pending / amber */
   --color-danger: #ff6b5e;
   --color-lcd: #a9c98a;
   --color-lcd-ink: #1c2a14;

@@ -11,13 +11,13 @@ const STORE = "beeper.chats.v1";
 const DEFAULT_MODEL = "beeper/dolphin-mistral-24b";
 const usd = (n: number) => `$${n.toFixed(n < 0.01 ? 4 : 2)}`;
 
-// Conversations live only in this browser — nothing is stored on our servers.
+// Conversations live only in this browser, nothing is stored on our servers.
 function loadChats(): Convo[] {
   try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; }
 }
 function saveChats(c: Convo[]) {
   // Generated images are too large for browser storage; keep a marker instead.
-  const slim = c.slice(0, 50).map((cv) => ({ ...cv, messages: cv.messages.map(({ images, ...m }) => (images?.length ? { ...m, content: `${m.content}\n[${images.length} image(s) — download them before leaving]`.trim() } : m)) }));
+  const slim = c.slice(0, 50).map((cv) => ({ ...cv, messages: cv.messages.map(({ images, ...m }) => (images?.length ? { ...m, content: `${m.content}\n[${images.length} image(s), download them before leaving]`.trim() } : m)) }));
   try { localStorage.setItem(STORE, JSON.stringify(slim)); } catch { /* storage unavailable */ }
 }
 const newConvo = (model = DEFAULT_MODEL): Convo => ({ id: Math.random().toString(36).slice(2), title: "New chat", model, system: "", messages: [], updated: Date.now() });
@@ -227,7 +227,7 @@ export default function Chat() {
         {showSystem && (
           <div className="border-b border-line p-4">
             <textarea value={active.system} onChange={(e) => update(active.id, (c) => ({ ...c, system: e.target.value }))} rows={3}
-              placeholder="System prompt / persona — e.g. “You are a blunt, unfiltered writing partner.”"
+              placeholder="System prompt / persona, e.g. “You are a blunt, unfiltered writing partner.”"
               className="w-full rounded-md border border-line bg-ink p-3 text-sm outline-none focus:border-ember" />
           </div>
         )}
@@ -238,8 +238,8 @@ export default function Chat() {
               <h2 className="font-serif text-5xl uppercase text-ember">{imageModel ? "Imagine anything." : "Ask anything."}</h2>
               <p className="mt-2 text-sm text-mute">
                 {imageModel
-                  ? <>Describe the image you want — {imageModel.style.toLowerCase()}. ${imageModel.perImage} per image. Prompts involving minors are blocked.</>
-                  : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? " — this model is uncensored" : ""}.</>}
+                  ? <>Describe the image you want: {imageModel.style.toLowerCase()}. ${imageModel.perImage} per image. Prompts involving minors are blocked.</>
+                  : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? ". This model is uncensored" : ""}.</>}
               </p>
             </div>
           )}

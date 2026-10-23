@@ -1,5 +1,5 @@
 import Legal from "@/components/Legal";
-export const metadata = { title: "Terms — Beeper" };
+export const metadata = { title: "Terms | Beeper" };
 export default function Page() {
   return <Legal eyebrow="Legal" title="Terms of Service" sections={[
     ["Service", "Beeper provides access to third-party and open-weight AI models through an API gateway, paid with prepaid credits."],

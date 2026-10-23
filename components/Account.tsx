@@ -82,7 +82,7 @@ export default function Account() {
     e.preventDefault();
     try {
       const r = await api("/api/me", { method: "PATCH", body: JSON.stringify({ handle: handle ?? "" }) });
-      setHandleMsg(r.handle ? `Saved — you appear as ${r.handle}` : "Cleared — you appear anonymously");
+      setHandleMsg(r.handle ? `Saved. You appear as ${r.handle}` : "Cleared. You appear anonymously");
       await load();
     } catch (err) { setHandleMsg((err as Error).message); }
   }
@@ -140,7 +140,7 @@ export default function Account() {
           <p className="eyebrow">API keys</p>
           {newKey && (
             <div className="slidein mt-4 rounded-lg border border-moss/40 bg-moss/10 p-3">
-              <p className="text-xs text-moss">“{newKey.name}” created — copy it now, it won’t be shown again.</p>
+              <p className="text-xs text-moss">“{newKey.name}” created. Copy it now, it won’t be shown again.</p>
               <code className="mt-2 block break-all font-mono text-sm text-bone">{newKey.key}</code>
               <div className="mt-2 flex gap-2">
                 <button className="btn btn-primary px-3 py-1 text-xs" onClick={() => navigator.clipboard?.writeText(newKey.key)}>Copy</button>
@@ -238,7 +238,7 @@ export default function Account() {
                   <tr key={i}>
                     <td className="p-4">{u.model}</td><td className="p-4 text-mute">{u.prompt_tokens.toLocaleString()}</td>
                     <td className="p-4 text-mute">{u.completion_tokens.toLocaleString()}</td><td className="p-4">{usd(u.cost, 4)}</td>
-                    <td className="p-4 text-mute">{u.latency_ms ?? "—"} ms</td><td className="p-4 text-mute">{when(u.created_at)}</td>
+                    <td className="p-4 text-mute">{u.latency_ms ?? "n/a"} ms</td><td className="p-4 text-mute">{when(u.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

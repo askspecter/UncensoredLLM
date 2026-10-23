@@ -11,8 +11,8 @@ const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: 
 const pixel = VT323({ subsets: ["latin"], weight: "400", variable: "--font-pixel" });
 
 const SITE = process.env.SITE_URL ?? "https://usebeeper.io";
-const TITLE = "Beeper — Private, uncensored AI";
-const DESCRIPTION = "Ask anything. No filters. No trace. Uncensored chat, images and an OpenAI-compatible API — credits 10%+ off, pay in USDG or card.";
+const TITLE = "Beeper | Private, uncensored AI";
+const DESCRIPTION = "Ask anything. No filters. No trace. Uncensored chat, images and an OpenAI-compatible API. Credits 10%+ off, pay in USDG or card.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   applicationName: "Beeper",
   openGraph: {
     type: "website", url: SITE, siteName: "Beeper", title: TITLE, description: DESCRIPTION,
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Beeper — Ask anything. No filters. No trace." }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Beeper. Ask anything. No filters. No trace." }],
   },
   twitter: { card: "summary_large_image", site: "@usebeeper", creator: "@usebeeper", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };

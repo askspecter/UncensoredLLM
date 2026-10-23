@@ -1,7 +1,7 @@
 import AdminPayouts from "@/components/AdminPayouts";
 import PageHeader from "@/components/PageHeader";
 
-export const metadata = { title: "Admin — Beeper", robots: { index: false } };
+export const metadata = { title: "Admin | Beeper", robots: { index: false } };
 
 export default function Admin() {
   return (

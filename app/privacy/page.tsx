@@ -1,5 +1,5 @@
 import Legal from "@/components/Legal";
-export const metadata = { title: "Privacy — Beeper" };
+export const metadata = { title: "Privacy | Beeper" };
 export default function Page() {
   return <Legal eyebrow="Legal" title="Privacy Policy" sections={[
     ["What we never store", "Prompts, completions, images and audio you send or receive. Inference runs on zero-retention endpoints."],

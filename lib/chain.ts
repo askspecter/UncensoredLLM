@@ -9,7 +9,7 @@ export const robinhood = defineChain({
   blockExplorers: { default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" } },
 });
 
-// Paxos Global Dollar on Robinhood Chain (6 decimals) — https://docs.paxos.com/guides/stablecoin/usdg/mainnet
+// Paxos Global Dollar on Robinhood Chain (6 decimals), https://docs.paxos.com/guides/stablecoin/usdg/mainnet
 export const USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168" as const;
 export const USDG_DECIMALS = 6;
 

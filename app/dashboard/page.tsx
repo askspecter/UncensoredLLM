@@ -1,6 +1,6 @@
 import Account from "@/components/Account";
 
-export const metadata = { title: "Account — Beeper" };
+export const metadata = { title: "Account | Beeper" };
 
 export default function Dashboard() {
   return (

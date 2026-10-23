@@ -22,7 +22,7 @@ export default function Leaderboard({ buyers, users }: { buyers: Row[]; users: R
         ))}
       </div>
       {t.rows.length === 0 ? (
-        <p className="card mt-6 p-8 text-center text-mute">No activity in the last 30 days yet — be the first.</p>
+        <p className="card mt-6 p-8 text-center text-mute">No activity in the last 30 days yet. Be the first.</p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">

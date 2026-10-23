@@ -78,7 +78,7 @@ export default function BuyCard() {
         )}
         {order.apiKey && (
           <>
-            <p className="mt-4 text-sm text-mute">Your first API key — save it now, it’s shown once:</p>
+            <p className="mt-4 text-sm text-mute">Your first API key. Save it now, it’s shown once:</p>
             <code className="mt-2 block break-all rounded-lg border border-line bg-ink p-3 font-mono text-sm text-ember-soft">{order.apiKey}</code>
           </>
         )}
@@ -142,7 +142,7 @@ export default function BuyCard() {
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}-$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Price is held for 2 hours after you create the order. No KYC. Minimum ${MIN_PURCHASE}.</p>

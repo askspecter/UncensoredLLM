@@ -1,5 +1,5 @@
 import Legal from "@/components/Legal";
-export const metadata = { title: "Acceptable Use — Beeper" };
+export const metadata = { title: "Acceptable Use | Beeper" };
 export default function Page() {
   return <Legal eyebrow="Legal" title="Acceptable Use Policy" sections={[
     ["Uncensored ≠ lawless", "Beeper adds no extra filters to model output. You remain fully responsible for complying with the laws that apply to you."],

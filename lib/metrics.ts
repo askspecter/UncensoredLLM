@@ -1,4 +1,4 @@
-// Public network metrics computed from the database (aggregates only — never content).
+// Public network metrics computed from the database (aggregates only, never content).
 import { createHash } from "crypto";
 import { MODELS } from "./data";
 import { dbEnabled, sql } from "./db";

@@ -23,7 +23,7 @@ export async function generateImages(o: { userId: string; keyId: string | null; 
   const model = findImageModel(o.model);
   if (!model) throw new ImageError(404, "model_not_found", `Unknown image model "${o.model}"`);
   const prompt = (o.prompt ?? "").trim();
-  if (!prompt || prompt.length > 4000) throw new ImageError(400, "invalid_request", "Prompt must be 1–4000 characters");
+  if (!prompt || prompt.length > 4000) throw new ImageError(400, "invalid_request", "Prompt must be 1 to 4000 characters");
   if (MINOR.test(prompt) || MINOR.test(o.negative ?? "")) {
     throw new ImageError(400, "content_policy", "Prompts involving minors are not allowed.");
   }

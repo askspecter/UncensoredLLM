@@ -9,7 +9,7 @@ import { PAY_TO, USDG, formatUsdg, robinhood } from "@/lib/chain";
 import { latestBlock, usdgEnabled } from "@/lib/usdg";
 import { createCheckout, whopEnabled } from "@/lib/whop";
 
-// PAYMENTS_MODE=test settles orders instantly without payment — local testing only.
+// PAYMENTS_MODE=test settles orders instantly without payment, local testing only.
 const TEST_PAYMENTS = process.env.PAYMENTS_MODE === "test";
 const cents = (n: number) => Math.round(n * 100);
 const MAX_OPEN_ORDERS = 3;
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   await expireStale();
   const [{ open }] = await sql<{ open: string }[]>`SELECT count(*) AS open FROM orders WHERE user_id = ${userId} AND status = 'pending'`;
   if (Number(open) >= MAX_OPEN_ORDERS) {
-    return NextResponse.json({ error: "You have unpaid orders open — pay or wait for them to expire first" }, { status: 429 });
+    return NextResponse.json({ error: "You have unpaid orders open. Pay or wait for them to expire first" }, { status: 429 });
   }
 
   // Create the order and reserve its order-book fills atomically, so the quoted price holds until it expires.

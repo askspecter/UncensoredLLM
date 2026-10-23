@@ -46,7 +46,7 @@ export async function PATCH(req: Request) {
   const raw = typeof body?.handle === "string" ? body.handle.trim().toLowerCase() : "";
   const handle = raw === "" ? null : raw;
   if (handle && (!/^[a-z0-9_]{3,20}$/.test(handle) || RESERVED.has(handle) || handle.startsWith("anon_"))) {
-    return NextResponse.json({ error: "Handle must be 3–20 characters: a–z, 0–9 or _" }, { status: 400 });
+    return NextResponse.json({ error: "Handle must be 3 to 20 characters: a to z, 0 to 9 or _" }, { status: 400 });
   }
   try {
     await sql`UPDATE users SET handle = ${handle} WHERE id = ${auth.userId}`;

@@ -36,7 +36,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
     else if (data.error && hash) setNote(data.error);
   }, [orderId, auth, onPaid]);
 
-  // Watch the chain every few seconds — also catches payments sent from another wallet or an exchange.
+  // Watch the chain every few seconds, also catches payments sent from another wallet or an exchange.
   useEffect(() => {
     const t = setInterval(() => confirm(txHash || undefined), 6000);
     return () => clearInterval(t);
@@ -48,7 +48,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
     try {
       const hash = await auth.sendUsdg(pay.to, BigInt(pay.units));
       setTxHash(hash);
-      setNote("Sent — waiting for confirmation…");
+      setNote("Sent. Waiting for confirmation…");
       await confirm(hash);
     } catch (e) {
       const msg = (e as { shortMessage?: string; message?: string }).shortMessage ?? (e as Error).message;
@@ -64,7 +64,7 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
           <p className="font-mono text-2xl text-bone">{pay.amount} <span className="text-base text-mute">USDG</span></p>
           <Copy text={pay.amount} />
         </div>
-        <p className="mt-1 text-[11px] text-mute">The last digits identify your order — send this exact amount.</p>
+        <p className="mt-1 text-[11px] text-mute">The last digits identify your order. Send this exact amount.</p>
       </div>
 
       <div className="rounded-md border border-line bg-ink p-4">

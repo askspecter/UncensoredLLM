@@ -19,7 +19,7 @@ export default function Footer() {
         <div className="col-span-2">
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-mute">
-            Private, uncensored inference. No logs, no lectures — just the model.
+            Private, uncensored inference. No logs, no lectures. Just the model.
           </p>
           <a href="https://x.com/usebeeper" target="_blank" rel="noreferrer"
             className="mt-5 inline-flex items-center gap-2 rounded border border-line px-3 py-2 text-sm hover:border-ember hover:text-ember">

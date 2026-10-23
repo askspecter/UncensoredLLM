@@ -1,4 +1,4 @@
-// Whop — hosted card checkout + Standard Webhooks callbacks.
+// Whop, hosted card checkout + Standard Webhooks callbacks.
 // Docs: https://docs.whop.com/api-reference/checkout-configurations/create-checkout-configuration
 import { createHmac, timingSafeEqual } from "crypto";
 

@@ -4,7 +4,7 @@ import { gatewayEnabled } from "@/lib/gateway";
 import { latestBlock, usdgEnabled } from "@/lib/usdg";
 import { whopEnabled } from "@/lib/whop";
 
-export const metadata = { title: "Status — Beeper" };
+export const metadata = { title: "Status | Beeper" };
 export const revalidate = 60;
 
 type Check = { name: string; ok: boolean; detail: string };

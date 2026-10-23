@@ -11,7 +11,7 @@ type Usage = { prompt_tokens?: number; completion_tokens?: number; total_tokens?
 function priceOf(model: Model, u: Usage) {
   const catalogue = costMicros(model, u.prompt_tokens ?? 0, u.completion_tokens ?? 0);
   const upstream = typeof u.cost === "number" ? BigInt(Math.ceil(u.cost * 1e6 * (1 + MARGIN))) : BigInt(0);
-  if (upstream > catalogue) console.warn(`[gateway] ${model.id} upstream cost above catalogue — update prices in lib/data.ts`);
+  if (upstream > catalogue) console.warn(`[gateway] ${model.id} upstream cost above catalogue, update prices in lib/data.ts`);
   return upstream > catalogue ? upstream : catalogue;
 }
 
