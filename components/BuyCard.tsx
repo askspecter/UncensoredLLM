@@ -10,8 +10,7 @@ type Order = { id: string; status: "paid" | "pending"; credit: number; total: nu
 
 export default function BuyCard() {
   const [amount, setAmount] = useState(100);
-  const [pay, setPay] = useState<"crypto" | "card">("crypto");
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
   const auth = useAuth();
@@ -27,7 +26,7 @@ export default function BuyCard() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
-        body: JSON.stringify({ credit: amount, payment: pay }),
+        body: JSON.stringify({ credit: amount, payment: "crypto" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
@@ -58,6 +57,7 @@ export default function BuyCard() {
           </>
         )}
         <div className="mt-5 flex flex-wrap gap-2">
+          {!paid && order.checkoutUrl && <a href={order.checkoutUrl} className="btn btn-primary text-sm">Open checkout</a>}
           {order.apiKey && <button className="btn btn-primary text-sm" onClick={() => navigator.clipboard?.writeText(order.apiKey!)}>Copy key</button>}
           <a href="/dashboard" className={`btn text-sm ${order.apiKey ? "btn-ghost" : "btn-primary"}`}>Go to account</a>
           <button className="btn btn-ghost text-sm" onClick={() => setOrder(null)}>Buy more</button>
@@ -112,16 +112,12 @@ export default function BuyCard() {
       )}
 
       <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-line p-1 text-sm">
-        {(["crypto", "card"] as const).map((m) => (
-          <button key={m} onClick={() => setPay(m)}
-            className={`rounded-full py-1.5 ${pay === m ? "bg-panel-2 text-bone" : "text-mute"}`}>
-            {m === "crypto" ? "Crypto (XMR / BTC / USDC)" : "Card"}
-          </button>
-        ))}
+        <span className="rounded-full bg-panel-2 py-1.5 text-center text-bone">Crypto · BTC / USDT / XMR +</span>
+        <span className="rounded-full py-1.5 text-center text-mute/60" title="Coming soon">Card · soon</span>
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? "Generating key…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? "Opening checkout…" : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}` : `Enter $${MIN_PURCHASE}–$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-ember-soft">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Sign in with Google, email or a wallet. No KYC. Minimum ${MIN_PURCHASE}.</p>

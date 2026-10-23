@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { sql, toMicros, fromMicros } from "@/lib/db";
 import { settleOrder } from "@/lib/billing";
 import { createApiKey, newId } from "@/lib/keys";
+import { createInvoice, nowpaymentsEnabled } from "@/lib/nowpayments";
 
 // Until a payment provider is connected, PAYMENTS_MODE=test settles orders instantly (for testing only).
 const TEST_PAYMENTS = process.env.PAYMENTS_MODE === "test";
@@ -13,9 +14,14 @@ export async function POST(req: Request) {
   if (auth.error) return auth.error;
   const { userId } = auth;
 
+  if (!TEST_PAYMENTS && !nowpaymentsEnabled) {
+    return NextResponse.json({ error: "Payments are not configured yet" }, { status: 503 });
+  }
+
   const body = await req.json().catch(() => null);
   const credit = Number(body?.credit);
-  const method = body?.payment === "card" ? "card" : "crypto";
+  if (body?.payment === "card") return NextResponse.json({ error: "Card payments are coming soon — pay with crypto" }, { status: 400 });
+  const method = "crypto";
   if (!Number.isFinite(credit) || credit < MIN_PURCHASE || credit > MAX_PURCHASE) {
     return NextResponse.json({ error: `Amount must be between $${MIN_PURCHASE} and $${MAX_PURCHASE}` }, { status: 400 });
   }
@@ -28,8 +34,16 @@ export async function POST(req: Request) {
     VALUES (${id}, ${userId}, ${toMicros(credit)}, ${cents(q.subtotal)}, ${cents(q.fee)}, ${cents(q.total)}, ${method})`;
 
   if (!TEST_PAYMENTS) {
-    // TODO(payments): create a checkout with the payment provider and return its URL.
-    return NextResponse.json({ id, status: "pending", credit, total: q.total, checkoutUrl: null }, { status: 201 });
+    const siteUrl = process.env.SITE_URL?.replace(/\/$/, "") ?? new URL(req.url).origin;
+    try {
+      const inv = await createInvoice({ orderId: id, usd: q.total, description: `Beeper credit $${credit}`, siteUrl });
+      await sql`UPDATE orders SET provider_ref = ${`np-inv:${inv.id}`}, checkout_url = ${inv.invoice_url} WHERE id = ${id}`;
+      return NextResponse.json({ id, status: "pending", credit, total: q.total, checkoutUrl: inv.invoice_url }, { status: 201 });
+    } catch (e) {
+      console.error("[orders] invoice failed", e);
+      await sql`UPDATE orders SET status = 'failed' WHERE id = ${id}`;
+      return NextResponse.json({ error: "Could not start checkout. Please try again." }, { status: 502 });
+    }
   }
 
   await settleOrder(id, "test");

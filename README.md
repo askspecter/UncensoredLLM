@@ -23,7 +23,9 @@ migrations automatically when `DATABASE_URL` is set (or run `npm run db:migrate`
 On Vercel: **Storage → Create Database → Neon (Postgres)** and connect it to the project — that sets
 `DATABASE_URL`. Supabase works too (use the pooled connection string). Then redeploy.
 
-Payments aren't wired yet: orders are created as `pending`. Set `PAYMENTS_MODE=test` to settle orders
+Payments use NOWPayments hosted crypto invoices. `POST /api/orders` creates a pending order + invoice; the signed
+IPN webhook (`/api/payments/nowpayments`) re-checks the payment via the API and credits the balance once.
+Without NOWPayments keys you can set `PAYMENTS_MODE=test` to settle orders
 instantly while testing — turn it off before the API gateway goes live.
 
 Local dev without Privy:
@@ -39,6 +41,5 @@ DATABASE_URL=postgres://... DEV_AUTH_BYPASS=1 NEXT_PUBLIC_DEV_USER=did:privy:dev
 - `lib/db.ts` · `lib/billing.ts` · `lib/keys.ts` · `lib/auth.ts` — database, ledger, API keys, Privy auth
 
 ## Before production
-- Issue API keys only after payment confirmation (BTCPay / NOWPayments / Stripe) — see TODO in `app/api/orders/route.ts`.
 - Build the actual OpenAI-compatible gateway (`/v1/chat/completions`) that meters usage against keys and routes upstream.
 - Write real Terms / Acceptable Use / Privacy pages, and check credit resale is allowed by each upstream provider's ToS.

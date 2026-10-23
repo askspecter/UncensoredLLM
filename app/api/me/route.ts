@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const [[user], keys, orders, usage, daily, [totals]] = await Promise.all([
     sql`SELECT id, handle, balance_micros, created_at FROM users WHERE id = ${uid}`,
     sql`SELECT id, name, prefix, created_at, last_used_at FROM api_keys WHERE user_id = ${uid} AND revoked_at IS NULL ORDER BY created_at DESC`,
-    sql`SELECT id, status, credit_micros, total_cents, payment_method, created_at FROM orders WHERE user_id = ${uid} ORDER BY created_at DESC LIMIT 20`,
+    sql`SELECT id, status, credit_micros, total_cents, payment_method, checkout_url, created_at FROM orders WHERE user_id = ${uid} ORDER BY created_at DESC LIMIT 20`,
     sql`SELECT model, prompt_tokens, completion_tokens, cost_micros, latency_ms, status, created_at FROM usage_logs WHERE user_id = ${uid} ORDER BY created_at DESC LIMIT 20`,
     sql`SELECT to_char(d, 'MM-DD') AS date, coalesce(sum(u.cost_micros), 0) AS cost_micros
         FROM generate_series(current_date - 13, current_date, interval '1 day') d

@@ -6,7 +6,7 @@ type Key = { id: string; name: string; prefix: string; created_at: string; last_
 type Me = {
   user: { id: string; balance: number; createdAt: string };
   keys: Key[];
-  orders: { id: string; status: string; credit: number; total: number; payment_method: string; created_at: string }[];
+  orders: { id: string; status: string; credit: number; total: number; payment_method: string; checkout_url: string | null; created_at: string }[];
   usage: { model: string; prompt_tokens: number; completion_tokens: number; cost: number; latency_ms: number | null; status: number; created_at: string }[];
   daily: { date: string; cost: number }[];
   totals: { bought: number; saved: number; requests: number };
@@ -37,6 +37,16 @@ export default function Account() {
   }, [api]);
 
   useEffect(() => { if (auth.authenticated) load(); }, [auth.authenticated, load]);
+
+  // While a payment is pending, refresh so credit shows up as soon as the IPN lands.
+  const hasPending = me?.orders.some((o) => o.status === "pending" && Date.now() - Date.parse(o.created_at) < 3 * 3600_000);
+  useEffect(() => {
+    if (!hasPending) return;
+    const t = setInterval(load, 10_000);
+    return () => clearInterval(t);
+  }, [hasPending, load]);
+  const [returning, setReturning] = useState(false);
+  useEffect(() => { setReturning(new URLSearchParams(window.location.search).has("order")); }, []);
 
   async function createKey(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +79,12 @@ export default function Account() {
 
   return (
     <>
+      {returning && hasPending && (
+        <p className="mt-6 flex items-center gap-2 rounded-lg border border-[#f5c451]/40 bg-[#f5c451]/10 p-3 text-sm text-[#f5c451]">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f5c451]" />
+          Payment received — waiting for on-chain confirmation. Credit is added automatically (usually 1–20 min).
+        </p>
+      )}
       {error && <p className="mt-6 rounded-lg border border-ember/40 bg-ember/10 p-3 text-sm text-ember-soft">{error}</p>}
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -141,7 +157,10 @@ export default function Account() {
               <tr key={o.id}>
                 <td className="p-4 text-mute">{o.id}</td><td className="p-4 text-mute">{when(o.created_at)}</td>
                 <td className="p-4">{usd(o.credit)}</td><td className="p-4">{usd(o.total)}</td>
-                <td className="p-4 text-mute">{o.payment_method}</td><td className={`p-4 ${STATUS[o.status] ?? ""}`}>{o.status}</td>
+                <td className="p-4 text-mute">{o.payment_method}</td><td className={`p-4 ${STATUS[o.status] ?? ""}`}>
+                  {o.status}
+                  {o.status === "pending" && o.checkout_url && <a href={o.checkout_url} className="ml-2 font-sans text-xs text-ember-soft underline">pay</a>}
+                </td>
               </tr>
             ))}
           </tbody>
