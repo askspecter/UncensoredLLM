@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[orders] whop checkout failed", e);
       await sql`UPDATE orders SET status = 'failed' WHERE id = ${id}`;
-      return NextResponse.json({ error: "Could not start card checkout. Please try again." }, { status: 502 });
+      return NextResponse.json({ error: `Could not start card checkout: ${whopReason(e)}` }, { status: 502 });
     }
   }
 
@@ -64,6 +64,16 @@ export async function POST(req: Request) {
     }
   }
   return NextResponse.json({ error: "Busy, please try again" }, { status: 503 });
+}
+
+/** Short, user-safe reason from a Whop API error (no keys or ids). */
+function whopReason(e: unknown) {
+  const msg = (e as Error).message ?? "";
+  const status = msg.match(/ (\d{3}): /)?.[1];
+  const detail = msg.match(/"message":"([^"]{1,160})"/)?.[1];
+  if (status === "401") return "Whop API key is invalid.";
+  if (status === "403") return `Whop API key is missing a permission${detail ? ` (${detail})` : ""}.`;
+  return detail ?? (status ? `Whop returned ${status}.` : "Whop is unreachable.");
 }
 
 async function settleForTest(id: string, userId: string, credit: number, total: number) {
