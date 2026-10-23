@@ -7,7 +7,8 @@ const COMPANY_ID = process.env.WHOP_COMPANY_ID;
 const WEBHOOK_SECRET = process.env.WHOP_WEBHOOK_SECRET;
 const BASE = process.env.WHOP_API_BASE ?? "https://api.whop.com/api/v1";
 
-export const whopEnabled = Boolean(API_KEY && COMPANY_ID && WEBHOOK_SECRET);
+// WHOP_COMPANY_ID is optional: current API versions resolve the account from the API key.
+export const whopEnabled = Boolean(API_KEY && WEBHOOK_SECRET);
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -23,30 +24,39 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 export type Checkout = { id: string; purchase_url: string };
 
 export async function createCheckout(o: { orderId: string; usd: number; credit: number; siteUrl: string }) {
-  const body = (idField: "account_id" | "company_id") => JSON.stringify({
-    mode: "payment",
-    plan: {
-      [idField]: COMPANY_ID,
-      currency: "usd",
-      plan_type: "one_time",
-      release_method: "buy_now",
-      visibility: "hidden",
-      initial_price: o.usd,
-      title: `$${o.credit} Beeper credit`,
-      product: { external_identifier: "beeper-credits", title: "Beeper Credits" },
-    },
-    metadata: { order_id: o.orderId },
-    redirect_url: `${o.siteUrl}/dashboard?order=${o.orderId}`,
-  });
-  const post = (idField: "account_id" | "company_id") =>
-    call<Checkout>("/checkout_configurations", { method: "POST", headers: { "idempotency-key": `${o.orderId}-${idField}` }, body: body(idField) });
-  // Newer API versions call the business `account_id`; older ones `company_id`.
-  try {
-    return await post("account_id");
-  } catch (e) {
-    if (!/\b400\b|\b422\b/.test((e as Error).message)) throw e;
-    return post("company_id");
+  const plan = {
+    currency: "usd",
+    plan_type: "one_time",
+    release_method: "buy_now",
+    visibility: "hidden",
+    initial_price: o.usd,
+    title: `$${o.credit} Beeper credit`,
+  };
+  const product = { external_identifier: "beeper-credits", title: "Beeper Credits" };
+  // Request shapes differ across Whop API versions; try the current one first, then older ones.
+  const variants: Record<string, unknown>[] = [
+    plan,
+    ...(COMPANY_ID ? [{ ...plan, account_id: COMPANY_ID, product }, { ...plan, company_id: COMPANY_ID, product }] : []),
+  ];
+  let lastError: unknown;
+  for (const [i, p] of variants.entries()) {
+    try {
+      return await call<Checkout>("/checkout_configurations", {
+        method: "POST",
+        headers: { "idempotency-key": `${o.orderId}-${i}` },
+        body: JSON.stringify({
+          mode: "payment",
+          plan: p,
+          metadata: { order_id: o.orderId },
+          redirect_url: `${o.siteUrl}/dashboard?order=${o.orderId}`,
+        }),
+      });
+    } catch (e) {
+      lastError = e;
+      if (/ (401|403|5\d\d): /.test((e as Error).message)) throw e; // auth/server errors won't be fixed by another shape
+    }
   }
+  throw lastError;
 }
 
 export type Payment = {
