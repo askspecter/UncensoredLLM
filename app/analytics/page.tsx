@@ -15,7 +15,7 @@ export default async function Analytics() {
   const best = Math.max(book?.house ?? 0, ...(book?.bands.map((b) => b.from) ?? []));
   const maxLiq = Math.max(...(book?.bands.map((b) => b.liquidity) ?? []), 1);
   return (
-    <main className="mx-auto max-w-6xl px-5 pt-16">
+    <main className="mx-auto max-w-6xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="Analytics · public" title={<>The big picture, <em className="text-ember-soft">in the open.</em></>}
         sub="Live network numbers, refreshed every minute. We publish totals — never prompts.">
         <span className="flex items-center gap-2 font-mono text-xs text-mute"><span className="h-1.5 w-1.5 animate-pulse rounded bg-moss" />live · UTC</span>

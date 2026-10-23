@@ -10,11 +10,11 @@ import ProviderLogo, { PROVIDERS_WITH_LOGOS } from "@/components/ProviderLogo";
 
 function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: string; title: React.ReactNode; sub?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-20 md:pt-28">
+    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-14 md:pt-24">
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 max-w-3xl font-serif text-4xl uppercase leading-[0.95] md:text-5xl">{title}</h2>
-      {sub && <p className="mt-4 max-w-2xl text-mute">{sub}</p>}
-      <div className="mt-10">{children}</div>
+      <h2 className="mt-3 max-w-3xl font-serif text-[2.1rem] uppercase leading-[1] md:text-5xl">{title}</h2>
+      {sub && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mute md:mt-4 md:text-base">{sub}</p>}
+      <div className="mt-7 md:mt-10">{children}</div>
     </section>
   );
 }
@@ -35,37 +35,48 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-10 pt-14 md:pt-20 lg:grid-cols-[1.1fr_1fr]">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-8 pt-8 md:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
           <div>
-            <p className="eyebrow">Private · Uncensored · USDG</p>
-            <h1 className="mt-5 font-serif text-5xl uppercase leading-[0.9] text-ember sm:text-6xl lg:text-[4.1rem]">
+            <a href="/chat" className="inline-flex items-center gap-2 rounded border border-line bg-panel px-3 py-1.5 text-[11px] uppercase tracking-wider text-mute hover:border-ember">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" /> Live on Robinhood Chain <span className="text-ember">→</span>
+            </a>
+            <h1 className="mt-5 font-serif text-5xl uppercase leading-[0.98] text-ember sm:text-6xl lg:text-[4.1rem]">
               Ask anything.<br />No filters.<br />No trace.
             </h1>
-            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-mute">
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-mute">
               Your AI on a burner. Unfiltered chat and image models, zero logs, one key — with credits from the order book at 10%+ off.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href="/chat" className="btn btn-primary">&gt; Start chatting</a>
-              <a href="#buy" className="btn btn-ghost">Buy credits</a>
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:flex">
+              <a href="/chat" className="btn btn-primary whitespace-nowrap">&gt; Chat now</a>
+              <a href="#buy" className="btn btn-ghost whitespace-nowrap">Buy credits</a>
             </div>
           </div>
           <HeroChat />
         </div>
-        <dl className="relative mx-auto mt-6 grid max-w-6xl grid-cols-2 border-y-2 border-line md:grid-cols-4">
-          {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off every top-up"], ["0", "prompts stored"]].map(([v, l]) => (
-            <div key={l} className="border-line px-5 py-5 even:border-l-2 md:border-l-2 md:first:border-l-0">
-              <dt className="font-serif text-4xl text-ember">{v}</dt><dd className="text-[11px] uppercase tracking-widest text-mute">{l}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-5 py-8">
-          <span className="text-[11px] uppercase tracking-widest text-mute">Models from</span>
-          {PROVIDERS_WITH_LOGOS.filter((p) => p !== "Alibaba Tongyi").map((p) => (
-            <span key={p} className="flex items-center gap-2 text-xs text-mute">
-              <ProviderLogo provider={p} size={24} />
-              <span className="hidden sm:inline">{p.replace(" (open weights)", "")}</span>
-            </span>
-          ))}
+        <div className="relative mx-auto max-w-6xl px-5">
+          <dl className="grid grid-cols-4 rounded-md border border-line bg-panel/60">
+            {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off"], ["0", "logs"]].map(([v, l], i) => (
+              <div key={l} className={`px-3 py-3 text-center sm:px-5 sm:py-4 sm:text-left ${i ? "border-l border-line" : ""}`}>
+                <dt className="font-serif text-3xl text-ember sm:text-4xl">{v}</dt>
+                <dd className="text-[10px] uppercase tracking-wider text-mute sm:text-[11px]">{l}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        {/* Provider marquee */}
+        <div className="relative mt-6 overflow-hidden border-y border-line py-4 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+          <div className="marquee flex w-max gap-10">
+            {[0, 1].map((k) => (
+              <div key={k} className="flex shrink-0 items-center gap-10" aria-hidden={k === 1}>
+                {PROVIDERS_WITH_LOGOS.filter((p) => p !== "Alibaba Tongyi").map((p) => (
+                  <span key={p} className="flex items-center gap-2.5 whitespace-nowrap text-xs uppercase tracking-wider text-mute">
+                    <ProviderLogo provider={p} size={26} />
+                    {p.replace(" (open weights)", "").replace(" Research", "")}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -141,7 +152,7 @@ export default function Home() {
       </Section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-6xl px-5 pt-28">
+      <section className="mx-auto max-w-6xl px-5 pt-14 md:pt-24">
         <div className="card relative overflow-hidden p-10 text-center md:p-16">
           <div className="glow pointer-events-none absolute inset-0" />
           <h2 className="relative font-serif text-4xl md:text-6xl">Start thinking. <em className="text-ember-soft">Privately.</em></h2>

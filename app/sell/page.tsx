@@ -11,12 +11,12 @@ const STEPS = [
 
 export default function Sell() {
   return (
-    <main className="mx-auto max-w-6xl px-5 pt-20">
+    <main className="mx-auto max-w-6xl px-5 pt-8 md:pt-16">
       <p className="eyebrow">Sell credits</p>
-      <h1 className="mt-3 max-w-3xl font-serif text-5xl uppercase leading-[0.92] md:text-6xl">Turn idle credit into <em className="text-ember-soft">USDG</em>.</h1>
+      <h1 className="mt-3 max-w-3xl font-serif text-5xl uppercase leading-[1] md:text-6xl">Turn idle credit into <em className="text-ember-soft">USDG</em>.</h1>
       <p className="mt-4 max-w-2xl text-mute">Bought more Beeper credit than you’ll use? List it on the order book and get paid when someone buys it.</p>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+      <div className="mt-8 grid gap-8 md:mt-12 lg:grid-cols-[1.2fr_1fr]">
         <SellForm />
         <div className="space-y-6">
           {STEPS.map(([n, t, d]) => (

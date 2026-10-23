@@ -33,7 +33,7 @@ export default async function Status() {
   const list = await checks();
   const allOk = list.every((c) => c.ok);
   return (
-    <main className="mx-auto max-w-4xl px-5 pt-16">
+    <main className="mx-auto max-w-4xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="System status" title={allOk ? "All systems paging." : "Some systems need attention."} />
       <div className={`card mt-8 flex items-center gap-3 p-5 ${allOk ? "border-moss/40" : "border-warn/40"}`}>
         <span className={`h-2.5 w-2.5 animate-pulse rounded-full ${allOk ? "bg-moss" : "bg-warn"}`} />

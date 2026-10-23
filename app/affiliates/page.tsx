@@ -22,9 +22,9 @@ export default function Affiliates() {
     <main>
       <section className="relative overflow-hidden">
         <div className="glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-6xl px-5 pb-6 pt-20 text-center">
+        <div className="relative mx-auto max-w-6xl px-5 pb-6 pt-10 text-center md:pt-20">
           <p className="eyebrow">Affiliate program</p>
-          <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl uppercase leading-[0.92] md:text-7xl">Page your friends. <em className="text-ember-soft">Get paid forever.</em></h1>
+          <h1 className="mx-auto mt-4 max-w-3xl font-serif text-5xl uppercase leading-[1] md:text-7xl">Page your friends. <em className="text-ember-soft">Get paid forever.</em></h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-mute">
             Earn {COMMISSION * 100}% of every deposit your referrals make — first purchase and every top-up after.
           </p>

@@ -31,7 +31,7 @@ const ERRORS = [
 
 export default function Docs() {
   return (
-    <main className="mx-auto grid max-w-6xl gap-10 px-5 pt-12 lg:grid-cols-[200px_1fr]">
+    <main className="mx-auto grid max-w-6xl gap-10 px-5 pt-8 md:pt-12 lg:grid-cols-[200px_1fr]">
       <aside className="hidden lg:block">
         <nav className="sticky top-24 space-y-1 text-sm">
           <p className="eyebrow mb-3">Docs</p>
@@ -41,7 +41,7 @@ export default function Docs() {
 
       <div className="min-w-0">
         <p className="eyebrow">Developer docs</p>
-        <h1 className="mt-3 font-serif text-5xl uppercase leading-[0.92] md:text-6xl">Build on Beeper.</h1>
+        <h1 className="mt-3 font-serif text-5xl uppercase leading-[1] md:text-6xl">Build on Beeper.</h1>
         <p className="mt-4 max-w-2xl text-mute">An OpenAI-compatible API for private, uncensored inference. If your code talks to OpenAI, it talks to Beeper.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3 font-mono text-sm">
           <div className="card p-4"><p className="text-xs text-mute">Base URL</p><p className="mt-1 break-all">https://usebeeper.io/v1</p></div>

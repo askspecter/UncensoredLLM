@@ -9,7 +9,7 @@ export default function ProviderLogo({ provider, size = 28 }: { provider: string
   const initials = provider.replace(/\(.*\)/, "").trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
     <span title={provider} style={{ width: size, height: size }}
-      className={`inline-grid shrink-0 place-items-center rounded ${file ? "bg-[#eef5e8]" : "border-2 border-line bg-panel-2"}`}>
+      className={`inline-grid shrink-0 place-items-center rounded ${file ? "bg-[#eef5e8]" : "border border-line bg-panel-2"}`}>
       {file
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={`/providers/${file}.svg`} alt={provider} width={size * 0.62} height={size * 0.62} />

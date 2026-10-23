@@ -12,7 +12,7 @@ export default function AuthButton() {
   return (
     <div className="relative">
       <button onClick={() => setOpen(!open)} className="btn btn-ghost text-sm">
-        <span className="h-1.5 w-1.5 rounded bg-moss" />
+        <span className="h-1.5 w-1.5 rounded-full bg-moss" />
         <span className="max-w-[6.5rem] truncate normal-case sm:max-w-[9rem]">{label}</span>
       </button>
       {open && (

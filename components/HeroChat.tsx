@@ -23,14 +23,14 @@ export default function HeroChat() {
   }, [n, i, cur.a.length]);
 
   return (
-    <div className="mx-auto w-full max-w-xl rounded-[34px] border-[3px] border-[#2f352d] bg-[#1b1e1a] p-5 shadow-[0_40px_80px_rgba(0,0,0,.6),inset_0_2px_0_#3a4137] sm:p-6">
-      <div className="lcd min-h-[13.5rem] p-4 text-left font-serif text-[1.55rem] leading-[1.15] sm:p-5">
+    <div className="mx-auto w-full max-w-xl rounded-[28px] border-[3px] border-[#2f352d] bg-[#1b1e1a] p-4 sm:rounded-[34px] shadow-[0_40px_80px_rgba(0,0,0,.6),inset_0_2px_0_#3a4137] sm:p-6">
+      <div className="lcd min-h-[11rem] p-4 text-left font-serif text-[1.3rem] leading-[1.12] sm:min-h-[13.5rem] sm:p-5 sm:text-[1.55rem]">
         <p className="text-lg opacity-70">MSG 0{i + 1} · {cur.model} · PRIVATE</p>
         <p>&gt; {cur.q}</p>
         <p className="caret-lcd">{cur.a.slice(0, n)}<span className="animate-pulse">█</span></p>
       </div>
-      <div className="mt-5 flex justify-center gap-3" aria-hidden>
-        {[0, 1, 2].map((k) => <span key={k} className="h-6 w-14 rounded-full border-2 border-[#3b4239] bg-[#2c312a]" />)}
+      <div className="mt-4 flex justify-center gap-3 sm:mt-5" aria-hidden>
+        {[0, 1, 2].map((k) => <span key={k} className="h-6 w-14 rounded-full border border-[#3b4239] bg-[#2c312a]" />)}
       </div>
     </div>
   );

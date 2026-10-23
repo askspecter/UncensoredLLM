@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Mono, VT323 } from "next/font/google";
+import { Inter, Space_Mono, VT323 } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import RefCapture from "@/components/RefCapture";
 
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans-ui" });
 const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-mono-ui" });
 const pixel = VT323({ subsets: ["latin"], weight: "400", variable: "--font-pixel" });
 
@@ -29,8 +30,8 @@ export const viewport = { themeColor: "#000000" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${mono.variable} ${pixel.variable}`}>
-      <body className="scanlines font-sans antialiased">
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${pixel.variable}`}>
+      <body className="font-sans antialiased">
         <Providers>
           <RefCapture />
           <Nav />
