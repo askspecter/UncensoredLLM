@@ -7,6 +7,7 @@ import Faq from "@/components/Faq";
 import { MODELS, PRIVACY_TIERS } from "@/lib/data";
 import { IMAGE_MODELS } from "@/lib/images";
 import ProviderLogo, { PROVIDERS_WITH_LOGOS } from "@/components/ProviderLogo";
+import BeepToken from "@/components/BeepToken";
 
 function Section({ id, eyebrow, title, sub, children }: { id?: string; eyebrow: string; title: React.ReactNode; sub?: string; children: React.ReactNode }) {
   return (
@@ -28,6 +29,8 @@ const FEATURES = [
   { t: "Streaming & transparent", d: "Full streaming support. Every response reports the exact upstream model and what it cost you." },
 ];
 
+export const revalidate = 60;
+
 export default function Home() {
   const uncensored = MODELS.filter((m) => m.uncensored).length + IMAGE_MODELS.filter((m) => m.uncensored).length;
   return (
@@ -37,8 +40,8 @@ export default function Home() {
         <div className="glow pointer-events-none absolute inset-0" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-8 pt-8 md:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
           <div>
-            <a href="/chat" className="inline-flex items-center gap-2 rounded border border-line bg-panel px-3 py-1.5 text-[11px] uppercase tracking-wider text-mute hover:border-ember">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" /> Live on Robinhood Chain <span className="text-ember">→</span>
+            <a href="#beep" className="inline-flex items-center gap-2 rounded border border-line bg-panel px-3 py-1.5 text-[11px] uppercase tracking-wider text-mute hover:border-ember">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" /> $BEEP is live on Robinhood Chain <span className="text-ember">→</span>
             </a>
             <h1 className="mt-5 font-serif text-5xl uppercase leading-[0.98] text-ember sm:text-6xl lg:text-[4.1rem]">
               Ask anything.<br />No filters.<br />No trace.
@@ -79,6 +82,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* $BEEP */}
+      <Section id="beep" eyebrow="Token" title={<>Official <em>$BEEP</em></>}
+        sub="The Beeper token on Robinhood Chain. Always check the contract address before you trade.">
+        <BeepToken />
+      </Section>
 
       {/* Buy */}
       <Section id="buy" eyebrow="Marketplace" title={<>Discounted credit, <em>filled live</em> from the order book.</>}

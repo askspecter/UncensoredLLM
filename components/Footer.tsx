@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import { BEEP } from "@/lib/token";
 
 const COLS = [
   { title: "Product", links: [["/chat", "Chat"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/models", "Models"], ["/dashboard", "Account"]] },
@@ -26,6 +27,8 @@ export default function Footer() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             @usebeeper
           </a>
+          <p className="mt-4 text-xs text-mute">Official $BEEP CA</p>
+          <a href={BEEP.explorer} target="_blank" rel="noreferrer" className="mt-1 block break-all font-mono text-xs text-bone hover:text-ember">{BEEP.address}</a>
         </div>
         {COLS.map((c) => (
           <div key={c.title} className="text-sm">
