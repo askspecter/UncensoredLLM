@@ -15,7 +15,7 @@ export default function Models() {
         <div className="grid grid-cols-3 gap-6 font-mono text-sm">
           <div><p className="text-xs text-mute">models</p><p className="text-2xl text-bone">{MODELS.length}</p></div>
           <div><p className="text-xs text-mute">uncensored</p><p className="text-2xl text-ember-soft">{unc}</p></div>
-          <div><p className="text-xs text-mute">from</p><p className="text-2xl text-moss">${Math.min(...MODELS.map((m) => m.input))}</p></div>
+          <div><p className="text-xs text-mute">from</p><p className="text-2xl text-moss">${Math.min(...MODELS.map((m) => m.input)).toFixed(2)}</p></div>
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>

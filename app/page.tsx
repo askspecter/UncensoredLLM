@@ -71,10 +71,10 @@ export default function Home() {
           <div className="marquee flex w-max gap-10">
             {[0, 1].map((k) => (
               <div key={k} className="flex shrink-0 items-center gap-10" aria-hidden={k === 1}>
-                {PROVIDERS_WITH_LOGOS.filter((p) => p !== "Alibaba Tongyi").map((p) => (
+                {PROVIDERS_WITH_LOGOS.map((p) => (
                   <span key={p} className="flex items-center gap-2.5 whitespace-nowrap text-xs uppercase tracking-wider text-mute">
                     <ProviderLogo provider={p} size={26} />
-                    {p.replace(" (open weights)", "").replace(" Research", "")}
+                    {p.replace(" Research", "")}
                   </span>
                 ))}
               </div>
@@ -132,7 +132,7 @@ export default function Home() {
       {/* Models */}
       <Section id="models" eyebrow="Model catalogue" title="Pick your model."
         sub="List prices per 1M tokens, billed from your credit balance. You buy that credit at a discount.">
-        <ModelTable />
+        <ModelTable preview />
       </Section>
 
       {/* API */}

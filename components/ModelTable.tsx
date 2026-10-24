@@ -1,25 +1,29 @@
 "use client";
 import { useMemo, useState } from "react";
-import { MODELS } from "@/lib/data";
+import { FEATURED, MODELS } from "@/lib/data";
 import ProviderLogo from "./ProviderLogo";
 
 const fmt = (n: number) => (n === 0 ? "n/a" : `$${n.toFixed(2)}`);
-const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents"] as const;
+const FILTERS = ["all", "uncensored", "roleplay", "reasoning", "code", "agents", "vision"] as const;
 
-export default function ModelTable() {
+/** `preview` shows only the featured models until the visitor searches or filters. */
+export default function ModelTable({ preview = false }: { preview?: boolean }) {
   const [q, setQ] = useState("");
   const [f, setF] = useState<(typeof FILTERS)[number]>("all");
 
-  const rows = useMemo(() => MODELS.filter((m) => {
-    const hit = (m.name + m.provider + m.id).toLowerCase().includes(q.toLowerCase());
-    const tag = f === "all" || (f === "uncensored" ? m.uncensored : m.tags.includes(f));
-    return hit && tag;
-  }), [q, f]);
+  const rows = useMemo(() => {
+    const all = MODELS.filter((m) => {
+      const hit = (m.name + m.provider + m.id).toLowerCase().includes(q.toLowerCase());
+      const tag = f === "all" || (f === "uncensored" ? m.uncensored : m.tags.includes(f));
+      return hit && tag;
+    });
+    return preview && !q && f === "all" ? all.slice(0, FEATURED.length) : all;
+  }, [q, f, preview]);
 
   return (
     <div className="card overflow-hidden">
       <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search models…"
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${MODELS.length} models…`}
           className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-ember sm:max-w-xs" />
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((x) => (
@@ -77,6 +81,11 @@ export default function ModelTable() {
           </tbody>
         </table>
       </div>
+      {rows.length < MODELS.length && !q && f === "all" && (
+        <a href="/models" className="block border-t border-line p-4 text-center text-sm text-ember-soft hover:text-bone">
+          Browse all {MODELS.length} models →
+        </a>
+      )}
     </div>
   );
 }

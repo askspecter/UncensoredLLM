@@ -1,4 +1,5 @@
 // Model catalogue + pricing.
+import GENERATED from "./models.generated.json";
 
 /** Markup on upstream (OpenRouter) token prices. */
 export const MARGIN = 0.2;
@@ -47,14 +48,21 @@ const UPSTREAM_MODELS: UpstreamModel[] = [
 
 const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;
 
-export const MODELS: Model[] = UPSTREAM_MODELS.map((m) => ({
+// Everything else OpenRouter serves (scripts/sync-models.mjs), after the hand-picked models above.
+const curated = new Set(UPSTREAM_MODELS.map((m) => m.upstream));
+const CATALOGUE: UpstreamModel[] = [...UPSTREAM_MODELS, ...(GENERATED as UpstreamModel[]).filter((m) => !curated.has(m.upstream))];
+
+export const MODELS: Model[] = CATALOGUE.map((m) => ({
   ...m,
   input: withMargin(m.input),
   output: withMargin(m.output),
   cost: { input: m.input, output: m.output },
 }));
 
-export const findModel = (id: string) => MODELS.find((m) => m.id === id);
+/** Accepts Beeper ids and upstream (OpenRouter) slugs. */
+export const findModel = (id: string) => MODELS.find((m) => m.id === id) ?? MODELS.find((m) => m.upstream === id);
+/** The hand-picked models shown first in pickers and on the home page. */
+export const FEATURED = MODELS.slice(0, UPSTREAM_MODELS.length);
 
 export type ImageModel = { id: string; upstream: string; name: string; provider: string; perImage: number; uncensored: boolean; style: string };
 

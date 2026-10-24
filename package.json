@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/migrate.mjs && next build",
+    "build": "node scripts/migrate.mjs && node scripts/sync-models.mjs && next build",
     "start": "next start",
     "lint": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.mjs"

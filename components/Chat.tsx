@@ -1,13 +1,18 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Providers";
-import { IMAGE_MODELS, MODELS } from "@/lib/data";
+import { FEATURED, IMAGE_MODELS, MODELS } from "@/lib/data";
 import ProviderLogo from "./ProviderLogo";
 
 type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[] };
 type Convo = { id: string; title: string; model: string; system: string; messages: Msg[]; updated: number };
 
 const STORE = "beeper.chats.v1";
+// Picker groups: hand-picked models first, then every other model by provider.
+const BY_PROVIDER = Object.entries(MODELS.slice(FEATURED.length).reduce<Record<string, typeof MODELS>>((acc, m) => {
+  (acc[m.provider] ??= []).push(m);
+  return acc;
+}, {})).sort(([a], [b]) => a.localeCompare(b));
 const DEFAULT_MODEL = "beeper/dolphin-mistral-24b";
 const usd = (n: number) => `$${n.toFixed(n < 0.01 ? 4 : 2)}`;
 
@@ -209,12 +214,17 @@ export default function Chat() {
           <ProviderLogo provider={imageModel ? imageModel.provider : model.provider} size={30} />
           <select value={active.model} onChange={(e) => update(active.id, (c) => ({ ...c, model: e.target.value }))}
             className="min-w-0 max-w-[60vw] rounded border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
-            <optgroup label="Chat">
-              {MODELS.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
+            <optgroup label="Featured">
+              {FEATURED.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
             </optgroup>
             <optgroup label="Image">
               {IMAGE_MODELS.map((m) => <option key={m.id} value={m.id}>🖼 {m.uncensored ? "🔓 " : ""}{m.name}</option>)}
             </optgroup>
+            {BY_PROVIDER.map(([provider, list]) => (
+              <optgroup key={provider} label={provider}>
+                {list.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
+              </optgroup>
+            ))}
           </select>
           {imageModel ? (
             <div className="flex rounded border border-line p-0.5 text-xs">

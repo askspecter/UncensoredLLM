@@ -2,6 +2,10 @@
 const LOGOS: Record<string, string> = {
   "Meta": "meta", "DeepSeek": "deepseek", "Alibaba": "qwen", "Alibaba Tongyi": "alibaba", "Moonshot": "kimi",
   "Zhipu": "zhipu", "Mistral": "mistral", "OpenAI (open weights)": "openai", "Nous Research": "nousresearch", "Tencent": "hunyuan",
+  "OpenAI": "openai", "Qwen": "qwen", "MoonshotAI": "kimi", "Z.ai": "zhipu", "Nous": "nousresearch", "Anthropic": "anthropic",
+  "Google": "google", "SpaceXAI": "xai", "xAI": "xai", "NVIDIA": "nvidia", "Microsoft": "microsoft", "Cohere": "cohere",
+  "Amazon": "amazon", "Perplexity": "perplexity", "MiniMax": "minimax", "ByteDance": "bytedance", "ByteDance Seed": "bytedance",
+  "IBM": "ibm", "LiquidAI": "liquid", "Upstage": "upstage", "StepFun": "stepfun", "AionLabs": "aionlabs",
 };
 
 export default function ProviderLogo({ provider, size = 28 }: { provider: string; size?: number }) {
@@ -18,4 +22,7 @@ export default function ProviderLogo({ provider, size = 28 }: { provider: string
   );
 }
 
-export const PROVIDERS_WITH_LOGOS = Object.keys(LOGOS);
+export const PROVIDERS_WITH_LOGOS = [
+  "OpenAI", "Anthropic", "Google", "xAI", "Meta", "DeepSeek", "Qwen", "Mistral", "MoonshotAI", "Z.ai", "NVIDIA",
+  "Microsoft", "Nous Research", "MiniMax", "Cohere", "Amazon", "Perplexity", "ByteDance", "Tencent", "IBM",
+];
