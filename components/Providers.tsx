@@ -19,6 +19,8 @@ type Auth = {
   /** First connected EVM wallet, if any. */
   walletAddress: string | null;
   connectWallet: () => void;
+  /** Signs a plain-text message with the connected wallet. */
+  signMessage: (message: string) => Promise<{ address: string; signature: string }>;
   /** Sends `units` of USDG on Robinhood Chain from the connected wallet; resolves to the tx hash. */
   sendUsdg: (to: `0x${string}`, units: bigint) => Promise<string>;
 };
@@ -39,6 +41,7 @@ const disabled: Auth = {
   walletAddress: null,
   connectWallet: () => {},
   sendUsdg: async () => { throw new Error("Wallet sign-in is not configured"); },
+  signMessage: async () => { throw new Error("Wallet sign-in is not configured"); },
 };
 
 const AuthContext = createContext<Auth>(disabled);
@@ -66,6 +69,12 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
     },
     walletAddress: wallet?.address ?? null,
     connectWallet: () => connectWallet(),
+    signMessage: async (message) => {
+      if (!wallet) throw new Error("Connect a wallet first");
+      const provider = await wallet.getEthereumProvider();
+      const signature = (await provider.request({ method: "personal_sign", params: [message, wallet.address] })) as string;
+      return { address: wallet.address, signature };
+    },
     sendUsdg: async (to, units) => {
       if (!wallet) throw new Error("Connect a wallet first");
       await wallet.switchChain(robinhood.id);

@@ -20,7 +20,10 @@ export default async function BeepToken() {
             <code className="min-w-0 break-all rounded-lg border border-line bg-ink px-4 py-3 font-mono text-sm text-bone">{BEEP.address}</code>
             <CopyAddress value={BEEP.address} />
           </div>
-          <a href={BEEP.explorer} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-ember-soft underline">View on Blockscout ↗</a>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <a href={BEEP.explorer} target="_blank" rel="noreferrer" className="text-ember-soft underline">View on Blockscout ↗</a>
+            <a href="/bcredit" className="text-ember-soft underline">Earn bCREDIT as a holder →</a>
+          </div>
           <p className="mt-4 text-xs leading-relaxed text-mute">
             This is the only official $BEEP contract. We never DM first and never ask for your seed phrase. Not financial advice.
           </p>

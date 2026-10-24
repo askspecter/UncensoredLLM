@@ -1,7 +1,7 @@
 import type postgres from "postgres";
 import { sql } from "./db";
 
-export async function addToBalance(tx: postgres.TransactionSql, userId: string, amount: bigint, kind: "topup" | "refund" | "adjust" | "usage" | "escrow" | "unescrow", ref: string) {
+export async function addToBalance(tx: postgres.TransactionSql, userId: string, amount: bigint, kind: "topup" | "refund" | "adjust" | "usage" | "escrow" | "unescrow" | "bcredit", ref: string) {
   await tx`INSERT INTO ledger (user_id, amount_micros, kind, ref) VALUES (${userId}, ${amount.toString()}, ${kind}, ${ref})`;
   await tx`UPDATE users SET balance_micros = balance_micros + ${amount.toString()} WHERE id = ${userId}`;
 }

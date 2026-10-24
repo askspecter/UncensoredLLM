@@ -9,6 +9,7 @@ export const NAV = [
   { href: "/chat", label: "Chat" },
   { href: "/#buy", label: "Buy" },
   { href: "/sell", label: "Sell" },
+  { href: "/bcredit", label: "bCREDIT" },
   { href: "/models", label: "Models" },
   { href: "/analytics", label: "Analytics" },
   { href: "/leaderboard", label: "Leaderboard" },
