@@ -20,6 +20,9 @@ function saveChats(c: Convo[]) {
   const slim = c.slice(0, 50).map((cv) => ({ ...cv, messages: cv.messages.map(({ images, ...m }) => (images?.length ? { ...m, content: `${m.content}\n[${images.length} image(s), download them before leaving]`.trim() } : m)) }));
   try { localStorage.setItem(STORE, JSON.stringify(slim)); } catch { /* storage unavailable */ }
 }
+const IMAGE_INTENT = /\b(buat(kan)?|bikin(in|kan)?|generate|draw|create|make|render)\b.{0,40}\b(gambar|image|picture|pic|foto|photo|ilustrasi|illustration|logo|poster|wallpaper)\b|\b(gambarkan|lukiskan)\b|^\s*(draw|paint|sketch)\b/i;
+const URL_RE = /https?:\/\/\S+/i;
+
 const newConvo = (model = DEFAULT_MODEL): Convo => ({ id: Math.random().toString(36).slice(2), title: "New chat", model, system: "", messages: [], updated: Date.now() });
 
 function Bubble({ m }: { m: Msg }) {
@@ -65,6 +68,8 @@ export default function Chat() {
   const active = chats.find((c) => c.id === activeId) ?? chats[0];
   const imageModel = IMAGE_MODELS.find((m) => m.id === active?.model) ?? null;
   const model = MODELS.find((m) => m.id === active?.model) ?? MODELS[0];
+  const lastUser = !imageModel && !busy ? active?.messages.findLast((m) => m.role === "user")?.content ?? "" : "";
+  const hint = IMAGE_INTENT.test(lastUser) ? "image" : URL_RE.test(lastUser) ? "url" : null;
   const [size, setSize] = useState<"square" | "portrait" | "landscape">("square");
 
   const refreshBalance = useCallback(async () => {
@@ -253,6 +258,19 @@ export default function Chat() {
           <div ref={endRef} />
         </div>
 
+        {hint && (
+          <div className="mx-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-line bg-panel p-2.5 text-sm text-mute">
+            {hint === "image" ? (
+              <>
+                <span className="min-w-0 flex-1">Chat models write text only. To create an image, switch to an image model.</span>
+                <button type="button" onClick={() => { update(active.id, (c) => ({ ...c, model: IMAGE_MODELS[0].id })); setInput(lastUser); }}
+                  className="btn btn-primary h-8 px-3 text-xs">Use {IMAGE_MODELS[0].name}</button>
+              </>
+            ) : (
+              <span>Models can&apos;t open links. Paste the text or numbers you want them to work with.</span>
+            )}
+          </div>
+        )}
         {error && (
           <p className="mx-4 mb-2 rounded-lg border border-danger/40 bg-danger/10 p-2.5 text-sm text-ember-soft">
             {error} {/credit|balance/i.test(error) && <a href="/#buy" className="underline">Top up</a>}
