@@ -6,7 +6,9 @@ export const metadata = { title: "Admin | Beeper", robots: { index: false } };
 export default function Admin() {
   return (
     <main className="mx-auto max-w-4xl px-5 pt-8 md:pt-16">
-      <PageHeader eyebrow="Admin" title="Seller payouts" />
+      <PageHeader eyebrow="Admin" title="Seller payouts">
+        <a href="/admin/hook" className="btn btn-ghost text-sm">Deploy BeeperHook</a>
+      </PageHeader>
       <AdminPayouts />
     </main>
   );

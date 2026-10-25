@@ -1,9 +1,10 @@
 import HookSim from "@/components/HookSim";
 import PageHeader from "@/components/PageHeader";
+import { liveHook } from "@/lib/hook-server";
 
 export const metadata = { title: "BeeperHook | Beeper", description: "A Uniswap v4 hook for $BEEP: USDG fees fund bCREDIT for holders, BEEP fees are burned." };
 
-const HOOK = process.env.NEXT_PUBLIC_BEEPER_HOOK;
+export const revalidate = 60;
 
 const POINTS = [
   { t: "Sells fund bCREDIT", d: "The hook fee on a sell is paid in USDG and goes to the bCREDIT pool, shared with $BEEP holders as AI credit." },
@@ -12,14 +13,15 @@ const POINTS = [
   { t: "No admin", d: "Every setting is fixed at deploy. No owner, no upgrade, no switch to change the fee later." },
 ];
 
-export default function HookPage() {
+export default async function HookPage() {
+  const HOOK = (await liveHook().catch(() => null))?.address;
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
       <PageHeader eyebrow="BeeperHook" title={<>Every $BEEP trade <span className="text-ember">feeds holders.</span></>}
         sub="A Uniswap v4 hook on a $BEEP / USDG pool. Run swaps through it below before it goes live: fees, refusals and where every cent goes.">
-        <span className={`rounded border px-3 py-1.5 font-mono text-xs ${HOOK ? "border-ember text-bone" : "border-line text-mute"}`}>
-          {HOOK ? `Live · ${HOOK.slice(0, 6)}…${HOOK.slice(-4)}` : "Not deployed yet"}
-        </span>
+        {HOOK
+          ? <a href={`https://robinhoodchain.blockscout.com/address/${HOOK}`} target="_blank" rel="noreferrer" className="rounded border border-ember px-3 py-1.5 font-mono text-xs text-bone">Live · {HOOK.slice(0, 6)}…{HOOK.slice(-4)}</a>
+          : <span className="rounded border border-line px-3 py-1.5 font-mono text-xs text-mute">Not deployed yet</span>}
       </PageHeader>
       <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {POINTS.map((p) => (
