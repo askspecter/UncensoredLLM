@@ -4,7 +4,7 @@ export const metadata = { title: "Docs | Beeper" };
 
 const TOC = [
   ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"],
-["models", "List models"], ["mcp", "MCP & agents"], ["limits", "Rate limits"], ["errors", "Errors"],
+["models", "List models"], ["x402", "Pay per request (x402)"], ["receipts", "Proof of Bill"], ["mcp", "MCP & agents"], ["limits", "Rate limits"], ["errors", "Errors"],
 ];
 
 function Code({ children }: { children: string }) {
@@ -98,6 +98,35 @@ export default function Docs() {
 OPENAI_API_BASE=https://usebeeper.io/v1
 OPENAI_API_KEY=$BEEPER_KEY
 MODEL=beeper/hermes-4-405b`}</Code>
+        </Sec>
+
+        <Sec id="x402" title="Pay per request (x402)">
+          <p>No account and no API key: call <code className="text-bone">/v1/chat/completions</code> without an <code className="text-bone">Authorization</code> header and pay each request in USDG on Robinhood Chain with <a href="https://x402.org" className="text-ember-soft underline">x402</a>. The server answers <code className="text-bone">402</code> with a <code className="text-bone">PAYMENT-REQUIRED</code> header quoting the most the request can cost; your client signs a USDG <code className="text-bone">transferWithAuthorization</code> for it and retries with <code className="text-bone">PAYMENT-SIGNATURE</code>. Beeper pays the gas.</p>
+          <p className="mt-3">You are billed the real token cost. Whatever is left of the payment stays as credit for your wallet and pays for its next requests, so most calls after the first settle nothing on chain.</p>
+          <Code>{`# network  eip155:4663 (Robinhood Chain)
+# asset    USDG 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168
+# scheme   exact (EIP-3009), EIP-712 domain "Global Dollar", version "1"
+
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+
+const USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
+const pay = wrapFetchWithPaymentFromConfig(fetch, {
+  schemes: [{ network: "eip155:4663", client: new ExactEvmScheme(privateKeyToAccount(KEY)) }],
+  spendControls: { allowedAssets: [{ network: "eip155:4663", asset: USDG, maxAmountPerPayment: "1000000" }] },
+});
+const res = await pay("https://usebeeper.io/v1/chat/completions", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ model: "beeper/hermes-4-405b", max_tokens: 800, messages: [{ role: "user", content: "hi" }] }),
+});`}</Code>
+          <p className="mt-3 text-sm text-mute"><code>max_tokens</code> sets the quote (default 2,048). The settlement transaction comes back in the <code>PAYMENT-RESPONSE</code> header.</p>
+        </Sec>
+
+        <Sec id="receipts" title="Proof of Bill">
+          <p>Every completion returns a receipt signed by Beeper&apos;s server wallet: model, token counts, price, time and the keccak256 of the generated text. The text itself is never stored.</p>
+          <p className="mt-3">Non-streaming responses carry it in a <code className="text-bone">receipt</code> field and the <code className="text-bone">x-beeper-receipt</code> header. Streams end with an SSE comment, <code className="text-bone">: beeper-receipt &lt;base64&gt;</code>, which OpenAI clients ignore. Each UTC day&apos;s receipts are folded into one Merkle root and written to Robinhood Chain. Check any receipt at <a href="/verify" className="text-ember-soft underline">/verify</a>, or fetch its proof from <code className="text-bone">GET /api/receipts/:id?h=&lt;outputHash&gt;</code>.</p>
         </Sec>
 
         <Sec id="limits" title="Rate limits">

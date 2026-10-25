@@ -1,3 +1,4 @@
+import { signReceipt, type SignedReceipt } from "./receipts";
 import type postgres from "postgres";
 import { sql } from "./db";
 
@@ -13,16 +14,23 @@ export async function addToBalance(tx: postgres.TransactionSql, userId: string, 
 export async function chargeUsage(u: {
   userId: string; keyId: string | null; model: string; promptTokens: number; completionTokens: number;
   costMicros: bigint; latencyMs: number; status: number;
-}): Promise<bigint> {
+  /** keccak256 of the generated text; when set, the request gets a signed Proof of Bill receipt. */
+  outputHash?: `0x${string}`;
+}): Promise<{ charged: bigint; receipt: SignedReceipt | null }> {
   return sql.begin(async (tx) => {
     const [row] = await tx<{ balance_micros: string }[]>`SELECT balance_micros FROM users WHERE id = ${u.userId} FOR UPDATE`;
     const balance = BigInt(row?.balance_micros ?? 0);
     const charge = u.costMicros < balance ? u.costMicros : balance;
-    const [log] = await tx<{ id: string }[]>`
+    const [log] = await tx<{ id: string; ts: string }[]>`
       INSERT INTO usage_logs (user_id, api_key_id, model, prompt_tokens, completion_tokens, cost_micros, latency_ms, status)
       VALUES (${u.userId}, ${u.keyId}, ${u.model}, ${u.promptTokens}, ${u.completionTokens}, ${charge.toString()}, ${u.latencyMs}, ${u.status})
-      RETURNING id`;
+      RETURNING id, extract(epoch FROM created_at)::bigint AS ts`;
     if (charge > BigInt(0)) await addToBalance(tx, u.userId, -charge, "usage", `usage:${log.id}`);
-    return charge;
+    const receipt = u.outputHash ? await signReceipt({
+      v: 1, id: String(log.id), model: u.model, promptTokens: u.promptTokens, completionTokens: u.completionTokens,
+      costMicros: charge.toString(), ts: Number(log.ts), outputHash: u.outputHash,
+    }) : null;
+    if (receipt) await tx`UPDATE usage_logs SET output_hash = ${receipt.outputHash}, receipt_sig = ${receipt.sig} WHERE id = ${log.id}`;
+    return { charged: charge, receipt };
   });
 }

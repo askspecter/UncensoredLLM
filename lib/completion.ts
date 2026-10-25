@@ -1,5 +1,6 @@
 // Shared chat-completions pipeline: balance checks, upstream call, streaming passthrough, billing.
 import { MARGIN, findModel, type Model } from "./data";
+import { encodeReceipt, hashOutput } from "./receipts";
 import {
   MIN_BALANCE_MICROS, affordableMaxTokens, apiError, balanceOf, chargeUsage,
   costMicros, privacyRouting, upstreamFetch,
@@ -15,8 +16,12 @@ function priceOf(model: Model, u: Usage) {
   return upstream > catalogue ? upstream : catalogue;
 }
 
-export async function complete(req: Request, owner: { userId: string; keyId: string | null }) {
-  const body = await req.json().catch(() => null);
+/**
+ * Runs a chat completion for `owner`. `parsed` is the request body when the caller already read it (x402),
+ * `headers` are extra response headers (x402's PAYMENT-RESPONSE).
+ */
+export async function complete(req: Request, owner: { userId: string; keyId: string | null }, parsed?: unknown, headers: Record<string, string> = {}) {
+  const body = (parsed ?? await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body || typeof body !== "object" || !Array.isArray(body.messages)) {
     return apiError(400, "invalid_request", "Body must be JSON with `model` and `messages`");
   }
@@ -54,29 +59,32 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
     return apiError(res.status >= 500 ? 502 : res.status, res.status === 429 ? "rate_limited" : "upstream_error", `${msg}. You were not charged.`);
   }
 
-  const bill = (u: Usage, status = 200) => chargeUsage({
+  const bill = (u: Usage, output: string, status = 200) => chargeUsage({
     userId: owner.userId, keyId: owner.keyId, model: model.id,
     promptTokens: u.prompt_tokens ?? 0, completionTokens: u.completion_tokens ?? 0,
     costMicros: priceOf(model, u),
     latencyMs: Date.now() - started, status,
+    outputHash: hashOutput(output),
   });
 
   if (!stream) {
     const data = await res.json();
     const usage: Usage = data.usage ?? {};
-    const charged = await bill(usage);
+    const output = (data.choices ?? []).map((c: { message?: { content?: string } }) => c.message?.content ?? "").join("");
+    const { charged, receipt } = await bill(usage, output);
     return Response.json({
       ...data,
       model: model.id,
       upstream_model: model.upstream,
       provider: undefined,
       usage: { prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens, total_tokens: usage.total_tokens, cost_usd: Number(charged) / 1e6 },
-    });
+      ...(receipt ? { receipt } : {}),
+    }, { headers: { ...headers, ...(receipt ? { "x-beeper-receipt": encodeReceipt(receipt) } : {}) } });
   }
 
   // Streaming: pass SSE through, rewriting the model name and capturing the final usage chunk.
   let usage: Usage | null = null;
-  let streamedChars = 0;
+  let streamed = "";
   let buffer = "";
   const enc = new TextEncoder();
   const dec = new TextDecoder();
@@ -88,7 +96,7 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
         usage = chunk.usage;
         chunk.usage = { prompt_tokens: chunk.usage.prompt_tokens, completion_tokens: chunk.usage.completion_tokens, total_tokens: chunk.usage.total_tokens };
       }
-      for (const c of chunk.choices ?? []) streamedChars += (c.delta?.content?.length ?? 0) + (c.delta?.reasoning?.length ?? 0);
+      for (const c of chunk.choices ?? []) streamed += c.delta?.content ?? "";
       chunk.model = model.id;
       delete chunk.provider;
       return `data: ${JSON.stringify(chunk)}`;
@@ -98,20 +106,22 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   };
   const settle = async () => {
     // If the client hung up before the usage chunk, bill an estimate (upstream still charges us).
-    const u: Usage = usage ?? { prompt_tokens: Math.ceil(JSON.stringify(body.messages).length / 4), completion_tokens: Math.ceil(streamedChars / 4) };
-    await bill(u, usage ? 200 : 499).catch((e) => console.error("[gateway] billing failed", e));
+    const u: Usage = usage ?? { prompt_tokens: Math.ceil(JSON.stringify(body.messages).length / 4), completion_tokens: Math.ceil(streamed.length / 4) };
+    return (await bill(u, streamed, usage ? 200 : 499).catch((e) => { console.error("[gateway] billing failed", e); return null; }))?.receipt ?? null;
   };
 
   const reader = res.body.getReader();
   let settled = false;
-  const finish = async () => { if (!settled) { settled = true; await settle(); } };
+  const finish = async () => { if (settled) return null; settled = true; return settle(); };
   const out = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         const { done, value } = await reader.read();
         if (done) {
           if (buffer) controller.enqueue(enc.encode(rewrite(buffer)));
-          await finish();
+          // Proof of Bill rides along as an SSE comment, which OpenAI-compatible clients ignore.
+          const receipt = await finish();
+          if (receipt) controller.enqueue(enc.encode(`: beeper-receipt ${encodeReceipt(receipt)}\n\n`));
           controller.close();
           return;
         }
@@ -132,6 +142,6 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   });
 
   return new Response(out, {
-    headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache, no-transform", connection: "keep-alive" },
+    headers: { ...headers, "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache, no-transform", connection: "keep-alive" },
   });
 }

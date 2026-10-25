@@ -4,7 +4,7 @@ import { useAuth } from "./Providers";
 import { FEATURED, IMAGE_MODELS, MODELS } from "@/lib/data";
 import ProviderLogo from "./ProviderLogo";
 
-type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[] };
+type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[]; receipt?: string };
 type Convo = { id: string; title: string; model: string; system: string; messages: Msg[]; updated: number };
 
 const STORE = "beeper.chats.v1";
@@ -167,7 +167,7 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
       }
       const reader = res.body.getReader();
       const dec = new TextDecoder();
-      let buf = "", text = "", tokens = 0;
+      let buf = "", text = "", tokens = 0, receipt: string | undefined;
       const images: string[] = [];
       for (;;) {
         const { done, value } = await reader.read();
@@ -176,6 +176,7 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
         const lines = buf.split("\n");
         buf = lines.pop() ?? "";
         for (const line of lines) {
+          if (line.startsWith(": beeper-receipt ")) { receipt = line.slice(17).trim(); continue; }
           if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
           try {
             const chunk = JSON.parse(line.slice(6));
@@ -187,7 +188,7 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
         }
         update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text, images: [...images] }] }));
       }
-      update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text || (images.length ? "" : "(no response)"), tokens, images }] }));
+      update(id, (c) => ({ ...c, messages: [...history, { role: "assistant", content: text || (images.length ? "" : "(no response)"), tokens, images, receipt }] }));
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         setError((err as Error).message);
@@ -274,7 +275,12 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
             <div key={i} className="text-[15px]">
               <Bubble m={m} />
               {m.role === "assistant" && busy && i === active.messages.length - 1 && <span className="caret" />}
-              {m.role === "assistant" && m.tokens ? <p className="mt-1 font-mono text-[10px] text-mute">{m.tokens.toLocaleString()} tokens</p> : null}
+              {m.role === "assistant" && m.tokens ? (
+                <p className="mt-1 font-mono text-[10px] text-mute">
+                  {m.tokens.toLocaleString()} tokens
+                  {m.receipt && <> · <a href={`/verify#${m.receipt}`} target="_blank" rel="noreferrer" className="text-ember-soft underline">receipt</a></>}
+                </p>
+              ) : null}
             </div>
           ))}
           <div ref={endRef} />
