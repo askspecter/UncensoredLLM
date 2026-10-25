@@ -16,8 +16,13 @@ function Copy({ text, label }: { text: string; label?: string }) {
   );
 }
 
-export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay: UsdgPay; onPaid: (r: Paid) => void }) {
+export default function PayUsdg({ orderId, pay, onPaid, headers }: {
+  orderId: string; pay: UsdgPay; onPaid: (r: Paid) => void;
+  /** Auth headers override, used by burner accounts. */
+  headers?: () => Promise<Record<string, string>>;
+}) {
   const auth = useAuth();
+  const authHeaders = headers ?? auth.authHeaders;
   const [sending, setSending] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [manualHash, setManualHash] = useState("");
@@ -28,13 +33,13 @@ export default function PayUsdg({ orderId, pay, onPaid }: { orderId: string; pay
     if (paidRef.current) return;
     const res = await fetch(`/api/orders/${orderId}/confirm`, {
       method: "POST",
-      headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
+      headers: { "content-type": "application/json", ...(await authHeaders()) },
       body: JSON.stringify(hash ? { txHash: hash } : {}),
     });
     const data = await res.json().catch(() => ({}));
     if (data.status === "paid") { paidRef.current = true; onPaid(data); }
     else if (data.error && hash) setNote(data.error);
-  }, [orderId, auth, onPaid]);
+  }, [orderId, authHeaders, onPaid]);
 
   // Watch the chain every few seconds, also catches payments sent from another wallet or an exchange.
   useEffect(() => {

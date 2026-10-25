@@ -5,7 +5,7 @@ import Logo from "./Logo";
 import { BEEP } from "@/lib/token";
 
 const COLS = [
-  { title: "Product", links: [["/chat", "Chat"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/bcredit", "bCREDIT"], ["/models", "Models"], ["/dashboard", "Account"]] },
+  { title: "Product", links: [["/chat", "Chat"], ["/burner", "Burner"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/bcredit", "bCREDIT"], ["/models", "Models"], ["/dashboard", "Account"]] },
   { title: "Network", links: [["/analytics", "Analytics"], ["/leaderboard", "Leaderboard"], ["/affiliates", "Affiliates"], ["/status", "Status"]] },
   { title: "Developers", links: [["/docs", "Docs"], ["/docs#quickstart", "Quickstart"], ["/docs#mcp", "MCP server"], ["/docs#errors", "Errors"]] },
   { title: "Legal", links: [["/terms", "Terms"], ["/aup", "Acceptable use"], ["/privacy", "Privacy"]] },
@@ -13,7 +13,8 @@ const COLS = [
 
 export default function Footer() {
   // The chat is a full-height app; no footer there.
-  if (usePathname() === "/chat") return null;
+  const path = usePathname();
+  if (path === "/chat" || path === "/burner") return null;
   return (
     <footer className="mt-16 border-t border-line md:mt-24">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-5 py-10 md:py-14 md:grid-cols-6">

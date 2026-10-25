@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./Providers";
 import { FEATURED, IMAGE_MODELS, MODELS } from "@/lib/data";
 import ProviderLogo from "./ProviderLogo";
@@ -17,13 +17,16 @@ const DEFAULT_MODEL = "beeper/dolphin-mistral-24b";
 const usd = (n: number) => `$${n.toFixed(n < 0.01 ? 4 : 2)}`;
 
 // Conversations live only in this browser, nothing is stored on our servers.
-function loadChats(): Convo[] {
-  try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; }
+// Burner chats use sessionStorage, so they're gone when the tab closes.
+const store = (burner: boolean) => (burner ? sessionStorage : localStorage);
+const storeKey = (burner: boolean) => (burner ? "beeper.burner.chats" : STORE);
+function loadChats(burner: boolean): Convo[] {
+  try { return JSON.parse(store(burner).getItem(storeKey(burner)) ?? "[]"); } catch { return []; }
 }
-function saveChats(c: Convo[]) {
+function saveChats(c: Convo[], burner: boolean) {
   // Generated images are too large for browser storage; keep a marker instead.
   const slim = c.slice(0, 50).map((cv) => ({ ...cv, messages: cv.messages.map(({ images, ...m }) => (images?.length ? { ...m, content: `${m.content}\n[${images.length} image(s), download them before leaving]`.trim() } : m)) }));
-  try { localStorage.setItem(STORE, JSON.stringify(slim)); } catch { /* storage unavailable */ }
+  try { store(burner).setItem(storeKey(burner), JSON.stringify(slim)); } catch { /* storage unavailable */ }
 }
 const IMAGE_INTENT = /\b(buat(kan)?|bikin(in|kan)?|generate|draw|create|make|render)\b.{0,40}\b(gambar|image|picture|pic|foto|photo|ilustrasi|illustration|logo|poster|wallpaper)\b|\b(gambarkan|lukiskan)\b|^\s*(draw|paint|sketch)\b/i;
 const URL_RE = /https?:\/\/\S+/i;
@@ -49,8 +52,13 @@ function Bubble({ m }: { m: Msg }) {
   );
 }
 
-export default function Chat() {
-  const auth = useAuth();
+/** `burnerKey` runs the chat as a burner account (authenticated by its key) instead of the signed-in user. */
+export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4rem)]" }: { burnerKey?: string; onBalance?: (usd: number) => void; height?: string } = {}) {
+  const privy = useAuth();
+  const burner = Boolean(burnerKey);
+  const auth = useMemo(() => (burnerKey
+    ? { ...privy, authenticated: true, login: () => {}, authHeaders: async (): Promise<Record<string, string>> => ({ authorization: `Bearer ${burnerKey}` }) }
+    : privy), [privy, burnerKey]);
   const [chats, setChats] = useState<Convo[]>([]);
   const [activeId, setActiveId] = useState<string>("");
   const [input, setInput] = useState("");
@@ -63,12 +71,12 @@ export default function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const c = loadChats();
+    const c = loadChats(burner);
     const list = c.length ? c : [newConvo()];
     setChats(list);
     setActiveId(list[0].id);
   }, []);
-  useEffect(() => { if (chats.length) saveChats(chats); }, [chats]);
+  useEffect(() => { if (chats.length) saveChats(chats, burner); }, [chats, burner]);
 
   const active = chats.find((c) => c.id === activeId) ?? chats[0];
   const imageModel = IMAGE_MODELS.find((m) => m.id === active?.model) ?? null;
@@ -80,9 +88,13 @@ export default function Chat() {
   const refreshBalance = useCallback(async () => {
     try {
       const r = await fetch("/api/me", { headers: await auth.authHeaders() });
-      if (r.ok) setBalance((await r.json()).user.balance);
+      if (r.ok) {
+        const b = (await r.json()).user.balance;
+        setBalance(b);
+        onBalance?.(b);
+      }
     } catch { /* ignore */ }
-  }, [auth]);
+  }, [auth, onBalance]);
   useEffect(() => { if (auth.authenticated) refreshBalance(); }, [auth.authenticated, refreshBalance]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [active?.messages.length, active?.messages.at(-1)?.content]);
 
@@ -192,7 +204,7 @@ export default function Chat() {
   const sorted = [...chats].sort((a, b) => b.updated - a.updated);
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-4rem)] max-w-6xl">
+    <div className={`mx-auto flex ${height} max-w-6xl`}>
       {/* Conversations */}
       <aside className={`${sidebar ? "fixed inset-0 z-30 block bg-ink/95 p-4 pt-20" : "hidden"} w-full shrink-0 border-r border-line md:static md:block md:w-64 md:bg-transparent md:p-4`}>
         <button onClick={startNew} className="btn btn-ghost w-full text-sm">+ New chat</button>
