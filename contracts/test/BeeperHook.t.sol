@@ -15,10 +15,14 @@ import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "@uniswap/v4-core/src/test/PoolModifyLiquidityTest.sol";
 import {LiquidityAmounts} from "@uniswap/v4-core/test/utils/LiquidityAmounts.sol";
 import {HookMiner} from "v4-periphery/test/shared/HookMiner.sol";
+import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
+import {PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BeeperHook} from "../src/BeeperHook.sol";
 
 /// Runs against a fork of Robinhood Chain mainnet: the real PoolManager, $BEEP and USDG.
 contract BeeperHookForkTest is Test {
+    using StateLibrary for IPoolManager;
+    using PoolIdLibrary for PoolKey;
     IPoolManager constant PM = IPoolManager(0x8366a39CC670B4001A1121B8F6A443A643e40951);
     address constant BEEP = 0x316353b8Ab5f1375e59C793D5903dAdEcF0f817e;
     address constant USDG = 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168;
@@ -114,17 +118,18 @@ contract BeeperHookForkTest is Test {
         vm.expectRevert();
         swap(true, true, 600e6);
         assertTrue(hook.capActive());
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         assertFalse(hook.capActive());
         assertEq(hook.feeBps(), 100);
         swap(true, true, 600e6);
     }
 
     function test_feeDecays() public {
+        uint256 t0 = vm.getBlockTimestamp();
         assertEq(hook.feeBps(), 500);
-        vm.warp(block.timestamp + WINDOW / 2);
+        vm.warp(t0 + WINDOW / 2);
         assertEq(hook.feeBps(), 300);
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(t0 + WINDOW);
         assertEq(hook.feeBps(), 100);
     }
 
@@ -136,7 +141,10 @@ contract BeeperHookForkTest is Test {
 
     /// Ten swaps over the launch window, logged for the website simulator to replay.
     function test_replayLog() public {
-        uint256 t0 = block.timestamp;
+        // vm.getBlockTimestamp: under via-IR, block.timestamp may be re-read after vm.warp
+        uint256 t0 = vm.getBlockTimestamp();
+        (uint160 p0,,,) = PM.getSlot0(key.toId());
+        console2.log(string.concat("INIT|", vm.toString(uint256(p0)), "|", vm.toString(uint256(PM.getLiquidity(key.toId())))));
         bool[10] memory buys = [true, false, true, false, true, true, false, false, true, false];
         uint256[10] memory amts = [uint256(50e6), 400_000e18, 120e6, 2_000_000e18, 499e6, 800e6, 900_000e18, 3_000_000e18, 1_500e6, 10_000_000e18];
         uint256[10] memory at = [uint256(30), 300, 600, 900, 1500, 1800, 2400, 3000, 3600, 5400];

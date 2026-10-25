@@ -5,7 +5,7 @@ import Logo from "./Logo";
 import { BEEP } from "@/lib/token";
 
 const COLS = [
-  { title: "Product", links: [["/chat", "Chat"], ["/burner", "Burner"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/bcredit", "bCREDIT"], ["/models", "Models"], ["/dashboard", "Account"]] },
+  { title: "Product", links: [["/chat", "Chat"], ["/burner", "Burner"], ["/#buy", "Buy credits"], ["/sell", "Sell credits"], ["/bcredit", "bCREDIT"], ["/hook", "BeeperHook"], ["/models", "Models"], ["/dashboard", "Account"]] },
   { title: "Network", links: [["/analytics", "Analytics"], ["/leaderboard", "Leaderboard"], ["/affiliates", "Affiliates"], ["/status", "Status"]] },
   { title: "Developers", links: [["/docs", "Docs"], ["/docs#quickstart", "Quickstart"], ["/docs#mcp", "MCP server"], ["/docs#errors", "Errors"]] },
   { title: "Legal", links: [["/terms", "Terms"], ["/aup", "Acceptable use"], ["/privacy", "Privacy"]] },

@@ -1,10 +1,10 @@
 // bCREDIT: each UTC day, a share of Beeper's gross margin is split across linked $BEEP holders
 // pro rata to the $BEEP their wallets hold. 1 bCREDIT activates into $1 of API balance.
-import { createPublicClient, erc20Abi, getAddress, http } from "viem";
+import { createPublicClient, erc20Abi, getAddress, http, isAddress, parseAbiItem } from "viem";
 import { MARGIN } from "./data";
 import { MICROS, sql } from "./db";
 import { addToBalance } from "./billing";
-import { robinhood } from "./chain";
+import { USDG, robinhood } from "./chain";
 import { BEEP } from "./token";
 
 /** Share of daily gross margin paid to holders. */
@@ -16,6 +16,23 @@ const client = createPublicClient({ chain: robinhood, transport: http(process.en
 const WEI = BigInt(10) ** BigInt(BEEP.decimals);
 
 export { linkMessage } from "./bcredit-shared";
+
+/** BeeperHook (contracts/src/BeeperHook.sol). Its USDG fees go to holders in full. */
+const HOOK = process.env.BEEPER_HOOK && isAddress(process.env.BEEPER_HOOK) ? getAddress(process.env.BEEPER_HOOK) : null;
+const HOOK_FROM_BLOCK = BigInt(process.env.BEEPER_HOOK_FROM_BLOCK || 0);
+const HOOK_FEE = parseAbiItem("event HookFee(bytes32 indexed poolId, address indexed currency, uint256 amount, uint256 feeBps, bool burned)");
+
+/** USDG (6 decimals, so already micro-dollars) the hook sent to the vault in (from, to]. */
+async function hookFees(from: bigint, to: bigint): Promise<bigint> {
+  if (!HOOK || to <= from) return BigInt(0);
+  let sum = BigInt(0);
+  for (let start = from + BigInt(1); start <= to; start += BigInt(50_000)) {
+    const end = start + BigInt(49_999) < to ? start + BigInt(49_999) : to;
+    const logs = await client.getLogs({ address: HOOK, event: HOOK_FEE, args: { currency: USDG }, fromBlock: start, toBlock: end });
+    for (const l of logs) sum += l.args.amount ?? BigInt(0);
+  }
+  return sum;
+}
 
 export async function beepBalance(address: string): Promise<bigint> {
   return client.readContract({ address: BEEP.address, abi: erc20Abi, functionName: "balanceOf", args: [getAddress(address)] });
@@ -36,9 +53,12 @@ export async function distribute(day: string) {
   if (done) return { day, skipped: "already distributed" };
 
   const revenue = await dailyRevenue(day);
-  const pool = (revenue * BigInt(Math.round(HOLDER_SHARE * 10_000))) / BigInt(10_000);
-  const wallets = await sql<{ address: string; user_id: string }[]>`SELECT address, user_id FROM holder_wallets`;
   const block = await client.getBlockNumber();
+  const [{ last }] = await sql<{ last: string | null }[]>`SELECT max(hook_to_block) AS last FROM bcredit_epochs`;
+  const hookFrom = last ? BigInt(last) : HOOK_FROM_BLOCK > BigInt(0) ? HOOK_FROM_BLOCK - BigInt(1) : block;
+  const fromHook = await hookFees(hookFrom, block);
+  const pool = (revenue * BigInt(Math.round(HOLDER_SHARE * 10_000))) / BigInt(10_000) + fromHook;
+  const wallets = await sql<{ address: string; user_id: string }[]>`SELECT address, user_id FROM holder_wallets`;
 
   // Snapshot balances now, aggregate per account, drop holders below the minimum.
   const perUser = new Map<string, bigint>();
@@ -53,8 +73,8 @@ export async function distribute(day: string) {
 
   return sql.begin(async (tx) => {
     const ins = await tx`
-      INSERT INTO bcredit_epochs (day, revenue_micros, pool_micros, total_beep, holders, block_number)
-      VALUES (${day}, ${revenue.toString()}, ${pool.toString()}, ${total.toString()}, ${eligible.length}, ${block.toString()})
+      INSERT INTO bcredit_epochs (day, revenue_micros, pool_micros, total_beep, holders, block_number, hook_fees_micros, hook_to_block)
+      VALUES (${day}, ${revenue.toString()}, ${pool.toString()}, ${total.toString()}, ${eligible.length}, ${block.toString()}, ${fromHook.toString()}, ${HOOK ? block.toString() : null})
       ON CONFLICT (day) DO NOTHING RETURNING day`;
     if (!ins.length) return { day, skipped: "already distributed" };
     let paid = BigInt(0);
@@ -67,7 +87,7 @@ export async function distribute(day: string) {
         paid += amount;
       }
     }
-    return { day, revenue: Number(revenue) / MICROS, pool: Number(pool) / MICROS, paid: Number(paid) / MICROS, holders: eligible.length };
+    return { day, revenue: Number(revenue) / MICROS, hookFees: Number(fromHook) / MICROS, pool: Number(pool) / MICROS, paid: Number(paid) / MICROS, holders: eligible.length };
   });
 }
 

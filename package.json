@@ -7,7 +7,8 @@
     "build": "node scripts/migrate.mjs && node scripts/sync-models.mjs && next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "check:hook": "node --experimental-strip-types scripts/check-hook-sim.ts"
   },
   "dependencies": {
     "@privy-io/react-auth": "3.48.0",
