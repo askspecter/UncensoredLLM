@@ -23,11 +23,18 @@ export default function Footer() {
           <p className="mt-4 max-w-xs text-sm text-mute">
             Private, uncensored inference. No logs, no lectures. Just the model.
           </p>
-          <a href="https://x.com/usebeeper" target="_blank" rel="noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded border border-line px-3 py-2 text-sm hover:border-ember hover:text-ember">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-            @usebeeper
-          </a>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href="https://x.com/usebeeper" target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded border border-line px-3 py-2 text-sm hover:border-ember hover:text-ember">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+              @usebeeper
+            </a>
+            <a href="https://t.me/usebeeper" target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded border border-line px-3 py-2 text-sm hover:border-ember hover:text-ember">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M21.94 4.6a1.2 1.2 0 0 0-1.62-1.33L2.79 10.06c-1.03.4-1 1.86.05 2.22l4.35 1.47 1.68 5.32c.27.86 1.35 1.13 1.99.5l2.44-2.39 4.27 3.13c.8.59 1.94.15 2.15-.82zM9.6 13.34l8.03-6.66-6.58 7.82-.32 3.17z" /></svg>
+              Telegram
+            </a>
+          </div>
           <p className="mt-4 text-xs text-mute">Official $BEEP CA</p>
           <a href={BEEP.explorer} target="_blank" rel="noreferrer" className="mt-1 block break-all font-mono text-xs text-bone hover:text-ember">{BEEP.address}</a>
         </div>
