@@ -4,7 +4,7 @@ export const metadata = { title: "Docs | Beeper" };
 
 const TOC = [
   ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"],
-["models", "List models"], ["x402", "Pay per request (x402)"], ["receipts", "Proof of Bill"], ["mcp", "MCP & agents"], ["limits", "Rate limits"], ["errors", "Errors"],
+["models", "List models"], ["x402", "Pay per request (x402)"], ["receipts", "Proof of Bill"], ["mcp", "MCP server"], ["limits", "Rate limits"], ["errors", "Errors"],
 ];
 
 function Code({ children }: { children: string }) {
@@ -92,10 +92,32 @@ export default function Docs() {
           <p><code className="text-bone">GET /v1/models</code> returns every model with its price per 1M tokens. Filter with <code className="text-bone">?uncensored=true</code>.</p>
         </Sec>
 
-        <Sec id="mcp" title="MCP & agents">
-          <p>Use Beeper as the model provider in any agent that supports OpenAI-compatible endpoints: Claude Code proxies, Cursor, Cline, OpenWebUI, SillyTavern, LiteLLM.</p>
-          <Code>{`# LiteLLM / OpenWebUI / Cline
-OPENAI_API_BASE=https://usebeeper.io/v1
+        <Sec id="mcp" title="MCP server">
+          <p>Beeper is an MCP server at <code className="text-bone">https://usebeeper.io/mcp</code> (Streamable HTTP). Any MCP client gets five tools: <code className="text-bone">chat</code> with any of the models, <code className="text-bone">generate_image</code>, <code className="text-bone">list_models</code>, <code className="text-bone">get_balance</code> and <code className="text-bone">verify_receipt</code>. Calls are billed to your API key, and every chat answer comes with its Proof of Bill receipt.</p>
+          <p className="mt-3 text-sm text-mute">Claude Code</p>
+          <Code>{`claude mcp add --transport http beeper https://usebeeper.io/mcp \\
+  --header "Authorization: Bearer sk-beeper-..."`}</Code>
+          <p className="mt-3 text-sm text-mute">Cursor (~/.cursor/mcp.json)</p>
+          <Code>{`{
+  "mcpServers": {
+    "beeper": {
+      "url": "https://usebeeper.io/mcp",
+      "headers": { "Authorization": "Bearer sk-beeper-..." }
+    }
+  }
+}`}</Code>
+          <p className="mt-3 text-sm text-mute">Claude Desktop (claude_desktop_config.json)</p>
+          <Code>{`{
+  "mcpServers": {
+    "beeper": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://usebeeper.io/mcp", "--header", "Authorization:\${BEEPER_AUTH}"],
+      "env": { "BEEPER_AUTH": "Bearer sk-beeper-..." }
+    }
+  }
+}`}</Code>
+          <p className="mt-3">Prefer plain OpenAI-compatible calls? Point LiteLLM, OpenWebUI, Cline or SillyTavern at Beeper instead:</p>
+          <Code>{`OPENAI_API_BASE=https://usebeeper.io/v1
 OPENAI_API_KEY=$BEEPER_KEY
 MODEL=beeper/hermes-4-405b`}</Code>
         </Sec>
