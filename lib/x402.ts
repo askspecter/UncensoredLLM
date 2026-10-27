@@ -8,6 +8,7 @@ import { PAY_TO, USDG, robinhood } from "./chain";
 import { sql } from "./db";
 import { addToBalance } from "./billing";
 import { findModel } from "./data";
+import { estimatePromptTokens } from "./gateway";
 import { chainClient, serverAccount, walletClient } from "./server-wallet";
 
 export const X402_NETWORK = `eip155:${robinhood.id}`;
@@ -35,7 +36,7 @@ export function quote(body: Record<string, unknown>): { amount: bigint; maxToken
   const model = findModel(String(body.model ?? ""));
   if (!model || !Array.isArray(body.messages)) return null;
   const maxTokens = Math.min(Number(body.max_tokens ?? body.max_completion_tokens) || DEFAULT_MAX_TOKENS, 16_384);
-  const promptTokens = Math.ceil(JSON.stringify(body.messages).length / 3);
+  const promptTokens = estimatePromptTokens(body.messages);
   const cost = BigInt(Math.ceil((promptTokens * model.input + maxTokens * model.output) * 1.25));
   return { amount: cost > MIN_PRICE ? cost : MIN_PRICE, maxTokens };
 }

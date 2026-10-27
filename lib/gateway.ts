@@ -34,8 +34,15 @@ export function costMicros(m: Model, promptTokens: number, completionTokens: num
 }
 
 /** Caps max_tokens to what the balance can pay for, given a rough prompt-size estimate. */
+/** Rough prompt size for budgeting: ~3 characters per token, and a flat 1,600 tokens per attached image. */
+export function estimatePromptTokens(messages: unknown) {
+  let images = 0;
+  const text = JSON.stringify(messages, (_k, v) => (typeof v === "string" && v.startsWith("data:") ? (images++, "") : v));
+  return Math.ceil(text.length / 3) + images * 1_600;
+}
+
 export function affordableMaxTokens(m: Model, balance: bigint, body: unknown, requested?: number) {
-  const estPromptTokens = Math.ceil(JSON.stringify(body).length / 3);
+  const estPromptTokens = estimatePromptTokens(body);
   const left = Number(balance) - estPromptTokens * m.input;
   const affordable = m.output > 0 ? Math.floor(left / m.output) : DEFAULT_MAX_TOKENS;
   return Math.max(0, Math.min(affordable, requested && requested > 0 ? requested : DEFAULT_MAX_TOKENS));

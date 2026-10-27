@@ -3,7 +3,7 @@ import CodeTabs from "@/components/CodeTabs";
 export const metadata = { title: "Docs | Beeper" };
 
 const TOC = [
-  ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"],
+  ["quickstart", "Quickstart"], ["auth", "Authentication"], ["chat", "Chat completions"], ["streaming", "Streaming"], ["vision", "Images & web search"],
 ["models", "List models"], ["x402", "Pay per request (x402)"], ["receipts", "Proof of Bill"], ["mcp", "MCP server"], ["limits", "Rate limits"], ["errors", "Errors"],
 ];
 
@@ -86,6 +86,19 @@ export default function Docs() {
   -d '{"model":"beeper/chroma","prompt":"noir city at 3am, rain, neon","size":"portrait","n":1}'
 # → { "data": [{ "b64_json": "…" }], "cost_usd": 0.012 }`}</Code>
           <p>Prompts involving minors are refused for every model.</p>
+        </Sec>
+
+        <Sec id="vision" title="Images & web search">
+          <p>Send an image to any model tagged <code className="text-bone">vision</code> on the Models page, in the usual OpenAI format. Add the <code className="text-bone">web</code> plugin and the model searches the web first; sources come back as <code className="text-bone">url_citation</code> annotations. Search fees are billed at cost plus the usual margin.</p>
+          <Code>{`{
+  "model": "google/gemini-3.5-flash-lite",
+  "plugins": [{ "id": "web", "max_results": 5 }],
+  "messages": [{ "role": "user", "content": [
+    { "type": "text", "text": "What is this, and where can I buy it?" },
+    { "type": "image_url", "image_url": { "url": "data:image/jpeg;base64,..." } }
+  ]}]
+}`}</Code>
+          <p className="mt-3 text-sm text-mute">With web search on, your question is sent to a search engine. It is off unless you ask for it.</p>
         </Sec>
 
         <Sec id="models" title="List models">
