@@ -59,3 +59,27 @@ try {
 } catch (e) {
   console.warn(`[sync-models] kept existing catalogue: ${e.message}`);
 }
+
+// Models Orbio serves at or below OpenRouter's price (lib/orbio-models.json). With ORBIO_UPSTREAM=1 these are
+// routed through Orbio and paid from Beeper's Orbio balance, which is bought at a discount on chain.
+try {
+  const [or, ob] = await Promise.all(["https://openrouter.ai/api/v1/models", "https://www.orbio.so/api/v1/models"].map(async (u) => {
+    const r = await fetch(u, { signal: AbortSignal.timeout(20_000) });
+    if (!r.ok) throw new Error(`${u} HTTP ${r.status}`);
+    const j = await r.json();
+    return new Map((Array.isArray(j) ? j : j.data).map((m) => [m.id, m]));
+  }));
+  const ids = [...ob.values()]
+    .filter((m) => m.architecture?.output_modalities?.includes("text"))
+    .filter((m) => {
+      const o = or.get(m.id);
+      const p = (x, k) => Number(x?.pricing?.[k] ?? NaN);
+      return o && p(m, "prompt") > 0 && p(m, "completion") > 0 && p(m, "prompt") <= p(o, "prompt") && p(m, "completion") <= p(o, "completion");
+    })
+    .map((m) => m.id).sort();
+  if (ids.length < 50) throw new Error(`only ${ids.length} Orbio models, refusing to overwrite`);
+  writeFileSync(new URL("../lib/orbio-models.json", import.meta.url), JSON.stringify(ids) + "\n");
+  console.log(`[sync-models] ${ids.length} models routable through Orbio`);
+} catch (e) {
+  console.warn(`[sync-models] kept existing Orbio list: ${e.message}`);
+}

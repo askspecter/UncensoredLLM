@@ -7,7 +7,10 @@ export default function Admin() {
   return (
     <main className="mx-auto max-w-4xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="Admin" title="Seller payouts">
-        <a href="/admin/hook" className="btn btn-ghost text-sm">Deploy BeeperHook</a>
+        <div className="flex gap-2">
+          <a href="/admin/orbio" className="btn btn-ghost text-sm">Orbio supply</a>
+          <a href="/admin/hook" className="btn btn-ghost text-sm">Deploy BeeperHook</a>
+        </div>
       </PageHeader>
       <AdminPayouts />
     </main>

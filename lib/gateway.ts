@@ -4,6 +4,7 @@ import { sql } from "./db";
 import { findApiKey } from "./keys";
 import { chargeUsage } from "./billing";
 import type { Model } from "./data";
+import { orbioFetch, routesToOrbio } from "./orbio";
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const UPSTREAM = process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1";
@@ -48,7 +49,25 @@ export function affordableMaxTokens(m: Model, balance: bigint, body: unknown, re
   return Math.max(0, Math.min(affordable, requested && requested > 0 ? requested : DEFAULT_MAX_TOKENS));
 }
 
-export function upstreamFetch(path: string, body: object, signal: AbortSignal) {
+/**
+ * Sends a request upstream: to Orbio when it serves the model at or below OpenRouter's price (and is enabled),
+ * otherwise, or if Orbio can't take it right now, to OpenRouter.
+ */
+export async function upstreamFetch(path: string, body: Record<string, unknown>, signal: AbortSignal) {
+  if (routesToOrbio(body)) {
+    try {
+      const res = await orbioFetch(path, body, signal);
+      if (res.ok) return res;
+      console.warn(`[gateway] orbio ${res.status} for ${body.model}, falling back to OpenRouter`);
+    } catch (e) {
+      if (signal.aborted) throw e;
+      console.warn("[gateway] orbio unreachable, falling back to OpenRouter");
+    }
+  }
+  return openRouterFetch(path, body, signal);
+}
+
+function openRouterFetch(path: string, body: object, signal: AbortSignal) {
   return fetch(`${UPSTREAM}${path}`, {
     method: "POST",
     headers: {
