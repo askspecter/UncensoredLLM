@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Providers";
 import { USDG, explorerTx, robinhood } from "@/lib/chain";
+import PayStock from "./PayStock";
 
 export type UsdgPay = { to: `0x${string}`; units: string; amount: string };
 export type Paid = { status: "paid"; txHash?: string; balance?: number; apiKey?: string | null };
@@ -16,8 +17,9 @@ function Copy({ text, label }: { text: string; label?: string }) {
   );
 }
 
-export default function PayUsdg({ orderId, pay, onPaid, headers }: {
+export default function PayUsdg({ orderId, pay, onPaid, headers, initialMode = "usdg" }: {
   orderId: string; pay: UsdgPay; onPaid: (r: Paid) => void;
+  initialMode?: "usdg" | "stock";
   /** Auth headers override, used by burner accounts. */
   headers?: () => Promise<Record<string, string>>;
 }) {
@@ -27,6 +29,7 @@ export default function PayUsdg({ orderId, pay, onPaid, headers }: {
   const [txHash, setTxHash] = useState("");
   const [manualHash, setManualHash] = useState("");
   const [note, setNote] = useState("");
+  const [mode, setMode] = useState(initialMode);
   const paidRef = useRef(false);
 
   const confirm = useCallback(async (hash?: string) => {
@@ -61,8 +64,18 @@ export default function PayUsdg({ orderId, pay, onPaid, headers }: {
     } finally { setSending(false); }
   }
 
+  const tab = (m: "usdg" | "stock", label: string) => (
+    <button type="button" onClick={() => setMode(m)} aria-pressed={mode === m}
+      className={`flex-1 rounded px-3 py-1.5 text-sm transition ${mode === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
+  );
+
   return (
     <div className="mt-5 space-y-4">
+      {auth.enabled && <div className="flex gap-1 rounded-md border border-line bg-ink p-1">{tab("usdg", "Pay with USDG")}{tab("stock", "Pay with stocks")}</div>}
+
+      {mode === "stock" ? (
+        <PayStock pay={pay} authHeaders={authHeaders} onSent={(hash) => { setTxHash(hash); setNote("Swap sent. Waiting for confirmation…"); confirm(hash); }} />
+      ) : (<>
       <div className="rounded-md border border-line bg-ink p-4">
         <p className="text-xs text-mute">Send exactly</p>
         <div className="mt-1 flex items-center justify-between gap-3">
@@ -86,6 +99,7 @@ export default function PayUsdg({ orderId, pay, onPaid, headers }: {
           {sending ? "Confirm in your wallet…" : auth.walletAddress ? `Pay ${pay.amount} USDG with wallet` : "Connect wallet to pay"}
         </button>
       )}
+      </>)}
 
       <div className="flex items-center gap-2 text-sm text-mute">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warn" />

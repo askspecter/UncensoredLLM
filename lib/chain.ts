@@ -7,6 +7,7 @@ export const robinhood = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: { default: { http: ["https://rpc.mainnet.chain.robinhood.com"] } },
   blockExplorers: { default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" } },
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
 });
 
 // Paxos Global Dollar on Robinhood Chain (6 decimals), https://docs.paxos.com/guides/stablecoin/usdg/mainnet

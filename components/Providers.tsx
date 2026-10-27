@@ -31,6 +31,7 @@ type Auth = {
 
 // Local testing without Privy: NEXT_PUBLIC_DEV_USER signs you in as that id (server needs DEV_AUTH_BYPASS=1).
 const DEV_USER = process.env.NODE_ENV !== "production" ? process.env.NEXT_PUBLIC_DEV_USER : undefined;
+const DEV_WALLET = DEV_USER ? process.env.NEXT_PUBLIC_DEV_WALLET ?? null : null;
 
 // Fallback when Privy isn't configured, so the site still renders in local dev.
 const disabled: Auth = {
@@ -42,7 +43,7 @@ const disabled: Auth = {
   logout: async () => {},
   getToken: async () => null,
   authHeaders: async (): Promise<Record<string, string>> => (DEV_USER ? { "x-dev-user": DEV_USER } : {}),
-  walletAddress: null,
+  walletAddress: DEV_WALLET,
   connectWallet: () => {},
   sendUsdg: async () => { throw new Error("Wallet sign-in is not configured"); },
   walletAddresses: [],

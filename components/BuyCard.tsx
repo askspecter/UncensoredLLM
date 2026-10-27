@@ -8,7 +8,7 @@ const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", curren
 const PRESETS = [10, 25, 100, 500];
 
 type Order = { id: string; status: "paid" | "pending"; credit: number; total: number; balance?: number; apiKey?: string | null; checkoutUrl?: string | null; pay?: UsdgPay; txHash?: string };
-type Method = "usdg" | "card";
+type Method = "usdg" | "stock" | "card";
 
 export default function BuyCard() {
   const [amount, setAmount] = useState(100);
@@ -48,7 +48,8 @@ export default function BuyCard() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json", ...(await auth.authHeaders()) },
-        body: JSON.stringify({ credit: amount, payment: method }),
+        // A stock payment is a USDG order paid through a swap.
+        body: JSON.stringify({ credit: amount, payment: method === "card" ? "card" : "usdg" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
@@ -66,14 +67,14 @@ export default function BuyCard() {
     return (
       <div className="card slidein p-6">
         <p className="eyebrow">Order {order.id}</p>
-        <h3 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-bone">{paid ? "Credit added." : order.pay ? "Pay with USDG." : "Awaiting payment."}</h3>
+        <h3 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-bone">{paid ? "Credit added." : order.pay ? (method === "stock" ? "Pay with stocks." : "Pay with USDG.") : "Awaiting payment."}</h3>
         <p className="mt-2 text-sm text-mute">
           {paid
             ? <>{usd(order.credit)} of credit for {usd(order.total)}. Balance: <span className="text-bone">{usd(order.balance ?? order.credit)}</span>.</>
             : <>{usd(order.credit)} of credit for {usd(order.total)}. Credit is added as soon as the payment confirms.</>}
         </p>
         {!paid && order.pay && (
-          <PayUsdg orderId={order.id} pay={order.pay}
+          <PayUsdg orderId={order.id} pay={order.pay} initialMode={method === "stock" ? "stock" : "usdg"}
             onPaid={(r: Paid) => setOrder({ ...order, status: "paid", balance: r.balance, apiKey: r.apiKey, txHash: r.txHash })} />
         )}
         {order.apiKey && (
@@ -134,15 +135,15 @@ export default function BuyCard() {
           : <>Filled by Beeper at −{HOUSE_DISCOUNT * 100}%. Deeper discounts appear when users list credit on the order book.</>}
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 rounded border border-line p-1 text-sm">
-        {([["usdg", "USDG", "· Robinhood"], ["card", "Card", ""]] as const).map(([m, label, extra]) => (
+      <div className="mt-5 grid grid-cols-3 gap-2 rounded border border-line p-1 text-sm">
+        {([["usdg", "USDG"], ["stock", "Stocks"], ["card", "Card"]] as const).map(([m, label]) => (
           <button key={m} onClick={() => setMethod(m)}
-            className={`rounded py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}<span className="hidden sm:inline"> {extra}</span></button>
+            className={`rounded py-1.5 ${method === m ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{label}</button>
         ))}
       </div>
 
       <button disabled={!valid || loading} onClick={checkout} className="btn btn-primary mt-4 w-full disabled:opacity-40">
-        {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : " in USDG"}` : `Enter $${MIN_PURCHASE}-$${MAX_PURCHASE.toLocaleString()}`}
+        {loading ? (method === "card" ? "Opening checkout…" : "Creating order…") : auth.enabled && !auth.authenticated ? "Sign in to buy" : valid ? `Pay ${usd(q.total)}${method === "card" ? " by card" : method === "stock" ? " in stocks" : " in USDG"}` : `Enter $${MIN_PURCHASE}-$${MAX_PURCHASE.toLocaleString()}`}
       </button>
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       <p className="mt-3 text-center text-xs text-mute">Price is held for 2 hours after you create the order. No KYC. Minimum ${MIN_PURCHASE}.</p>
