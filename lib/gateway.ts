@@ -7,6 +7,8 @@ import type { Model } from "./data";
 import { orbioFetch, routesToOrbio } from "./orbio";
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
+const VENICE_KEY = process.env.VENICE_API_KEY;
+const FEATHERLESS_KEY = process.env.FEATHERLESS_API_KEY;
 const UPSTREAM = process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1";
 const DEFAULT_MAX_TOKENS = 16_384;
 const MIN_BALANCE_MICROS = BigInt(1_000); // $0.001
@@ -53,7 +55,8 @@ export function affordableMaxTokens(m: Model, balance: bigint, body: unknown, re
  * Sends a request upstream: to Orbio when it serves the model at or below OpenRouter's price (and is enabled),
  * otherwise, or if Orbio can't take it right now, to OpenRouter.
  */
-export async function upstreamFetch(path: string, body: Record<string, unknown>, signal: AbortSignal) {
+export async function upstreamFetch(path: string, body: Record<string, unknown>, signal: AbortSignal, route?: Model["route"]) {
+  if (route) return directFetch(route, path, body, signal);
   if (routesToOrbio(body)) {
     try {
       const res = await orbioFetch(path, body, signal);
@@ -65,6 +68,24 @@ export async function upstreamFetch(path: string, body: Record<string, unknown>,
     }
   }
   return openRouterFetch(path, body, signal);
+}
+
+/**
+ * Venice and Featherless speak the OpenAI API but not OpenRouter's extensions, so those are dropped.
+ * Neither keeps prompts (Venice: private by design; Featherless: never logs prompts or completions).
+ */
+function directFetch(route: NonNullable<Model["route"]>, path: string, body: Record<string, unknown>, signal: AbortSignal) {
+  const { provider: _p, usage: _u, plugins: _w, transforms: _t, models: _m, ...rest } = body;
+  const [base, key, extra] = route === "venice"
+    ? ["https://api.venice.ai/api/v1", VENICE_KEY, { venice_parameters: { include_venice_system_prompt: false } }]
+    : ["https://api.featherless.ai/v1", FEATHERLESS_KEY, {}];
+  if (!key) return Promise.resolve(Response.json({ error: { message: "This model is not available right now" } }, { status: 503 }));
+  return fetch(`${process.env[`${route.toUpperCase()}_BASE_URL`] ?? base}${path}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "user-agent": "beeper/1.0" },
+    body: JSON.stringify({ ...rest, ...extra }),
+    signal,
+  });
 }
 
 function openRouterFetch(path: string, body: object, signal: AbortSignal) {

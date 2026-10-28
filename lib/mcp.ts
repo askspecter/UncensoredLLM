@@ -5,6 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getAddress } from "viem";
 import { z } from "zod";
 import { IMAGE_MODELS, MODELS } from "./data";
+import { searchLongtail } from "./longtail";
 import { balanceOf } from "./gateway";
 import { complete } from "./completion";
 import { ImageError, generateImages } from "./images";
@@ -24,7 +25,7 @@ export function beeperMcp(owner: Owner) {
 
   server.registerTool("list_models", {
     title: "List Beeper models",
-    description: "Search the model catalogue. Returns id, name and price per 1M tokens (input/output). Use the id with `chat`.",
+    description: "Search the model catalogue, including tens of thousands of open Hugging Face models (ids starting with hf/). Returns id, name and price per 1M tokens (input/output). Use the id with `chat`.",
     inputSchema: {
       search: z.string().optional().describe("Matches model name, id or provider, e.g. 'claude', 'deepseek', 'hermes'"),
       uncensored_only: z.boolean().optional().describe("Only models served without refusals"),
@@ -38,8 +39,11 @@ export function beeperMcp(owner: Owner) {
       const rows = IMAGE_MODELS.filter((m) => (!uncensored_only || m.uncensored) && `${m.name}${m.id}${m.provider}`.toLowerCase().includes(q));
       return text(rows.map((m) => `${m.id} · ${m.name} · $${m.perImage}/image${m.uncensored ? " · uncensored" : ""}`).join("\n") || "No image models match.");
     }
-    const all = MODELS.filter((m) => (!uncensored_only || m.uncensored) && `${m.name}${m.id}${m.provider}`.toLowerCase().includes(q));
-    const rows = all.slice(0, limit ?? 20), total = all.length;
+    const main = MODELS.filter((m) => (!uncensored_only || m.uncensored) && `${m.name}${m.id}${m.provider}`.toLowerCase().includes(q));
+    // Then the open-model long tail, which only matches on a search term.
+    const tail = q ? searchLongtail(q, 0, limit ?? 20, uncensored_only) : { total: 0, models: [] };
+    const all = [...main, ...tail.models];
+    const rows = all.slice(0, limit ?? 20), total = main.length + tail.total;
     return text(rows.map((m) => `${m.id} · ${m.name} (${m.provider}) · $${m.input}/$${m.output} per 1M · ${m.context}${m.uncensored ? " · uncensored" : ""}`).join("\n")
       + (total > rows.length ? `\n…and ${total - rows.length} more. Narrow with \`search\`.` : "") || "No models match.");
   });

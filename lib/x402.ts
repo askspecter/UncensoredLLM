@@ -7,7 +7,7 @@ import { getAddress, isAddress, parseSignature, parseAbi, verifyTypedData, type 
 import { PAY_TO, USDG, robinhood } from "./chain";
 import { sql } from "./db";
 import { addToBalance } from "./billing";
-import { findModel } from "./data";
+import { resolveModel } from "./longtail";
 import { estimatePromptTokens } from "./gateway";
 import { chainClient, serverAccount, walletClient } from "./server-wallet";
 
@@ -33,7 +33,7 @@ export const x402Account = (address: string) => `x402_${address.toLowerCase()}`;
 
 /** Most a request can cost (USDG units = micro-dollars), plus 25% headroom; also caps max_tokens to what was quoted. */
 export function quote(body: Record<string, unknown>): { amount: bigint; maxTokens: number } | null {
-  const model = findModel(String(body.model ?? ""));
+  const model = resolveModel(String(body.model ?? ""));
   if (!model || !Array.isArray(body.messages)) return null;
   const maxTokens = Math.min(Number(body.max_tokens ?? body.max_completion_tokens) || DEFAULT_MAX_TOKENS, 16_384);
   const promptTokens = estimatePromptTokens(body.messages);

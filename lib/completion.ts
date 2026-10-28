@@ -1,5 +1,6 @@
 // Shared chat-completions pipeline: balance checks, upstream call, streaming passthrough, billing.
-import { MARGIN, findModel, type Model } from "./data";
+import { MARGIN, type Model } from "./data";
+import { resolveModel } from "./longtail";
 import { encodeReceipt, hashOutput } from "./receipts";
 import {
   MIN_BALANCE_MICROS, affordableMaxTokens, apiError, balanceOf, chargeUsage,
@@ -25,12 +26,15 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   if (!body || typeof body !== "object" || !Array.isArray(body.messages)) {
     return apiError(400, "invalid_request", "Body must be JSON with `model` and `messages`");
   }
-  const model = findModel(String(body.model ?? ""));
+  const model = resolveModel(String(body.model ?? ""));
   if (!model) return apiError(404, "model_not_found", `Unknown model "${body.model}". See GET /v1/models`);
 
   const balance = await balanceOf(owner.userId);
   if (balance < MIN_BALANCE_MICROS) return apiError(402, "insufficient_credit", "Balance too low. Top up at https://usebeeper.io/#buy");
-  const maxTokens = affordableMaxTokens(model, balance, body.messages, Number(body.max_tokens ?? body.max_completion_tokens) || undefined);
+  // Long-tail models often have 2K to 8K of context; asking for more output than that is rejected upstream.
+  const ctxCap = model.route === "featherless" ? Math.floor(parseFloat(model.context) * (model.context.endsWith("M") ? 1_000_000 : 1000) / 2) : undefined;
+  const asked = Number(body.max_tokens ?? body.max_completion_tokens) || ctxCap;
+  const maxTokens = Math.min(affordableMaxTokens(model, balance, body.messages, asked), ctxCap ?? Infinity);
   if (maxTokens < 1) return apiError(402, "insufficient_credit", "Balance too low for this prompt. Top up at https://usebeeper.io/#buy");
 
   const stream = body.stream === true;
@@ -49,7 +53,7 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   req.signal.addEventListener("abort", () => ctrl.abort());
   let res: Response;
   try {
-    res = await upstreamFetch("/chat/completions", upstreamBody, ctrl.signal);
+    res = await upstreamFetch("/chat/completions", upstreamBody, ctrl.signal, model.route);
   } catch {
     return apiError(502, "upstream_error", "Model provider unreachable. You were not charged.");
   }

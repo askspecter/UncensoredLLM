@@ -1,5 +1,6 @@
 // Model catalogue + pricing.
 import GENERATED from "./models.generated.json";
+import VENICE from "./venice-models.json";
 
 /** Markup on upstream (OpenRouter) token prices. */
 export const MARGIN = 0.2;
@@ -23,6 +24,7 @@ type UpstreamModel = {
   uncensored: boolean;
   tags: string[];
   image?: boolean; // generates images (output tokens include image tokens)
+  route?: "venice" | "featherless"; // upstream other than OpenRouter
 };
 
 /** `input`/`output` are Beeper's prices (upstream + MARGIN); `cost` is what we pay upstream. */
@@ -46,11 +48,16 @@ const UPSTREAM_MODELS: UpstreamModel[] = [
   { id: "beeper/gpt-oss-120b", upstream: "openai/gpt-oss-120b", name: "gpt-oss 120B", provider: "OpenAI (open weights)", context: "131K", input: 0.15, output: 0.6, uncensored: false, tags: ["reasoning"] },
 ];
 
-const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;
+export const withMargin = (usd: number) => Math.round(usd * (1 + MARGIN) * 10_000) / 10_000;
 
-// Everything else OpenRouter serves (scripts/sync-models.mjs), after the hand-picked models above.
+// Everything else OpenRouter serves, then Venice's models OpenRouter lacks (scripts/sync-models.mjs).
+// The Featherless long tail is server-only, see lib/longtail.ts.
 const curated = new Set(UPSTREAM_MODELS.map((m) => m.upstream));
-const CATALOGUE: UpstreamModel[] = [...UPSTREAM_MODELS, ...(GENERATED as UpstreamModel[]).filter((m) => !curated.has(m.upstream))];
+const CATALOGUE: UpstreamModel[] = [
+  ...UPSTREAM_MODELS,
+  ...(GENERATED as UpstreamModel[]).filter((m) => !curated.has(m.upstream)),
+  ...(VENICE as UpstreamModel[]),
+];
 
 export const MODELS: Model[] = CATALOGUE.map((m) => ({
   ...m,
