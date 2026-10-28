@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./Providers";
 import { FEATURED, IMAGE_MODELS, MODELS } from "@/lib/data";
 import ProviderLogo from "./ProviderLogo";
+import OpenModelPicker from "./OpenModelPicker";
 
 type Source = { url: string; title?: string };
 type Msg = { role: "user" | "assistant"; content: string; tokens?: number; images?: string[]; receipt?: string; attachment?: string; sources?: Source[] };
@@ -113,6 +114,8 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
   const [attachment, setAttachment] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [sidebar, setSidebar] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [openCount, setOpenCount] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -123,10 +126,18 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
     setActiveId(list[0].id);
   }, []);
   useEffect(() => { if (chats.length) saveChats(chats, burner); }, [chats, burner]);
+  useEffect(() => {
+    fetch("/api/models/search?q=__none__").then((r) => r.json()).then((d) => setOpenCount(d.count ?? 0)).catch(() => {});
+  }, []);
 
   const active = chats.find((c) => c.id === activeId) ?? chats[0];
   const imageModel = IMAGE_MODELS.find((m) => m.id === active?.model) ?? null;
-  const model = MODELS.find((m) => m.id === active?.model) ?? MODELS[0];
+  // hf/owner/model ids come from the open-model long tail, which isn't in the client catalogue.
+  const openModel = active?.model.startsWith("hf/") ? (() => {
+    const [, owner = "", ...rest] = active.model.split("/");
+    return { ...MODELS[0], id: active.model, upstream: active.model, name: rest.join("/"), provider: owner, tags: [], uncensored: /uncensor|abliterat|heretic|dolphin|rp/i.test(active.model) };
+  })() : null;
+  const model = openModel ?? MODELS.find((m) => m.id === active?.model) ?? MODELS[0];
   const lastUser = !imageModel && !busy ? active?.messages.findLast((m) => m.role === "user")?.content ?? "" : "";
   const hint = attachment && !imageModel && !model.tags.includes("vision") ? "vision"
     : IMAGE_INTENT.test(lastUser) ? "image" : URL_RE.test(lastUser) && !active?.web ? "url" : null;
@@ -282,8 +293,10 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <button onClick={() => setSidebar(!sidebar)} className="rounded border border-line px-3 py-1.5 text-xs md:hidden">Chats</button>
           <ProviderLogo provider={imageModel ? imageModel.provider : model.provider} size={30} />
-          <select value={active.model} onChange={(e) => update(active.id, (c) => ({ ...c, model: e.target.value }))}
+          <select value={active.model} onChange={(e) => e.target.value === "__open" ? setPicking(true) : update(active.id, (c) => ({ ...c, model: e.target.value }))}
             className="min-w-0 max-w-[60vw] rounded border border-line bg-ink px-3 py-1.5 text-sm outline-none focus:border-ember">
+            {openModel && <option value={openModel.id}>{openModel.name}</option>}
+            {openCount > 0 && <option value="__open">Open models ({openCount.toLocaleString("en-US")})…</option>}
             <optgroup label="Featured">
               {FEATURED.map((m) => <option key={m.id} value={m.id}>{m.uncensored ? "🔓 " : ""}{m.name}</option>)}
             </optgroup>
@@ -306,9 +319,10 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
             <button onClick={() => setShowSystem(!showSystem)} className={`rounded border px-3 py-1.5 text-xs ${active.system ? "border-ember text-bone" : "border-line text-mute"}`}>Persona</button>
           )}
           <span className="ml-auto font-mono text-xs text-mute">
-            {balance !== null && <>balance {usd(balance)} · </>}{imageModel ? `$${imageModel.perImage} / image` : `$${model.input}/$${model.output} per 1M`}
+            {balance !== null && <>balance {usd(balance)} · </>}{imageModel ? `$${imageModel.perImage} / image` : openModel ? "on your Featherless plan" : `$${model.input}/$${model.output} per 1M`}
           </span>
         </div>
+        {picking && <OpenModelPicker onClose={() => setPicking(false)} onPick={(id) => { update(active.id, (c) => ({ ...c, model: id })); setPicking(false); }} />}
         {showSystem && (
           <div className="border-b border-line p-4">
             <textarea value={active.system} onChange={(e) => update(active.id, (c) => ({ ...c, system: e.target.value }))} rows={3}
@@ -324,6 +338,7 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
               <p className="mt-2 text-sm text-mute">
                 {imageModel
                   ? <>Describe the image you want: {imageModel.style.toLowerCase()}. ${imageModel.perImage} per image. Prompts involving minors are blocked.</>
+                  : openModel ? <>Open model on your own Featherless plan. Not billed from your Beeper balance.</>
                   : <>Private and unfiltered. Billed per token from your balance{model.uncensored ? ". This model is uncensored" : ""}.</>}
               </p>
             </div>
@@ -368,7 +383,7 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
         )}
         {error && (
           <p className="mx-4 mb-2 rounded-lg border border-danger/40 bg-danger/10 p-2.5 text-sm text-ember-soft">
-            {error} {/credit|balance/i.test(error) && <a href="/#buy" className="underline">Top up</a>}
+            {error} {/Featherless/.test(error) ? <a href="/dashboard" className="underline">Connect Featherless</a> : /credit|balance/i.test(error) && <a href="/#buy" className="underline">Top up</a>}
           </p>
         )}
         {attachment && (

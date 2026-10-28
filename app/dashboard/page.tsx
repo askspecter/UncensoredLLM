@@ -1,4 +1,5 @@
 import Account from "@/components/Account";
+import FeatherlessConnect from "@/components/FeatherlessConnect";
 
 export const metadata = { title: "Account | Beeper" };
 
@@ -13,6 +14,7 @@ export default function Dashboard() {
         <a href="/#buy" className="btn btn-primary text-sm">Top up</a>
       </div>
       <Account />
+      <FeatherlessConnect />
     </main>
   );
 }

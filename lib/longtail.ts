@@ -6,7 +6,10 @@ import { findModel, withMargin, type Model } from "./data";
 type Row = [id: string, context: number, input: number, output: number, cls: string];
 
 export const LONGTAIL_PREFIX = "hf/";
-export const longtailEnabled = Boolean(process.env.FEATHERLESS_API_KEY);
+// On when Beeper can pay for these models itself (API key), or users can connect their own Featherless plan (OAuth).
+export const longtailEnabled = Boolean(process.env.FEATHERLESS_API_KEY || process.env.FEATHERLESS_CLIENT_SECRET);
+/** Beeper's own Featherless key; without it a long-tail request needs the user's connected account. */
+export const longtailPaid = Boolean(process.env.FEATHERLESS_API_KEY);
 
 const rows = ROWS as Row[];
 const byId = new Map(rows.map((r) => [r[0].toLowerCase(), r]));
@@ -39,6 +42,11 @@ export function findLongtail(id: string): Model | undefined {
 /** Any model Beeper can bill: the main catalogue first, then the long tail. */
 export const resolveModel = (id: string) => findModel(id) ?? findLongtail(id);
 
+// Labs and well-known finetuners first; automated training-swarm checkpoints (thousands of tiny copies) last.
+const KNOWN = new Set(["qwen", "meta-llama", "mistralai", "google", "deepseek-ai", "microsoft", "nousresearch", "cognitivecomputations",
+  "sao10k", "anthracite-org", "thedrummer", "gryphe", "neversleep", "undi95", "huihui-ai", "mlabonne", "failspy", "nvidia", "01-ai", "tiiuae"]);
+const rank = (id: string) => (/swarm|gensyn/i.test(id) ? 2 : KNOWN.has(id.split("/")[0].toLowerCase()) ? 0 : 1);
+
 /** Case-insensitive search over repo ids; every word must match. */
 export function searchLongtail(q: string, offset = 0, limit = 50, uncensoredOnly = false) {
   if (!longtailEnabled) return { total: 0, models: [] as Model[] };
@@ -46,7 +54,7 @@ export function searchLongtail(q: string, offset = 0, limit = 50, uncensoredOnly
   const hits = rows.filter((r) => {
     const id = r[0].toLowerCase();
     return words.every((w) => id.includes(w)) && (!uncensoredOnly || UNCENSORED.test(r[0]));
-  });
+  }).sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].length - b[0].length);
   return { total: hits.length, models: hits.slice(offset, offset + limit).map(toModel) };
 }
 

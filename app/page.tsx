@@ -6,6 +6,7 @@ import CodeTabs from "@/components/CodeTabs";
 import Faq from "@/components/Faq";
 import { MODELS, PRIVACY_TIERS } from "@/lib/data";
 import { IMAGE_MODELS } from "@/lib/images";
+import { longtailCount } from "@/lib/longtail";
 import ProviderLogo, { PROVIDERS_WITH_LOGOS } from "@/components/ProviderLogo";
 import BeepToken from "@/components/BeepToken";
 
@@ -30,6 +31,12 @@ const FEATURES = [
 ];
 
 export const revalidate = 60;
+
+/** Every chat, image and open model; compact ("22K+") once the long tail is on, so it fits the stat bar on phones. */
+function modelCount() {
+  const n = MODELS.length + IMAGE_MODELS.length + longtailCount();
+  return n >= 10_000 ? `${Math.floor(n / 1000)}K+` : `${n}`;
+}
 
 export default function Home() {
   const uncensored = MODELS.filter((m) => m.uncensored).length + IMAGE_MODELS.filter((m) => m.uncensored).length;
@@ -58,7 +65,7 @@ export default function Home() {
         </div>
         <div className="relative mx-auto max-w-6xl px-5">
           <dl className="grid grid-cols-4 rounded-md border border-line bg-panel/60">
-            {[[`${MODELS.length + IMAGE_MODELS.length}`, "models"], [`${uncensored}`, "uncensored"], ["10%+", "off"], ["0", "logs"]].map(([v, l], i) => (
+            {[[modelCount(), "models"], [`${uncensored}`, "uncensored"], ["10%+", "off"], ["0", "logs"]].map(([v, l], i) => (
               <div key={l} className={`px-3 py-3 text-center sm:px-5 sm:py-4 sm:text-left ${i ? "border-l border-line" : ""}`}>
                 <dt className="font-serif text-3xl text-ember sm:text-4xl">{v}</dt>
                 <dd className="text-[10px] uppercase tracking-wider text-mute sm:text-[11px]">{l}</dd>
@@ -148,7 +155,7 @@ export default function Home() {
             <div className="card grid grid-cols-3 gap-4 p-5 font-mono text-sm">
               <div><p className="text-xs text-mute">format</p><p className="text-bone">OpenAI</p></div>
               <div><p className="text-xs text-mute">streaming</p><p className="text-bone">yes</p></div>
-              <div><p className="text-xs text-mute">models</p><p className="text-bone">{MODELS.length}</p></div>
+              <div><p className="text-xs text-mute">models</p><p className="text-bone">{(MODELS.length + longtailCount()).toLocaleString("en-US")}</p></div>
             </div>
           </div>
           <CodeTabs />

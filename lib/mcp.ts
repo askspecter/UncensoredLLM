@@ -20,7 +20,7 @@ const usd = (micros: bigint | number) => `$${(Number(micros) / 1e6).toFixed(6)}`
 
 export function beeperMcp(owner: Owner) {
   const server = new McpServer({ name: "beeper", version: "1.0.0" }, {
-    instructions: "Private, uncensored AI. 400+ chat models and image models on one prepaid balance. Prompts and answers are never stored; every chat answer comes with a Proof of Bill receipt.",
+    instructions: "Private, uncensored AI. 400+ chat models, image models and tens of thousands of open Hugging Face models (hf/ ids, on your own connected Featherless plan) on one key. Prompts and answers are never stored; every chat answer comes with a Proof of Bill receipt.",
   });
 
   server.registerTool("list_models", {

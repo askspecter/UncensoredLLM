@@ -3,22 +3,32 @@ import PriceExamples from "@/components/PriceExamples";
 import ProviderLogo from "@/components/ProviderLogo";
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_MODELS, MODELS } from "@/lib/data";
+import { longtailCount } from "@/lib/longtail";
+import OpenModelBrowser from "@/components/OpenModelBrowser";
 
 export const metadata = { title: "Models | Beeper" };
 
 export default function Models() {
   const unc = MODELS.filter((m) => m.uncensored).length;
+  const open = longtailCount();
   return (
     <main className="mx-auto max-w-6xl px-5 pt-8 md:pt-16">
       <PageHeader eyebrow="Model catalogue" title={<>Every model. <em className="text-ember-soft">One key.</em></>}
         sub="Open-weight and frontier models behind one OpenAI-compatible key. Uncensored models are served raw: no extra system prompts, no moderation layer.">
         <div className="grid grid-cols-3 gap-6 font-mono text-sm">
-          <div><p className="text-xs text-mute">models</p><p className="text-2xl text-bone">{MODELS.length}</p></div>
+          <div><p className="text-xs text-mute">models</p><p className="text-2xl text-bone">{(MODELS.length + open).toLocaleString("en-US")}</p></div>
           <div><p className="text-xs text-mute">uncensored</p><p className="text-2xl text-ember-soft">{unc}</p></div>
           <div><p className="text-xs text-mute">from</p><p className="text-2xl text-moss">${Math.min(...MODELS.map((m) => m.input)).toFixed(2)}</p></div>
         </div>
       </PageHeader>
       <div className="mt-10"><ModelTable /></div>
+      {open > 0 && (
+        <>
+          <h2 className="mt-14 text-3xl leading-[1.1] font-semibold tracking-[-0.035em] text-bone md:text-4xl">{open.toLocaleString("en-US")} open models</h2>
+          <p className="mt-3 max-w-2xl text-mute">Every open model on Hugging Face that Featherless serves, from Llama and Qwen finetunes to thousands of uncensored and roleplay builds. They run on your own Featherless plan once you connect it on your account page.</p>
+          <div className="mt-6"><OpenModelBrowser /></div>
+        </>
+      )}
       <h2 className="mt-14 text-3xl leading-[1.1] font-semibold tracking-[-0.035em] text-bone md:text-4xl">Image models</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {IMAGE_MODELS.map((m) => (

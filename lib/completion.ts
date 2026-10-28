@@ -1,6 +1,7 @@
 // Shared chat-completions pipeline: balance checks, upstream call, streaming passthrough, billing.
 import { MARGIN, type Model } from "./data";
-import { resolveModel } from "./longtail";
+import { longtailPaid, resolveModel } from "./longtail";
+import { featherlessToken } from "./featherless";
 import { encodeReceipt, hashOutput } from "./receipts";
 import {
   MIN_BALANCE_MICROS, affordableMaxTokens, apiError, balanceOf, chargeUsage,
@@ -26,11 +27,18 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   if (!body || typeof body !== "object" || !Array.isArray(body.messages)) {
     return apiError(400, "invalid_request", "Body must be JSON with `model` and `messages`");
   }
-  const model = resolveModel(String(body.model ?? ""));
+  let model = resolveModel(String(body.model ?? ""));
   if (!model) return apiError(404, "model_not_found", `Unknown model "${body.model}". See GET /v1/models`);
 
+  // A long-tail model runs on the user's own Featherless plan when they connected it: free on Beeper.
+  const userKey = model.route === "featherless" ? await featherlessToken(owner.userId) ?? undefined : undefined;
+  if (model.route === "featherless" && !userKey && !longtailPaid) {
+    return apiError(403, "connect_featherless", "This open model runs on your own Featherless plan. Connect it at https://www.usebeeper.io/dashboard");
+  }
+  if (userKey) model = { ...model, input: 0, output: 0 };
+
   const balance = await balanceOf(owner.userId);
-  if (balance < MIN_BALANCE_MICROS) return apiError(402, "insufficient_credit", "Balance too low. Top up at https://usebeeper.io/#buy");
+  if (!userKey && balance < MIN_BALANCE_MICROS) return apiError(402, "insufficient_credit", "Balance too low. Top up at https://usebeeper.io/#buy");
   // Long-tail models often have 2K to 8K of context; asking for more output than that is rejected upstream.
   const ctxCap = model.route === "featherless" ? Math.floor(parseFloat(model.context) * (model.context.endsWith("M") ? 1_000_000 : 1000) / 2) : undefined;
   const asked = Number(body.max_tokens ?? body.max_completion_tokens) || ctxCap;
@@ -53,7 +61,7 @@ export async function complete(req: Request, owner: { userId: string; keyId: str
   req.signal.addEventListener("abort", () => ctrl.abort());
   let res: Response;
   try {
-    res = await upstreamFetch("/chat/completions", upstreamBody, ctrl.signal, model.route);
+    res = await upstreamFetch("/chat/completions", upstreamBody, ctrl.signal, model.route, userKey);
   } catch {
     return apiError(502, "upstream_error", "Model provider unreachable. You were not charged.");
   }
