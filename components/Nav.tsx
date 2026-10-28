@@ -8,6 +8,7 @@ import AuthButton from "./AuthButton";
 export const NAV = [
   { href: "/chat", label: "Chat" },
   { href: "/burner", label: "Burner" },
+  { href: "/trade", label: "Trade" },
   { href: "/#buy", label: "Buy" },
   { href: "/sell", label: "Sell" },
   { href: "/bcredit", label: "bCREDIT" },

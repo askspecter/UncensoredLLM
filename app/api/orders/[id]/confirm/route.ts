@@ -36,7 +36,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   // Claim the tx for this order; the UNIQUE constraint stops one transfer paying for two orders.
   try {
-    const claimed = await sql`UPDATE orders SET tx_hash = ${found.txHash}, payer = ${found.from} WHERE id = ${id} AND (tx_hash IS NULL OR tx_hash = ${found.txHash}) RETURNING id`;
+    const claimed = await sql.begin(async (tx) => {
+      // Same lock as beeper.trade cashback claims: a swap fee that already paid out as cashback can't pay an order too.
+      await tx`SELECT pg_advisory_xact_lock(hashtext(${found!.txHash.toLowerCase()}))`;
+      const [cashback] = await tx`SELECT 1 FROM trade_cashback WHERE tx_hash = ${found!.txHash.toLowerCase()}`;
+      if (cashback) return null;
+      return tx`UPDATE orders SET tx_hash = ${found!.txHash}, payer = ${found!.from} WHERE id = ${id} AND (tx_hash IS NULL OR tx_hash = ${found!.txHash}) RETURNING id`;
+    });
+    if (claimed === null) return NextResponse.json({ status: "pending", error: "Transaction already used for a trade cashback" }, { status: 409 });
     if (!claimed.length) return NextResponse.json({ status: "pending" });
   } catch (e) {
     if ((e as { code?: string }).code === "23505") return NextResponse.json({ status: "pending", error: "Transaction already used for another order" }, { status: 409 });
