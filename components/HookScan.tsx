@@ -44,7 +44,7 @@ export default function HookScan({ symbol }: { symbol: string }) {
   const shown = all ? sorted : sorted.slice(0, COLLAPSED);
 
   return (
-    <div className="card p-5 sm:p-6">
+    <div className="card min-w-0 p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-xl font-semibold tracking-[-0.02em] text-bone">Hook Scan <span className="font-mono text-sm font-normal text-mute">{symbol} / USDG</span></h2>
         {at && <span className="font-mono text-[11px] text-mute">scanned {new Date(at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>}

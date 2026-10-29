@@ -16,7 +16,7 @@ const POINTS = [
 export default function TradePage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:py-14">
-      <p className="font-serif text-6xl leading-none text-ember md:text-8xl">beeper.trade</p>
+      <p className="font-serif text-[12vw] leading-none whitespace-nowrap text-ember sm:text-[80px] md:text-8xl">beeper.trade</p>
       <h1 className="mt-4 max-w-3xl text-3xl leading-[1.08] font-semibold tracking-[-0.035em] text-bone md:text-5xl">
         Every swap pays you back in AI. <span className="text-mute">Every hidden fee gets exposed.</span>
       </h1>

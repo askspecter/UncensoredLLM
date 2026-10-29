@@ -30,10 +30,10 @@ export default function Nav() {
     <header className="sticky top-0 z-40 border-b border-line/60 bg-ink/80 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
         <Link href="/" aria-label="Beeper home"><Logo /></Link>
-        <div className="hidden items-center gap-1 text-sm lg:flex">
+        <div className="hidden items-center gap-0.5 text-sm xl:flex">
           {NAV.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`rounded-md px-3 py-1.5 ${isActive(l.href) ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>
+              className={`rounded-md px-2.5 py-1.5 ${isActive(l.href) ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>
               {l.label}
             </Link>
           ))}
@@ -42,7 +42,7 @@ export default function Nav() {
           <Link href="/dashboard" className="btn btn-ghost hidden text-sm sm:inline-flex">Account</Link>
           <AuthButton />
           <button onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}
-            className="grid h-10 w-10 place-items-center rounded-lg border border-line lg:hidden">
+            className="grid h-10 w-10 place-items-center rounded-lg border border-line xl:hidden">
             <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.5" aria-hidden>
               {open ? <path d="M3 3l10 10M13 3L3 13" /> : <path d="M2 4h12M2 8h12M2 12h12" />}
             </svg>
@@ -50,7 +50,7 @@ export default function Nav() {
         </div>
       </nav>
       {open && (
-        <div className="slidein border-t border-line bg-ink px-5 pb-6 pt-2 lg:hidden">
+        <div className="slidein border-t border-line bg-ink px-5 pb-6 pt-2 xl:hidden">
           {[...NAV, { href: "/dashboard", label: "Account" }].map((l) => (
             <Link key={l.href} href={l.href}
               className={`block border-b border-line py-3.5 text-lg ${isActive(l.href) ? "text-ember-soft" : ""}`}>{l.label}</Link>

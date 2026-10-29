@@ -143,7 +143,7 @@ export default function TradeSwap({ symbol, onSymbol }: { symbol: string; onSymb
     : !quote ? (qErr || "Enter an amount") : quote.needs && !quote.needs.enough ? `Not enough ${inSym}` : `Swap ${inSym} for ${outSym}`;
 
   return (
-    <div className="card p-5 sm:p-6">
+    <div className="card min-w-0 p-5 sm:p-6">
       <div className="grid grid-cols-2 gap-1 rounded-md border border-line bg-ink p-1 text-sm">
         {(["sell", "buy"] as const).map((s) => (
           <button key={s} type="button" onClick={() => flip(s)} aria-pressed={side === s}
