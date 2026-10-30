@@ -3,6 +3,7 @@ import { isAddress, verifyMessage } from "viem";
 import { requireUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { linkMessage } from "@/lib/bcredit";
+import { claimWallet } from "@/lib/launch-server";
 
 /** Links a wallet after verifying a signed message proving the caller controls it. */
 export async function POST(req: Request) {
@@ -20,7 +21,9 @@ export async function POST(req: Request) {
   const [existing] = await sql<{ user_id: string }[]>`SELECT user_id FROM holder_wallets WHERE address = ${addr}`;
   if (existing && existing.user_id !== auth.userId) return NextResponse.json({ error: "This wallet is linked to another account" }, { status: 409 });
   await sql`INSERT INTO holder_wallets (address, user_id) VALUES (${addr}, ${auth.userId}) ON CONFLICT (address) DO NOTHING`;
-  return NextResponse.json({ ok: true, address: addr });
+  // Launchpad credit earned by this wallet before it was linked lands now.
+  const launchCredit = await claimWallet(auth.userId, addr);
+  return NextResponse.json({ ok: true, address: addr, launchCredit });
 }
 
 export async function DELETE(req: Request) {

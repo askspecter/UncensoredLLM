@@ -26,7 +26,7 @@ type Auth = {
   /** Addresses of every connected EVM wallet. */
   walletAddresses: string[];
   /** Sends a transaction on Robinhood Chain from `from` (a connected wallet); resolves to the tx hash. */
-  sendTx: (from: string, tx: { to: `0x${string}`; data: `0x${string}` }) => Promise<`0x${string}`>;
+  sendTx: (from: string, tx: { to: `0x${string}`; data: `0x${string}`; value?: bigint; gas?: bigint }) => Promise<`0x${string}`>;
 };
 
 // Local testing without Privy: NEXT_PUBLIC_DEV_USER signs you in as that id (server needs DEV_AUTH_BYPASS=1).
@@ -95,7 +95,8 @@ function PrivyBridge({ children }: { children: React.ReactNode }) {
       if (!w) throw new Error(`Connect ${from.slice(0, 6)}…${from.slice(-4)} first`);
       await w.switchChain(robinhood.id);
       const provider = await w.getEthereumProvider();
-      return (await provider.request({ method: "eth_sendTransaction", params: [{ from: w.address, to: tx.to, data: tx.data }] })) as `0x${string}`;
+      const extra = { ...(tx.value ? { value: `0x${tx.value.toString(16)}` } : {}), ...(tx.gas ? { gas: `0x${tx.gas.toString(16)}` } : {}) };
+      return (await provider.request({ method: "eth_sendTransaction", params: [{ from: w.address, to: tx.to, data: tx.data, ...extra }] })) as `0x${string}`;
     },
   }), [ready, authenticated, user, login, logout, getAccessToken, connectWallet, wallet, wallets]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

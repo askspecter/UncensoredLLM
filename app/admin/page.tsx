@@ -10,6 +10,7 @@ export default function Admin() {
         <div className="flex gap-2">
           <a href="/admin/orbio" className="btn btn-ghost text-sm">Orbio supply</a>
           <a href="/admin/hook" className="btn btn-ghost text-sm">Deploy BeeperHook</a>
+          <a href="/admin/launch" className="btn btn-ghost text-sm">Deploy launchpad</a>
         </div>
       </PageHeader>
       <AdminPayouts />

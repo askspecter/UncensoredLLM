@@ -121,7 +121,10 @@ export default function Chat({ burnerKey, onBalance, height = "h-[calc(100dvh-4r
 
   useEffect(() => {
     const c = loadChats(burner);
-    const list = c.length ? c : [newConvo()];
+    // /chat?model=<id> (from a launchpad coin, for example) opens a fresh chat on that model.
+    const asked = new URL(window.location.href).searchParams.get("model");
+    const known = asked && (MODELS.some((m) => m.id === asked) || IMAGE_MODELS.some((m) => m.id === asked) || asked.startsWith("hf/"));
+    const list = known ? [newConvo(asked), ...c] : c.length ? c : [newConvo()];
     setChats(list);
     setActiveId(list[0].id);
   }, []);
