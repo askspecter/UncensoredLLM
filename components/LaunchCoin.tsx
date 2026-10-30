@@ -6,10 +6,13 @@ import { CoinLogo, type LaunchCoin as Coin } from "./LaunchList";
 import { findModel } from "@/lib/data";
 import { USDG, explorerTx, robinhood } from "@/lib/chain";
 import { CURVE_ABI, ROUTER_ABI } from "@/lib/launch";
+import CoinChart, { fmtUsd, type Trade } from "./CoinChart";
 
 type Detail = {
   coin: Coin & { curve: string; router: string; socials: Record<string, string> };
   paid: number;
+  supply: number | null;
+  trades: Trade[];
   harvests: { txHash: string; credit: number; paid: number; holders: number; at: string }[];
   top: { wallet: string; earned: number }[];
 };
@@ -29,6 +32,7 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
   const [bal, setBal] = useState<{ usdg: bigint; coin: bigint } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/launch/${token}`);
@@ -46,7 +50,7 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
     if (usdg !== null && coin !== null) setBal({ usdg, coin });
   }, [me, token]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, 30_000); return () => clearInterval(id); }, [load]);
   useEffect(() => { loadBal(); }, [loadBal]);
 
   if (err) return <p className="card p-6 text-sm text-mute">{err}</p>;
@@ -83,7 +87,7 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
       setNote(`Confirm: ${amount} ${side === "buy" ? "USDG" : c.symbol} for about ${Number(formatUnits(out, side === "buy" ? 18 : 6)).toLocaleString("en-US", { maximumFractionDigits: 4 })} ${side === "buy" ? c.symbol : "USDG"}`);
       const hash = await send({ to: curve, data: encodeFunctionData({ abi: CURVE_ABI, functionName: fn, args: [units, min, me] }) });
       setNote(`Done. ${short(hash)}`);
-      loadBal();
+      loadBal(); setTimeout(load, 3000);
     } catch (e) {
       const msg = (e as { shortMessage?: string; message?: string }).shortMessage ?? (e as Error).message;
       setNote(/reject|denied/i.test(msg) ? "Cancelled." : msg.slice(0, 180));
@@ -109,74 +113,139 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
   const links = ([["X", c.socials?.twitter && /^[A-Za-z0-9_]{1,15}$/.test(c.socials.twitter) ? `https://x.com/${c.socials.twitter}` : null],
     ["Telegram", web(c.socials?.telegram)], ["Website", web(c.socials?.website)]] as [string, string | null][]).filter(([, u]) => u);
 
-  return (
-    <div className="space-y-5">
-      <div className="card flex flex-wrap items-center gap-4 p-5 sm:p-6">
-        <CoinLogo coin={c} size={72} />
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-3xl font-semibold tracking-[-0.035em] text-bone">{c.name}</h1>
-          <p className="font-mono text-sm text-mute">${c.symbol} · <a className="underline" href={`https://robinhoodchain.blockscout.com/token/${c.token}`} target="_blank" rel="noreferrer">{short(c.token)}</a></p>
-        </div>
-        <a href={`/chat?model=${encodeURIComponent(c.model)}`} className="btn btn-primary">Chat with {model?.name ?? c.model}</a>
-      </div>
+  async function copyCa() {
+    await navigator.clipboard.writeText(c.token).catch(() => {});
+    setCopied(true); setTimeout(() => setCopied(false), 1500);
+  }
 
-      <div className="grid items-start gap-5 lg:grid-cols-[1fr_380px]">
-        <div className="min-w-0 space-y-5">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[["Paid to holders", usd(d.paid), "text-ember"], ["Harvests", String(d.harvests.length), "text-bone"], ["Holders earning", String(d.harvests[0]?.holders ?? 0), "text-bone"], ["Creator tax", `${(c.tax_bps / 100).toFixed(2)}%`, "text-bone"]].map(([l, v, cls]) => (
-              <div key={l} className="card p-4"><p className="text-[11px] text-mute">{l}</p><p className={`mt-1 font-serif text-3xl ${cls}`}>{v}</p></div>
-            ))}
-          </div>
-          {c.description && <p className="card p-5 text-sm leading-relaxed text-mute">{c.description}</p>}
-          <div className="card p-5">
-            <p className="font-semibold text-bone">How holders earn</p>
-            <p className="mt-2 text-sm text-mute">
-              Every trade pays a fee in USDG. When the fees are harvested, 80% becomes Beeper credit for holders, split by how many {c.symbol} each wallet holds at that block, usable with {model?.name ?? "any model"} and 430+ others.
-              Link your wallet on the <a href="/bcredit" className="underline">bCREDIT page</a> to receive it. Credit earned before you link waits for you.
-            </p>
-            <button onClick={harvest} disabled={busy} className="btn btn-ghost mt-4 text-sm disabled:opacity-50">Harvest fees now</button>
-          </div>
-          <div className="card overflow-hidden">
-            <p className="border-b border-line px-5 py-3 font-semibold text-bone">Recent harvests</p>
-            {d.harvests.length === 0 ? <p className="px-5 py-4 text-sm text-mute">None yet. Fees are harvested daily, or by anyone with the button above.</p> : (
-              <ul className="divide-y divide-line text-sm">{d.harvests.map((h) => (
-                <li key={h.txHash} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                  <span className="text-ember">{usd(h.paid)} <span className="text-mute">to {h.holders} holders</span></span>
-                  <a href={explorerTx(h.txHash)} target="_blank" rel="noreferrer" className="font-mono text-xs text-mute underline">{short(h.txHash)}</a>
-                </li>))}</ul>
-            )}
-          </div>
-          {d.top.length > 0 && (
-            <div className="card overflow-hidden">
-              <p className="border-b border-line px-5 py-3 font-semibold text-bone">Top earners</p>
-              <ul className="divide-y divide-line text-sm">{d.top.map((t, i) => (
-                <li key={t.wallet} className="flex justify-between px-5 py-2.5"><span className="font-mono text-xs text-mute">{i + 1}. {short(t.wallet)}</span><span className="text-bone">{usd(t.earned)}</span></li>
-              ))}</ul>
+  const volume = d.trades.reduce((sum, t) => sum + t.usdg, 0);
+  const stats: [string, string, string][] = [
+    ["Volume", fmtUsd(volume), "text-bone"],
+    ["Trades", d.trades.length.toLocaleString("en-US"), "text-bone"],
+    ["Paid to holders", usd(d.paid), "text-ember"],
+    ["Creator tax", `${(c.tax_bps / 100).toFixed(2)}%`, "text-bone"],
+  ];
+
+  const tradeCard = (
+    <div className="card min-w-0 p-5 sm:p-6">
+      <div className="grid grid-cols-2 gap-1 rounded-md border border-line bg-ink p-1 text-sm">
+        {(["buy", "sell"] as const).map((s) => (
+          <button key={s} onClick={() => { setSide(s); setAmount(s === "buy" ? "10" : ""); setNote(""); }}
+            className={`rounded py-2.5 font-medium ${side === s ? (s === "buy" ? "bg-moss/15 text-moss" : "bg-danger/15 text-danger") : "text-mute hover:text-bone"}`}>
+            {s === "buy" ? "Buy" : "Sell"}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4 flex justify-between text-xs text-mute">
+        <span>You pay</span>
+        {bal && <button type="button" className="hover:text-bone" onClick={() => setAmount(side === "buy" ? formatUnits(bal.usdg, 6) : formatUnits(bal.coin, 18))}>
+          Balance {side === "buy" ? `${Number(formatUnits(bal.usdg, 6)).toFixed(2)} USDG` : `${Number(formatUnits(bal.coin, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${c.symbol}`}
+        </button>}
+      </div>
+      <label className="mt-1.5 flex items-center gap-3 rounded-md border border-line bg-ink px-3 py-2.5 focus-within:border-ember">
+        <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} className="min-w-0 flex-1 bg-transparent text-2xl text-bone outline-none" aria-label="Amount" placeholder="0" />
+        <span className="font-mono text-sm text-mute">{side === "buy" ? "USDG" : c.symbol}</span>
+      </label>
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
+        {(side === "buy" ? ["5", "10", "25", "50"] : ["25", "50", "75", "100"]).map((v) => (
+          <button key={v} type="button" className="rounded border border-line py-1.5 font-mono text-xs text-mute hover:border-ember hover:text-bone"
+            onClick={() => setAmount(side === "buy" ? v : bal ? formatUnits((bal.coin * BigInt(v)) / BigInt(100), 18) : "")}>
+            {side === "buy" ? `$${v}` : `${v}%`}
+          </button>
+        ))}
+      </div>
+      <button onClick={trade} disabled={busy} className="btn btn-primary mt-4 w-full disabled:opacity-50">
+        {!auth.authenticated ? "Sign in to trade" : !me ? "Connect wallet" : busy ? "Working…" : side === "buy" ? `Buy ${c.symbol}` : `Sell ${c.symbol}`}
+      </button>
+      {note && <p className="mt-3 break-words text-sm text-mute">{note}</p>}
+      <p className="mt-4 text-[11px] leading-relaxed text-mute">Trades run on the Pons curve, paired with USDG, with a {Number(SLIPPAGE_BPS) / 100}% slippage cap. Memecoins are volatile and can go to zero.</p>
+    </div>
+  );
+
+  return (
+    <div className="grid items-start gap-5 lg:grid-cols-[1fr_380px]">
+      <div className="min-w-0 space-y-5">
+        <div className="card min-w-0 p-5 sm:p-6">
+          <div className="flex items-center gap-4">
+            <CoinLogo coin={c} size={64} />
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-2xl font-semibold tracking-[-0.03em] text-bone sm:text-3xl">{c.name}</h1>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                <span className="font-mono text-mute">${c.symbol}</span>
+                <span className="rounded border border-line px-1.5 py-px font-mono text-[11px] text-ember-soft">{model?.name ?? c.model}</span>
+              </p>
             </div>
+          </div>
+          <button type="button" onClick={copyCa} className="mt-4 flex w-full items-center gap-3 rounded-md border border-line bg-ink px-3 py-2.5 text-left hover:border-ember" aria-label="Copy contract address">
+            <span className="shrink-0 text-[11px] font-semibold tracking-[.15em] text-mute">CA</span>
+            <span className="min-w-0 flex-1 truncate font-mono text-xs text-bone sm:text-sm">{c.token}</span>
+            <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${copied ? "bg-moss/15 text-moss" : "bg-panel-2 text-bone"}`}>{copied ? "Copied" : "Copy"}</span>
+          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a href={`/chat?model=${encodeURIComponent(c.model)}`} className="btn btn-primary w-full text-sm sm:w-auto">Chat with {model?.name ?? "this model"}</a>
+            <a href={`https://robinhoodchain.blockscout.com/token/${c.token}`} target="_blank" rel="noreferrer" className="btn btn-ghost flex-1 text-sm sm:flex-none">Explorer</a>
+            {links.map(([l, u]) => <a key={l} href={u!} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-ghost flex-1 text-sm sm:flex-none">{l}</a>)}
+          </div>
+          {c.description && <p className="mt-4 border-t border-line pt-4 text-sm leading-relaxed text-mute">{c.description}</p>}
+        </div>
+
+        <div className="lg:hidden">{tradeCard}</div>
+
+        <CoinChart trades={d.trades} supply={d.supply} launchedAt={c.created_at} />
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {stats.map(([l, v, cls]) => (
+            <div key={l} className="card min-w-0 p-4"><p className="text-[11px] text-mute">{l}</p><p className={`mt-1 truncate font-serif text-2xl sm:text-3xl ${cls}`}>{v}</p></div>
+          ))}
+        </div>
+
+        <div className="card overflow-hidden">
+          <p className="border-b border-line px-5 py-3 font-semibold text-bone">Trades</p>
+          {d.trades.length === 0 ? <p className="px-5 py-4 text-sm text-mute">No trades yet. Be the first.</p> : (
+            <ul className="divide-y divide-line text-sm">{[...d.trades].reverse().slice(0, 25).map((t) => (
+              <li key={t.tx} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-5 py-2.5">
+                <span className={`w-10 font-mono text-xs font-semibold ${t.side === "buy" ? "text-moss" : "text-danger"}`}>{t.side === "buy" ? "BUY" : "SELL"}</span>
+                <span className="min-w-0 truncate text-bone">{usd(t.usdg)} <span className="text-mute">· {t.tokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} {c.symbol}</span></span>
+                <a href={explorerTx(t.tx)} target="_blank" rel="noreferrer" className="font-mono text-xs text-mute underline">{ago(t.at)}</a>
+              </li>))}</ul>
           )}
         </div>
 
-        <div className="card order-first min-w-0 p-5 sm:p-6 lg:sticky lg:top-24 lg:order-none">
-          <div className="grid grid-cols-2 gap-1 rounded-md border border-line bg-ink p-1 text-sm">
-            {(["buy", "sell"] as const).map((s) => (
-              <button key={s} onClick={() => { setSide(s); setAmount(s === "buy" ? "10" : ""); }} className={`rounded py-2 ${side === s ? "bg-panel-2 text-bone" : "text-mute hover:text-bone"}`}>{s === "buy" ? "Buy" : "Sell"} {c.symbol}</button>
-            ))}
-          </div>
-          <label className="mt-4 block text-xs text-mute">
-            <span className="flex justify-between"><span>You pay</span>{bal && <span>Balance {side === "buy" ? `${Number(formatUnits(bal.usdg, 6)).toFixed(2)} USDG` : `${Number(formatUnits(bal.coin, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${c.symbol}`}</span>}</span>
-            <span className="mt-1.5 flex items-center gap-3 rounded-md border border-line bg-ink px-3 py-2.5 focus-within:border-ember">
-              <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} className="min-w-0 flex-1 bg-transparent text-2xl text-bone outline-none" aria-label="Amount" />
-              <span className="font-mono text-sm text-mute">{side === "buy" ? "USDG" : c.symbol}</span>
-            </span>
-          </label>
-          <button onClick={trade} disabled={busy} className="btn btn-primary mt-4 w-full disabled:opacity-50">
-            {!auth.authenticated ? "Sign in to trade" : !me ? "Connect wallet" : busy ? "Working…" : side === "buy" ? `Buy ${c.symbol}` : `Sell ${c.symbol}`}
-          </button>
-          {note && <p className="mt-3 break-words text-sm text-mute">{note}</p>}
-          <p className="mt-4 text-[11px] leading-relaxed text-mute">Trades run on the coin&apos;s Pons curve, paired with USDG, with a {Number(SLIPPAGE_BPS) / 100}% slippage cap. Memecoins are volatile and can go to zero.</p>
-          {links.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{links.map(([l, u]) => <a key={l} href={u!} target="_blank" rel="noopener noreferrer nofollow" className="rounded border border-line px-2.5 py-1 text-xs text-mute hover:text-bone">{l}</a>)}</div>}
+        <div className="card p-5">
+          <p className="font-semibold text-bone">How holders earn</p>
+          <p className="mt-2 text-sm leading-relaxed text-mute">
+            Every trade pays a fee in USDG. When the fees are harvested, 80% becomes Beeper credit for holders, split by how many {c.symbol} each wallet holds at that block, usable with {model?.name ?? "this model"} and every other model on Beeper.
+            Link your wallet on the <a href="/bcredit" className="underline">bCREDIT page</a> to receive it. Credit earned before you link waits for you.
+          </p>
+          <button onClick={harvest} disabled={busy} className="btn btn-ghost mt-4 text-sm disabled:opacity-50">Harvest fees now</button>
         </div>
+
+        <div className="card overflow-hidden">
+          <p className="border-b border-line px-5 py-3 font-semibold text-bone">Harvests</p>
+          {d.harvests.length === 0 ? <p className="px-5 py-4 text-sm text-mute">None yet. Fees are harvested daily, or by anyone with the button above.</p> : (
+            <ul className="divide-y divide-line text-sm">{d.harvests.map((h) => (
+              <li key={h.txHash} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
+                <span className="text-ember">{usd(h.paid)} <span className="text-mute">to {h.holders} holders</span></span>
+                <a href={explorerTx(h.txHash)} target="_blank" rel="noreferrer" className="font-mono text-xs text-mute underline">{short(h.txHash)}</a>
+              </li>))}</ul>
+          )}
+        </div>
+        {d.top.length > 0 && (
+          <div className="card overflow-hidden">
+            <p className="border-b border-line px-5 py-3 font-semibold text-bone">Top earners</p>
+            <ul className="divide-y divide-line text-sm">{d.top.map((t, i) => (
+              <li key={t.wallet} className="flex justify-between px-5 py-2.5"><span className="font-mono text-xs text-mute">{i + 1}. {short(t.wallet)}</span><span className="text-bone">{usd(t.earned)}</span></li>
+            ))}</ul>
+          </div>
+        )}
       </div>
+
+      <div className="hidden lg:sticky lg:top-24 lg:block">{tradeCard}</div>
     </div>
   );
+}
+
+function ago(at: string) {
+  const s = Math.max(0, (Date.now() - new Date(at).getTime()) / 1000);
+  return s < 60 ? `${Math.floor(s)}s ago` : s < 3600 ? `${Math.floor(s / 60)}m ago` : s < 86400 ? `${Math.floor(s / 3600)}h ago` : `${Math.floor(s / 86400)}d ago`;
 }

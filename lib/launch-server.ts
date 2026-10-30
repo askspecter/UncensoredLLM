@@ -6,6 +6,7 @@ import { sql } from "./db";
 import { addToBalance } from "./billing";
 import { walletClient } from "./server-wallet";
 import { LAUNCHER_ABI, PONS_ESCROW, PONS_FACTORY, ROUTER_ABI, deployPlan } from "./launch";
+import { USDG } from "./chain";
 import CODE from "./launch-bytecode.json";
 
 const client = createPublicClient({ chain: robinhood, transport: http(process.env.ROBINHOOD_RPC_URL || undefined, { retryCount: 6, retryDelay: 800 }) });
@@ -162,6 +163,60 @@ async function syncHarvests(fromBlock: bigint, head: bigint) {
   return paid;
 }
 
+type Flow = { usdgIn: bigint; usdgOut: bigint; tokIn: bigint; tokOut: bigint; buyer?: string; seller?: string; block: bigint };
+
+/** Rebuilds curve trades from Transfer logs, since USDG and the coin both move through the curve on every trade. */
+async function syncTrades(fromBlock: bigint, head: bigint) {
+  const coins = await sql<{ token: string; curve: string }[]>`SELECT token, curve FROM launch_coins`;
+  if (!coins.length) return 0;
+  const cursor = await getSetting<{ block: string }>("launch_trade_cursor");
+  const from = cursor ? BigInt(cursor.block) + BigInt(1) : fromBlock;
+  if (from > head) return 0;
+  const byCurve = new Map(coins.map((c) => [c.curve.toLowerCase(), getAddress(c.token)]));
+  const flows = new Map<string, Flow>();
+  for (let i = 0; i < coins.length; i += 100) {
+    const part = coins.slice(i, i + 100);
+    const curves = part.map((c) => getAddress(c.curve)), tokens = part.map((c) => getAddress(c.token));
+    const q = (address: `0x${string}` | `0x${string}`[], args: object) =>
+      logsIn((a, b) => client.getLogs({ address, event: TRANSFER, args, fromBlock: a, toBlock: b }), from, head);
+    const [usdgIn, usdgOut, tokIn, tokOut] = await Promise.all([
+      q(USDG, { to: curves }), q(USDG, { from: curves }), q(tokens, { to: curves }), q(tokens, { from: curves }),
+    ]);
+    const add = (logs: typeof usdgIn, curveOf: (l: (typeof usdgIn)[number]) => string, k: "usdgIn" | "usdgOut" | "tokIn" | "tokOut") => {
+      for (const l of logs) {
+        const curve = curveOf(l).toLowerCase();
+        if (!byCurve.has(curve)) continue;
+        // A token log must be the curve's own coin, not some other launch's.
+        if ((k === "tokIn" || k === "tokOut") && byCurve.get(curve)!.toLowerCase() !== l.address.toLowerCase()) continue;
+        const key = `${l.transactionHash}:${curve}`;
+        const f = flows.get(key) ?? { usdgIn: BigInt(0), usdgOut: BigInt(0), tokIn: BigInt(0), tokOut: BigInt(0), block: l.blockNumber! };
+        f[k] += l.args.value!;
+        if (k === "tokOut") f.buyer ??= l.args.to!.toLowerCase();
+        if (k === "tokIn") f.seller ??= l.args.from!.toLowerCase();
+        flows.set(key, f);
+      }
+    };
+    add(usdgIn, (l) => l.args.to!, "usdgIn"); add(usdgOut, (l) => l.args.from!, "usdgOut");
+    add(tokIn, (l) => l.args.to!, "tokIn"); add(tokOut, (l) => l.args.from!, "tokOut");
+  }
+  const times = new Map<bigint, Date>();
+  let n = 0;
+  for (const [key, f] of flows) {
+    const [tx, curve] = key.split(":");
+    const buy = f.usdgIn > BigInt(0) && f.tokOut > BigInt(0), sell = f.tokIn > BigInt(0) && f.usdgOut > BigInt(0);
+    if (buy === sell) continue; // seeding, graduation and other non trade moves
+    if (!times.has(f.block)) times.set(f.block, new Date(Number((await client.getBlock({ blockNumber: f.block })).timestamp) * 1000));
+    await sql`
+      INSERT INTO launch_trades (tx_hash, token, block_number, ts, side, wallet, usdg_micros, tokens)
+      VALUES (${tx}, ${byCurve.get(curve)!}, ${f.block.toString()}, ${times.get(f.block)!}, ${buy ? "buy" : "sell"},
+              ${(buy ? f.buyer : f.seller) ?? ""}, ${(buy ? f.usdgIn : f.usdgOut).toString()}, ${(buy ? f.tokOut : f.tokIn).toString()})
+      ON CONFLICT DO NOTHING`;
+    n++;
+  }
+  await setSetting("launch_trade_cursor", { block: head.toString() });
+  return n;
+}
+
 /** Indexes launches and harvests. Cheap to call often: a cursor keeps each run to the new blocks. */
 export async function syncLaunchpad() {
   const state = await launcherState();
@@ -169,7 +224,8 @@ export async function syncLaunchpad() {
   const head = await client.getBlockNumber({ cacheTime: 0 });
   const launches = await syncLaunches(state.fromBlock, head);
   const paid = await syncHarvests(state.fromBlock, head);
-  return { deployed: true as const, launches, paid };
+  const trades = await syncTrades(state.fromBlock, head);
+  return { deployed: true as const, launches, paid, trades };
 }
 
 const MIN_SYNC_GAP_MS = 20_000;
