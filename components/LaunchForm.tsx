@@ -16,6 +16,21 @@ const BY_PROVIDER = Object.entries(MODELS.slice(FEATURED.length).reduce<Record<s
   return acc;
 }, {})).sort(([a], [b]) => a.localeCompare(b));
 
+const LOGO_PX = 512;
+
+/** Center-crops to a square and scales to 512px, so uploads stay small. Animated GIFs under 1 MB are kept as is. */
+async function squareLogo(file: File): Promise<Blob> {
+  if (file.type === "image/gif" && file.size <= 1_000_000) return file;
+  const img = await createImageBitmap(file);
+  const side = Math.min(img.width, img.height), out = Math.min(LOGO_PX, side);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = out;
+  canvas.getContext("2d")!.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, out, out);
+  const as = (type: string, q?: number) => new Promise<Blob>((ok, no) => canvas.toBlob((b) => (b ? ok(b) : no(new Error("Could not read that image"))), type, q));
+  const png = await as("image/png");
+  return png.size <= 900_000 ? png : as("image/jpeg", 0.9);
+}
+
 const input = "w-full rounded-md border border-line bg-ink px-3 py-2.5 text-sm text-bone outline-none focus:border-ember";
 
 /** Launches a Pons coin paired with USDG, whose creator fees pay its holders in AI credit for the chosen model. */
@@ -25,13 +40,32 @@ export default function LaunchForm({ launcher }: { launcher: `0x${string}` }) {
   const [fee, setFee] = useState<bigint | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [logoState, setLogoState] = useState<{ busy: boolean; error: string; preview: string }>({ busy: false, error: "", preview: "" });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
 
   useEffect(() => { chain.readContract({ address: PONS_FACTORY, abi: PONS_ABI, functionName: "launchFee" }).then(setFee).catch(() => {}); }, []);
 
   const model = useMemo(() => MODELS.find((m) => m.id === f.model), [f.model]);
   const taxBps = Math.round(Math.min(Math.max(Number(f.tax) || 0, 0), MAX_CREATOR_TAX_BPS / 100) * 100);
-  const valid = f.name.trim().length >= 2 && /^[A-Za-z0-9]{2,10}$/.test(f.symbol.trim()) && Boolean(model) && (!f.logo || /^https:\/\//.test(f.logo));
+  const valid = f.name.trim().length >= 2 && /^[A-Za-z0-9]{2,10}$/.test(f.symbol.trim()) && Boolean(model) && (!f.logo || /^https:\/\//.test(f.logo)) && !logoState.busy;
+
+  async function uploadLogo(file: File | undefined) {
+    if (!file) return;
+    if (!auth.authenticated) return auth.login();
+    setLogoState({ busy: true, error: "", preview: URL.createObjectURL(file) });
+    try {
+      const body = new FormData();
+      body.append("file", await squareLogo(file));
+      const res = await fetch("/api/launch/logo", { method: "POST", headers: await auth.authHeaders(), body });
+      const d = await res.json().catch(() => ({ error: "Upload failed, try again" }));
+      if (!res.ok || !d.url) throw new Error(d.error ?? "Upload failed, try again");
+      setF((cur) => ({ ...cur, logo: d.url }));
+      setLogoState((cur) => ({ ...cur, busy: false }));
+    } catch (e) {
+      setF((cur) => ({ ...cur, logo: "" }));
+      setLogoState({ busy: false, error: (e as Error).message, preview: "" });
+    }
+  }
 
   async function launch() {
     if (!auth.authenticated) return auth.login();
@@ -78,7 +112,21 @@ export default function LaunchForm({ launcher }: { launcher: `0x${string}` }) {
           </select>
           <span className="mt-1.5 block text-[11px]">Holders earn Beeper credit and the coin page opens a chat with {model?.name ?? "this model"}. Locked at launch.</span>
         </label>
-        <label className="block text-xs text-mute">Image URL (https, optional)<input className={`${input} mt-1.5`} value={f.logo} onChange={set("logo")} placeholder="https://…/logo.png" /></label>
+        <div className="text-xs text-mute">Logo (optional)
+          <label className="mt-1.5 flex cursor-pointer items-center gap-4 rounded-md border border-dashed border-line bg-ink p-3 hover:border-ember">
+            {logoState.preview || f.logo
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={logoState.preview || f.logo} alt="" className="h-16 w-16 shrink-0 rounded-lg border border-line object-cover" />
+              : <span className="grid h-16 w-16 shrink-0 place-items-center rounded-lg border border-line font-mono text-lg text-mute">+</span>}
+            <span className="min-w-0 text-sm text-bone">
+              {logoState.busy ? "Uploading…" : f.logo ? "Logo uploaded. Tap to change." : "Upload an image"}
+              <span className="mt-0.5 block text-[11px] text-mute">PNG, JPG, WebP or GIF. Cropped to a square.</span>
+            </span>
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" disabled={logoState.busy}
+              onChange={(e) => { uploadLogo(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+          {logoState.error && <span className="mt-1.5 block text-[11px] text-danger">{logoState.error}</span>}
+        </div>
         <label className="block text-xs text-mute">Description<textarea className={`${input} mt-1.5`} rows={3} maxLength={500} value={f.description} onChange={set("description")} placeholder="What is this coin about?" /></label>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block text-xs text-mute">X handle<input className={`${input} mt-1.5`} value={f.twitter} onChange={set("twitter")} placeholder="@handle" /></label>
