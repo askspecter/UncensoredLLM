@@ -28,11 +28,8 @@ export async function POST(req: Request) {
   if (!TEST_PAYMENTS && method === "usdg" && !usdgEnabled) return NextResponse.json({ error: "USDG payments are not configured yet" }, { status: 503 });
   if (!TEST_PAYMENTS && method === "card" && !whopEnabled) return NextResponse.json({ error: "Card payments are not configured yet" }, { status: 503 });
 
-  await expireStale();
-  const [{ open }] = await sql<{ open: string }[]>`SELECT count(*) AS open FROM orders WHERE user_id = ${userId} AND status = 'pending'`;
-  if (Number(open) >= MAX_OPEN_ORDERS) {
-    return NextResponse.json({ error: "You have unpaid orders open. Pay or wait for them to expire first" }, { status: 429 });
-  }
+  // Room for the new order: the user's oldest unpaid ones step aside instead of blocking checkout.
+  await expireStale({ id: userId, keep: MAX_OPEN_ORDERS - 1 });
 
   // Create the order and reserve its order-book fills atomically, so the quoted price holds until it expires.
   const id = newId("ord");

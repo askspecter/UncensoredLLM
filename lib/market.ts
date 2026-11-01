@@ -80,11 +80,20 @@ async function giveBack(tx: Tx, offerId: string, micros: bigint) {
   else await addToBalance(tx, o.user_id, micros, "unescrow", offerId);
 }
 
-/** Expires unpaid orders past their TTL and releases their reserved liquidity. */
-export async function expireStale() {
+/**
+ * Expires unpaid orders past their TTL and releases their reserved liquidity. With a user and a keep count,
+ * also expires that user's oldest unpaid orders beyond the newest `keep`, so an abandoned checkout never
+ * blocks a new one. Expired orders still settle if their payment lands later (see settleOrder).
+ */
+export async function expireStale(user?: { id: string; keep: number }) {
   await sql.begin(async (tx) => {
-    const expired = await tx<{ id: string }[]>`
-      UPDATE orders SET status = 'expired' WHERE status = 'pending' AND expires_at < now() RETURNING id`;
+    const expired = user
+      ? await tx<{ id: string }[]>`
+          UPDATE orders SET status = 'expired' WHERE status = 'pending' AND (expires_at < now() OR id IN (
+            SELECT id FROM orders WHERE user_id = ${user.id} AND status = 'pending' ORDER BY created_at DESC OFFSET ${user.keep}))
+          RETURNING id`
+      : await tx<{ id: string }[]>`
+          UPDATE orders SET status = 'expired' WHERE status = 'pending' AND expires_at < now() RETURNING id`;
     if (!expired.length) return;
     const fills = await tx<{ offer_id: string | null; credit_micros: string }[]>`
       UPDATE order_fills SET status = 'released'
