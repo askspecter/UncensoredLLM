@@ -5,16 +5,19 @@ import { robinhood } from "./chain";
 import { sql } from "./db";
 import { addToBalance } from "./billing";
 import { walletClient } from "./server-wallet";
-import { LAUNCHER_ABI, PONS_ESCROW, PONS_FACTORY, ROUTER_ABI, deployPlan } from "./launch";
+import { CURVE_ID_OFFSET, CURVE_LAUNCHER_ABI, LAUNCHER_ABI, PONS_ESCROW, PONS_FACTORY, ROUTER_ABI, curvePlan, deployPlan } from "./launch";
 import { USDG } from "./chain";
 import CODE from "./launch-bytecode.json";
 
 const client = createPublicClient({ chain: robinhood, transport: http(process.env.ROBINHOOD_RPC_URL || undefined, { retryCount: 6, retryDelay: 800 }) });
 const PLAN = deployPlan(CODE as { router: Hex; launcher: Hex });
 export const LAUNCHER = PLAN.launcher;
+/** Beeper curve launcher (anti sniper protection, v4 graduation); new launches go here once it is deployed. */
+export const CURVE_LAUNCHER = curvePlan(CODE as Parameters<typeof curvePlan>[0]).launcher;
 const SPAN = BigInt(9_999_000); // the RPC allows 10M blocks per getLogs
 const TRANSFER = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
 const LAUNCHED = LAUNCHER_ABI.find((x) => x.type === "event" && x.name === "Launched")!;
+const CURVE_LAUNCHED = CURVE_LAUNCHER_ABI.find((x) => x.type === "event" && x.name === "Launched")!;
 const HARVESTED = ROUTER_ABI.find((x) => x.type === "event" && x.name === "Harvested")!;
 const ZERO = "0x0000000000000000000000000000000000000000";
 const DEAD = "0x000000000000000000000000000000000000dead";
@@ -24,21 +27,31 @@ const setSetting = (key: string, value: object) => sql`
   INSERT INTO app_settings (key, value) VALUES (${key}, ${sql.json(value as never)})
   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`;
 
-/** The launcher's address and deploy block, once it is on chain (deterministic CREATE2 address). */
-export async function launcherState(): Promise<{ address: `0x${string}`; fromBlock: bigint } | null> {
-  const saved = await getSetting<{ fromBlock: string }>("launchpad");
-  if (saved) return { address: LAUNCHER, fromBlock: BigInt(saved.fromBlock) };
-  const code = await client.getCode({ address: LAUNCHER });
+/** A contract's first block with code (by binary search, so indexing never starts from genesis), or null. */
+async function deployedSince(address: `0x${string}`, key: string): Promise<{ address: `0x${string}`; fromBlock: bigint } | null> {
+  const saved = await getSetting<{ fromBlock: string }>(key);
+  if (saved) return { address, fromBlock: BigInt(saved.fromBlock) };
+  const code = await client.getCode({ address });
   if (!code || code === "0x") return null;
-  // First block with code, by binary search, so indexing never has to start from genesis.
   let lo = BigInt(0), hi = await client.getBlockNumber({ cacheTime: 0 });
   while (lo < hi) {
     const mid = (lo + hi) / BigInt(2);
-    const c = await client.getCode({ address: LAUNCHER, blockNumber: mid }).catch(() => "0x");
+    const c = await client.getCode({ address, blockNumber: mid }).catch(() => "0x");
     if (c && c !== "0x") hi = mid; else lo = mid + BigInt(1);
   }
-  await setSetting("launchpad", { fromBlock: lo.toString() });
-  return { address: LAUNCHER, fromBlock: lo };
+  await setSetting(key, { fromBlock: lo.toString() });
+  return { address, fromBlock: lo };
+}
+
+/** The Pons launcher's address and deploy block, once it is on chain (deterministic CREATE2 address). */
+export const launcherState = () => deployedSince(LAUNCHER, "launchpad");
+
+/** The curve launcher's state; it only takes launches once its GraduationGuard is deployed. */
+export async function curveLauncherState() {
+  const s = await deployedSince(CURVE_LAUNCHER, "curve_launchpad");
+  if (!s) return null;
+  const guard = await client.readContract({ address: CURVE_LAUNCHER, abi: CURVE_LAUNCHER_ABI, functionName: "guard" }).catch(() => ZERO);
+  return { ...s, ready: guard !== ZERO };
 }
 
 /** getLogs over any range: 10M-block chunks, split further when a chunk returns too many logs. */
@@ -78,6 +91,32 @@ async function syncLaunches(fromBlock: bigint, head: bigint) {
   return logs.length;
 }
 
+/** Indexes launches from the curve launcher, with their protection settings. */
+async function syncCurveLaunches(fromBlock: bigint, head: bigint) {
+  const cursor = await getSetting<{ block: string }>("curve_launch_cursor");
+  const from = cursor ? BigInt(cursor.block) + BigInt(1) : fromBlock;
+  if (from > head) return 0;
+  const logs = await logsIn((a, b) => client.getLogs({ address: CURVE_LAUNCHER, event: CURVE_LAUNCHED, fromBlock: a, toBlock: b }), from, head);
+  for (const l of logs) {
+    const a = l.args as { id: bigint; creator: string; token: string; curve: string; router: string; model: string };
+    const [tx, block] = await Promise.all([client.getTransaction({ hash: l.transactionHash! }), client.getBlock({ blockNumber: l.blockNumber! })]);
+    let p: { name?: string; symbol?: string; logo?: string; description?: string; twitter?: string; telegram?: string; website?: string;
+      feeBps?: number; protectFor?: number; sniperStartBps?: number; maxWalletBps?: number } = {};
+    try { p = (decodeFunctionData({ abi: CURVE_LAUNCHER_ABI, data: tx.input }).args?.[0] ?? {}) as typeof p; } catch { /* launched through another contract */ }
+    const protectUntil = new Date((Number(block.timestamp) + Number(p.protectFor ?? 0)) * 1000);
+    await sql`
+      INSERT INTO launch_coins (id, token, curve, router, creator, model, name, symbol, logo, description, socials, tax_bps, created_block, tx_hash,
+                                kind, protect_until, sniper_bps, max_wallet_bps)
+      VALUES (${CURVE_ID_OFFSET + Number(a.id)}, ${getAddress(a.token)}, ${getAddress(a.curve)}, ${getAddress(a.router)}, ${getAddress(a.creator)}, ${a.model},
+              ${(p.name ?? "").slice(0, 64)}, ${(p.symbol ?? "").slice(0, 16)}, ${(p.logo ?? "").slice(0, 500)}, ${(p.description ?? "").slice(0, 1000)},
+              ${sql.json({ twitter: p.twitter ?? "", telegram: p.telegram ?? "", website: p.website ?? "" } as never)}, ${Number(p.feeBps ?? 0)},
+              ${l.blockNumber!.toString()}, ${l.transactionHash!}, 'curve', ${protectUntil}, ${Number(p.sniperStartBps ?? 0)}, ${Number(p.maxWalletBps ?? 10_000)})
+      ON CONFLICT (id) DO NOTHING`;
+  }
+  await setSetting("curve_launch_cursor", { block: head.toString() });
+  return logs.length;
+}
+
 // Contracts never earn: the curve, pools, routers and the like. EIP-7702 wallets (code 0xef0100…) are people.
 const isContract = new Map<string, boolean>();
 async function contractAddr(a: `0x${string}`) {
@@ -98,7 +137,7 @@ export async function holdersAt(token: `0x${string}`, createdBlock: bigint, bloc
     bal.set(f, (bal.get(f) ?? BigInt(0)) - value);
     bal.set(t, (bal.get(t) ?? BigInt(0)) + value);
   }
-  const excluded = new Set([ZERO, DEAD, PONS_FACTORY.toLowerCase(), PONS_ESCROW.toLowerCase(), LAUNCHER.toLowerCase(), token.toLowerCase(), ...skip.map((s) => s.toLowerCase())]);
+  const excluded = new Set([ZERO, DEAD, PONS_FACTORY.toLowerCase(), PONS_ESCROW.toLowerCase(), LAUNCHER.toLowerCase(), CURVE_LAUNCHER.toLowerCase(), token.toLowerCase(), ...skip.map((s) => s.toLowerCase())]);
   const out: [string, bigint][] = [];
   for (const [w, b] of bal) {
     if (b <= BigInt(0) || excluded.has(w)) continue;
@@ -222,7 +261,8 @@ export async function syncLaunchpad() {
   const state = await launcherState();
   if (!state) return { deployed: false as const };
   const head = await client.getBlockNumber({ cacheTime: 0 });
-  const launches = await syncLaunches(state.fromBlock, head);
+  const curve = await curveLauncherState().catch(() => null);
+  const launches = await syncLaunches(state.fromBlock, head) + (curve ? await syncCurveLaunches(curve.fromBlock, head) : 0);
   const paid = await syncHarvests(state.fromBlock, head);
   const trades = await syncTrades(state.fromBlock, head);
   return { deployed: true as const, launches, paid, trades };

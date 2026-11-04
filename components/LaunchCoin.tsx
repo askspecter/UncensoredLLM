@@ -5,11 +5,11 @@ import { useAuth } from "./Providers";
 import { CoinLogo, type LaunchCoin as Coin } from "./LaunchList";
 import { findModel } from "@/lib/data";
 import { USDG, explorerTx, robinhood } from "@/lib/chain";
-import { CURVE_ABI, ROUTER_ABI } from "@/lib/launch";
+import { BEEPER_CURVE_ABI, CURVE_ABI, CURVE_SUPPLY, ROUTER_ABI } from "@/lib/launch";
 import CoinChart, { fmtUsd, type Trade } from "./CoinChart";
 
 type Detail = {
-  coin: Coin & { curve: string; router: string; socials: Record<string, string> };
+  coin: Coin & { curve: string; router: string; socials: Record<string, string>; kind?: "pons" | "curve" };
   paid: number;
   supply: number | null;
   trades: Trade[];
@@ -33,6 +33,8 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [copied, setCopied] = useState(false);
+  const [cs, setCs] = useState<{ protect: boolean; until: number; sniperBps: number; maxWallet: bigint; sold: bigint; complete: boolean; graduated: boolean } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/launch/${token}`);
@@ -52,6 +54,23 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
 
   useEffect(() => { load(); const id = setInterval(load, 30_000); return () => clearInterval(id); }, [load]);
   useEffect(() => { loadBal(); }, [loadBal]);
+
+  // Beeper curve coins: protection window, sniper fee and progress to graduation, read from the curve itself.
+  const curveAddr = d?.coin.kind === "curve" ? (d.coin.curve as `0x${string}`) : null;
+  const loadCurve = useCallback(async () => {
+    if (!curveAddr) return;
+    const c = { address: curveAddr, abi: BEEPER_CURVE_ABI } as const;
+    const [protect, until, sniper, maxW, sold, complete, graduated] = await Promise.all([
+      chain.readContract({ ...c, functionName: "protectionActive" }), chain.readContract({ ...c, functionName: "protectUntil" }),
+      chain.readContract({ ...c, functionName: "sniperFeeBps" }), chain.readContract({ ...c, functionName: "maxWallet" }),
+      chain.readContract({ ...c, functionName: "tokensSold" }), chain.readContract({ ...c, functionName: "complete" }),
+      chain.readContract({ ...c, functionName: "graduated" }),
+    ]).catch(() => [null, null, null, null, null, null, null]);
+    if (protect === null) return;
+    setCs({ protect: protect as boolean, until: Number(until) * 1000, sniperBps: Number(sniper), maxWallet: maxW as bigint, sold: sold as bigint, complete: complete as boolean, graduated: graduated as boolean });
+  }, [curveAddr]);
+  useEffect(() => { loadCurve(); const id = setInterval(loadCurve, 15_000); return () => clearInterval(id); }, [loadCurve]);
+  useEffect(() => { if (!cs?.protect) return; const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, [cs?.protect]);
 
   if (err) return <p className="card p-6 text-sm text-mute">{err}</p>;
   if (!d) return <p className="text-sm text-mute">Loading…</p>;
@@ -82,12 +101,16 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
       // Simulate first, then accept at most SLIPPAGE_BPS less than the simulated output.
       const fn = side === "buy" ? "buy" : "sell";
       const { result: out } = await chain.simulateContract({ account: me, address: curve, abi: CURVE_ABI, functionName: fn, args: [units, BigInt(0), me] })
-        .catch(() => { throw new Error("This coin has graduated from its curve, or the curve cannot fill that size. Trade it on its pool."); });
+        .catch((err) => {
+          const why = String((err as { shortMessage?: string }).shortMessage ?? err);
+          if (/max wallet/i.test(why)) throw new Error("Anti sniper protection is on: that buy would put this wallet above the max per wallet. Buy less, or wait until protection ends.");
+          throw new Error("This coin has graduated from its curve, or the curve cannot fill that size. Trade it on its pool.");
+        });
       const min = out - (out * SLIPPAGE_BPS) / BigInt(10_000);
       setNote(`Confirm: ${amount} ${side === "buy" ? "USDG" : c.symbol} for about ${Number(formatUnits(out, side === "buy" ? 18 : 6)).toLocaleString("en-US", { maximumFractionDigits: 4 })} ${side === "buy" ? c.symbol : "USDG"}`);
       const hash = await send({ to: curve, data: encodeFunctionData({ abi: CURVE_ABI, functionName: fn, args: [units, min, me] }) });
       setNote(`Done. ${short(hash)}`);
-      loadBal(); setTimeout(load, 3000);
+      loadBal(); loadCurve(); setTimeout(load, 3000);
     } catch (e) {
       const msg = (e as { shortMessage?: string; message?: string }).shortMessage ?? (e as Error).message;
       setNote(/reject|denied/i.test(msg) ? "Cancelled." : msg.slice(0, 180));
@@ -126,6 +149,47 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
     ["Creator tax", `${(c.tax_bps / 100).toFixed(2)}%`, "text-bone"],
   ];
 
+  async function graduate() {
+    if (!me) return auth.connectWallet();
+    setBusy(true); setNote("Moving the curve into its Uniswap v4 pool…");
+    try {
+      await send({ to: curve, data: encodeFunctionData({ abi: BEEPER_CURVE_ABI, functionName: "graduate" }) });
+      setNote("Graduated. The pool is live and its liquidity is locked."); loadCurve();
+    } catch (e) {
+      const msg = (e as { shortMessage?: string; message?: string }).shortMessage ?? (e as Error).message;
+      setNote(/reject|denied/i.test(msg) ? "Cancelled." : msg.slice(0, 180));
+    } finally { setBusy(false); }
+  }
+
+  const secondsLeft = cs?.protect ? Math.max(0, Math.round((cs.until - now) / 1000)) : 0;
+  const progress = cs ? Number((cs.sold * BigInt(10_000)) / CURVE_SUPPLY) / 100 : 0;
+  const curvePanel = cs && (
+    <div className="card min-w-0 p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-semibold text-bone">Beeper curve</p>
+        {cs.protect
+          ? <span className="rounded border border-warn/50 px-2 py-0.5 font-mono text-[11px] text-warn">ANTI SNIPER ON · {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}</span>
+          : <span className="rounded border border-moss/40 px-2 py-0.5 font-mono text-[11px] text-moss">{cs.graduated ? "GRADUATED" : "OPEN TRADING"}</span>}
+      </div>
+      {cs.protect && (
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded-md border border-line bg-ink p-3"><p className="text-[11px] text-mute">Sniper fee on buys now</p><p className="mt-1 font-serif text-3xl text-warn">{(cs.sniperBps / 100).toFixed(1)}%</p></div>
+          <div className="rounded-md border border-line bg-ink p-3"><p className="text-[11px] text-mute">Max per wallet</p><p className="mt-1 font-serif text-3xl text-bone">{Number(formatUnits(cs.maxWallet, 18)).toLocaleString("en-US", { maximumFractionDigits: 0 })}</p></div>
+        </div>
+      )}
+      <div className="mt-4">
+        <div className="flex justify-between text-xs text-mute"><span>Progress to graduation</span><span className="font-mono">{progress.toFixed(2)}%</span></div>
+        <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-ink"><div className="h-full rounded-full bg-ember" style={{ width: `${Math.min(100, progress)}%` }} /></div>
+        <p className="mt-2 text-[11px] leading-relaxed text-mute">
+          {cs.graduated ? "All USDG raised and the remaining coins sit in a Uniswap v4 pool whose liquidity is locked. Its fees keep paying holders in AI credit."
+            : cs.complete ? "The curve is sold out. Anyone can graduate it into its Uniswap v4 pool now." 
+            : "When every curve coin is sold, the USDG raised and the rest of the supply move into a locked Uniswap v4 pool."}
+        </p>
+        {cs.complete && !cs.graduated && <button onClick={graduate} disabled={busy} className="btn btn-primary mt-3 w-full text-sm disabled:opacity-50">Graduate to Uniswap v4</button>}
+      </div>
+    </div>
+  );
+
   const tradeCard = (
     <div className="card min-w-0 p-5 sm:p-6">
       <div className="grid grid-cols-2 gap-1 rounded-md border border-line bg-ink p-1 text-sm">
@@ -158,7 +222,8 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
         {!auth.authenticated ? "Sign in to trade" : !me ? "Connect wallet" : busy ? "Working…" : side === "buy" ? `Buy ${c.symbol}` : `Sell ${c.symbol}`}
       </button>
       {note && <p className="mt-3 break-words text-sm text-mute">{note}</p>}
-      <p className="mt-4 text-[11px] leading-relaxed text-mute">Trades run on the Pons curve, paired with USDG, with a {Number(SLIPPAGE_BPS) / 100}% slippage cap. Memecoins are volatile and can go to zero.</p>
+      {cs?.protect && side === "buy" && <p className="mt-3 text-xs text-warn">Anti sniper protection is on: buys pay {(cs.sniperBps / 100).toFixed(1)}% extra right now, falling to zero.</p>}
+      <p className="mt-4 text-[11px] leading-relaxed text-mute">Trades run on the {c.kind === "curve" ? "Beeper" : "Pons"} curve, paired with USDG, with a {Number(SLIPPAGE_BPS) / 100}% slippage cap. Memecoins are volatile and can go to zero.</p>
     </div>
   );
 
@@ -190,6 +255,8 @@ export default function LaunchCoin({ token }: { token: `0x${string}` }) {
         </div>
 
         <div className="lg:hidden">{tradeCard}</div>
+
+        {curvePanel}
 
         <CoinChart trades={d.trades} supply={d.supply} launchedAt={c.created_at} />
 
